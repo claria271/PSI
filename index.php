@@ -126,7 +126,6 @@
 <header>
   <div class="logo">
     <img src="assets/image/logo.png" alt="PSI">
-    <span><strong>PSI</strong></span>
   </div>
   <nav>
     <a href="#">Beranda</a>
