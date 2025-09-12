@@ -41,6 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   </style>
 </head>
 <body>
+  <img src="psi2.jpg" alt="">
   <div class="container">
     <h2>Daftar</h2>
     <form method="POST">
