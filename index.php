@@ -1,5 +1,9 @@
 <?php
-// index.php
+session_start();
+if (!isset($_SESSION['alamat_email'])) {
+    header("Location: login.php");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
