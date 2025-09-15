@@ -95,7 +95,7 @@
   <!-- Form container -->
   <div class="container">
     <div style="width:100%">
-      <h2>Daftar</h2>
+      <h2>tasya</h2>
       <form method="POST">
         <label for="nama_lengkap">Nama Lengkap</label>
         <input type="text" id="nama_lengkap" name="nama_lengkap" placeholder="Nama Lengkap" required>
