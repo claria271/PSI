@@ -17,8 +17,10 @@
       background: #f9f9f9;
       color: #333;
     }
+
+    /* Header */
     header {
-      background: #fff;
+      background: #999999; /* navbar abu lebih terang */
       border-bottom: 1px solid #ddd;
       padding: 12px 40px;
       display: flex;
@@ -40,23 +42,61 @@
       margin: 0 15px;
       text-decoration: none;
       font-weight: bold;
-      color: #333;
+      color: #fff;
     }
     nav a:hover {
-      color: #c00;
+      color: #ffcccc;
     }
 
-    /* Layout utama */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 200px 1fr 200px;
+    /* Container atas & bawah */
+    .container-atas, .container-bawah {
+      width: 75%;
+      margin: 30px auto;
+      display: flex;
       gap: 20px;
-      padding: 30px;
+      align-items: stretch;
     }
-    .sub-grid {
-      display: grid;
+
+    /* Kolom */
+    .kolom {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       gap: 20px;
     }
+    .kolom-tengah {
+      flex: 2;
+    }
+    .kolom-kanan {
+      flex: 1;
+    }
+    .kolom-kiri-bawah {
+      flex: 1;
+    }
+    .kolom-kanan-bawah {
+      flex: 2;
+    }
+
+    /* Box umum */
+    .box {
+      background: #fff;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .box h2 {
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+    .box p {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Foto placeholder */
     .foto {
       background: #ddd;
       border-radius: 8px;
@@ -65,59 +105,64 @@
       justify-content: center;
       font-weight: bold;
       color: #555;
-      height: 200px;
-    }
-    .foto.tinggi {
-      height: 420px; /* biar tinggi seperti desain kanan */
-    }
-
-    /* Box umum */
-    .box {
-      background: #fff;
-      border-radius: 10px;
-      padding: 60px;
-      box-shadow: 0 2px 2px rgba(0,0,0,0.1);
-    }
-    .box h2 {
-      margin-bottom: 20px;
+      flex: 1;
+      min-height: 200px;
     }
 
     /* Statistik */
     .stats {
       text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .stats h2 {
+      margin-bottom: 15px;
+    }
+    .stat-boxes, .stat-boxes-bottom {
+      display: grid;
+      gap: 15px;
+      flex: 1; /* biar isi ikut membesar */
     }
     .stat-boxes {
-      display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 20px;
     }
     .stat-boxes-bottom {
-      display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      margin-top: 20px;
-      justify-content: center;
+      margin-top: 15px;
     }
     .stat-box {
       background: #eee;
       border-radius: 8px;
-      padding: 40px 10px;
+      padding: 20px 10px;
       font-weight: bold;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px; /* lebih tinggi */
     }
 
+    /* Footer */
     footer {
-      background: #f1f1f1;
+      background: #999999; /* footer abu lebih terang */
       text-align: center;
-      padding: 20px;
-      margin-top: 30px;
+      padding: 15px;
+      margin-top: 20px;
       font-size: 14px;
-      color: #444;
+      color: #fff;
     }
     footer i {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
+      color: #fff;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .container-atas, .container-bawah {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -136,15 +181,10 @@
   </nav>
 </header>
 
-<div class="main-grid">
-  <!-- Kolom kiri -->
-  <div class="sub-grid">
-    <div class="foto">[Foto]</div>
-    <div class="foto">[Foto]</div>
-  </div>
-
-  <!-- Kolom tengah -->
-  <div class="sub-grid">
+<!-- Container Atas -->
+<div class="container-atas">
+  <!-- Kolom Tengah -->
+  <div class="kolom kolom-tengah">
     <div class="box">
       <h2>Selamat Datang di Website PSI<br>Entri Data Bantuan</h2>
       <p>
@@ -153,7 +193,24 @@
         Mari bersama wujudkan pelayanan yang lebih baik melalui teknologi yang terpercaya.
       </p>
     </div>
+  </div>
 
+  <!-- Kolom Kanan -->
+  <div class="kolom kolom-kanan">
+    <div class="foto">[Foto]</div>
+  </div>
+</div>
+
+<!-- Container Bawah -->
+<div class="container-bawah">
+  <!-- Kolom Kiri Bawah -->
+  <div class="kolom kolom-kiri-bawah">
+    <div class="foto">[Foto]</div>
+    <div class="foto">[Foto]</div>
+  </div>
+
+  <!-- Kolom Kanan Bawah (Statistik) -->
+  <div class="kolom kolom-kanan-bawah">
     <div class="box stats">
       <h2>Statistik</h2>
       <div class="stat-boxes">
@@ -167,15 +224,13 @@
       </div>
     </div>
   </div>
-
-  <!-- Kolom kanan -->
-  <div class="sub-grid">
-    <div class="foto tinggi">[Foto]</div>
-  </div>
 </div>
 
+<i style="display:block; text-align:center; margin-top:15px; color:#555;">
+  "Website PSI - Entri Data Bantuan membantu pencatatan bantuan jadi lebih transparan dan efisien."
+</i>
+
 <footer>
-  <i>"Website PSI - Entri Data Bantuan membantu pencatatan bantuan jadi lebih transparan dan efisien."</i>
   Hak cipta © 2025 - Partai Solidaritas Indonesia
 </footer>
 
