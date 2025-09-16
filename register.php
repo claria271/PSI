@@ -1,3 +1,25 @@
+<?php
+// daftar.php
+include 'koneksi/config.php'; // panggil file config
+
+// Proses form ketika disubmit
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nama_lengkap   = $conn->real_escape_string($_POST['nama_lengkap']);
+    $alamat_lengkap = $conn->real_escape_string($_POST['alamat_lengkap']);
+    $nomor_telepon  = $conn->real_escape_string($_POST['nomor_telepon']);
+    $alamat_email   = $conn->real_escape_string($_POST['alamat_email']);
+    $password       = password_hash($_POST['password'], PASSWORD_DEFAULT);
+
+    $sql = "INSERT INTO login (nama_lengkap, alamat_lengkap, nomor_telepon, alamat_email, password) 
+            VALUES ('$nama_lengkap', '$alamat_lengkap', '$nomor_telepon', '$alamat_email', '$password')";
+
+    if ($conn->query($sql) === TRUE) {
+        echo "<script>alert('Pendaftaran berhasil!'); window.location='login.php';</script>";
+    } else {
+        echo "Error: " . $conn->error;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
