@@ -17,26 +17,38 @@
       background: #f9f9f9;
       color: #333;
     }
-    header {
-      background: #dcdcdc;
-      padding: 10px 20px;
+     header {
+      background: #999999; /* navbar abu lebih terang */
+      border-bottom: 1px solid #ddd;
+      padding: 12px 40px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     header img {
       height: 40px;
     }
     nav a {
-      margin-left: 20px;
+      margin: 0 15px;
       text-decoration: none;
-      color: #333;
       font-weight: bold;
+      color: #fff;
     }
-    nav a.active {
+    nav a:hover {
+      color: #ffcccc;
+    }
+    /* nav a.active {
       color: #000;
       border-bottom: 2px solid #000;
-    }
+    }*/
     .container {
       max-width: 800px;
       margin: 20px auto;
@@ -92,7 +104,7 @@
 <body>
   <header>
     <div class="logo">
-      <img src="logo.png" alt="PSI Logo"> <!-- Ganti dengan logo asli -->
+      <img src="assets/image/logo.png" alt="PSI Logo"> <!-- Ganti dengan logo asli -->
     </div>
     <nav>
       <a href="dashboard.php">Beranda</a>
