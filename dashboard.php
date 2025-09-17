@@ -158,19 +158,22 @@ if (!isset($_SESSION['alamat_email'])) {
       line-height: 1.6;
     }
 
-    /* Footer */
     footer {
-      background: #999999; /* footer abu lebih terang */
+      margin-top: 0;
+      padding: 15px 5%;
       text-align: center;
-      padding: 15px;
-      margin-top: 20px;
+      background: #999999; /* sama dengan navbar */
       font-size: 14px;
       color: #fff;
+      border-top: 1px solid #ccc;
     }
-    footer i {
-      display: block;
-      margin-bottom: 5px;
-      color: #fff;
+    footer img {
+      height: 20px;
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+    footer img:first-child {
+      height: 20px; /* samakan dengan logo PSI putih */
     }
 
 
@@ -248,8 +251,10 @@ if (!isset($_SESSION['alamat_email'])) {
 
 
 <footer>
-  Hak cipta © 2025 - Partai Solidaritas Indonesia
-</footer>
+    <img src="assets/image/logodprd.png" alt="dprd Logo">
+    <img src="assets/image/psiputih.png" alt="PSI Logo">
+    Hak cipta © 2025 - Partai Solidaritas Indonesia
+  </footer>
 
 </body>
 </html>

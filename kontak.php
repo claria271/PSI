@@ -50,7 +50,7 @@ nav a:hover {
 
     /* Box utama */
     .container {
-      max-width: 800px;
+      max-width: 80%;
       margin: 40px auto;
       padding: 30px;
       background: #fff;
@@ -83,20 +83,21 @@ nav a:hover {
     }
 
     footer {
-      margin-top: 40px;
-      padding: 15px;
+      margin-top: 0;
+      padding: 15px 5%;
       text-align: center;
-      background: #dcdcdc;
+      background: #999999; /* sama dengan navbar */
       font-size: 14px;
-      color: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
+      color: #fff;
+      border-top: 1px solid #ccc;
     }
     footer img {
-      height: 25px;
+      height: 20px;
       vertical-align: middle;
+      margin-left: 5px;
+    }
+    footer img:first-child {
+      height: 20px; /* samakan dengan logo PSI putih */
     }
   </style>
 </head>
@@ -128,8 +129,9 @@ nav a:hover {
   </div>
 
   <footer>
-    <img src="logo-footer.png" alt="Logo Footer"> <!-- ganti logo footer -->
-    <span>Hak cipta © 2025 - Partai Solidaritas Indonesia</span>
+    <img src="assets/image/logodprd.png" alt="dprd Logo">
+    <img src="assets/image/psiputih.png" alt="PSI Logo">
+    Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
 </body>
 </html>

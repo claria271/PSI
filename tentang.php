@@ -94,27 +94,30 @@
     /* Container 1 & 2 */
     .container.flex {
       gap: 5%;
-      margin-top: 20px;
+      margin: 0 auto; /* hapus gap antar container */
+      align-items: stretch; /* tinggi text menyesuaikan tinggi circle */
     }
     .text {
-      width: 40%;
-      padding: 10px;
+      width: 30%;
+      display: flex;
+      align-items: center; /* teks sejajar vertikal */
     }
     .text p {
       line-height: 1.6;
       text-align: justify;
     }
     .circle {
-      width: 40%;
+      width: 40%;           /* circle lebih kecil */
       aspect-ratio: 1/1;
       border-radius: 50%;
       background: #ccc;
+      margin: 20px 0;       /* gap atas-bawah di dalam container */
     }
 
     /* Container 3 */
     .container3 {
       max-width: 90%;
-      margin: 20px auto;
+      margin: 0 auto 40px auto; /* kasih jarak lebih besar ke footer */
       padding: 20px;
       display: flex;
       align-items: center;
