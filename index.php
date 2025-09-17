@@ -34,7 +34,7 @@
 
       <!-- Bagian teks -->
       <div class="col-lg-6">
-        <h1 class="display-4 fw-bold lh-1 mb-4">Selamat Datang di Website PSI</h1>
+        <h1 class="display-4 fw-bold lh-1 mb-4">Selamat Datang di Website PSI Kota Surabaya</h1>
         <p class="lead mb-4">
           Kita percaya, solidaritas bukan sekadar kata. Melalui program bantuan dana sosial, 
           PSI berupaya meringankan beban masyarakat yang membutuhkan, dengan proses yang terbuka, cepat, 

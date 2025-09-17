@@ -192,8 +192,8 @@ if (!isset($_SESSION['alamat_email'])) {
     <div class="box">
       <h2>Selamat Datang di Website PSI<br>Entri Data Bantuan</h2>
       <p>
-        Kami hadir untuk menghadirkan kemudahan, kecepatan, dan transparansi dalam pengelolaan data bantuan.<br><br>
-        Dengan sistem yang terintegrasi, setiap informasi tercatat dengan rapi, akurat, dan dapat diakses secara aman.<br><br>
+        Kami hadir untuk menghadirkan kemudahan, kecepatan, dan transparansi dalam pengelolaan data bantuan.
+        Dengan sistem yang terintegrasi, setiap informasi tercatat dengan rapi, akurat, dan dapat diakses secara aman.
         Mari bersama wujudkan pelayanan yang lebih baik melalui teknologi yang terpercaya.
       </p>
     </div>
