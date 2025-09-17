@@ -189,10 +189,10 @@ if (!isset($_SESSION['alamat_email'])) {
     <img src="assets/image/logo.png" alt="PSI">
   </div>
   <nav>
-    <a href="#">Beranda</a>
+    <a href="dashboard.php">Beranda</a>
     <a href="#">Tambah Data</a>
     <a href="#">Kehadiran</a>
-    <a href="#">Tentang</a>
+    <a href="tentang.php">Tentang</a>
     <a href="#">Kontak</a>
   </nav>
 </header>
