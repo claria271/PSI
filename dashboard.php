@@ -54,7 +54,8 @@ if (!isset($_SESSION['alamat_email'])) {
 
     /* Container atas & bawah */
     .container-atas, .container-bawah {
-      width: 75%;
+      width: 90%;            /* perkecil gap kanan kiri */
+      max-width: 1200px;     /* batas maksimum di layar besar */
       margin: 30px auto;
       display: flex;
       gap: 20px;
@@ -147,6 +148,16 @@ if (!isset($_SESSION['alamat_email'])) {
       min-height: 120px; /* lebih tinggi */
     }
 
+    .quote {
+      display: block;
+      text-align: center;
+      margin: 5% auto; /* beri jarak atas bawah */
+      color: #555;
+      font-style: italic;
+      max-width: 900px;
+      line-height: 1.6;
+    }
+
     /* Footer */
     footer {
       background: #999999; /* footer abu lebih terang */
@@ -161,6 +172,7 @@ if (!isset($_SESSION['alamat_email'])) {
       margin-bottom: 5px;
       color: #fff;
     }
+
 
     /* Responsive */
     @media (max-width: 900px) {
@@ -230,9 +242,10 @@ if (!isset($_SESSION['alamat_email'])) {
   </div>
 </div>
 
-<i style="display:block; text-align:center; margin-top:15px; color:#555;">
+<i class="quote">
   "Website PSI - Entri Data Bantuan membantu pencatatan bantuan jadi lebih transparan dan efisien."
 </i>
+
 
 <footer>
   Hak cipta © 2025 - Partai Solidaritas Indonesia
