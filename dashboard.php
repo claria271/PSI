@@ -193,7 +193,7 @@ if (!isset($_SESSION['alamat_email'])) {
     <a href="#">Tambah Data</a>
     <a href="#">Kehadiran</a>
     <a href="tentang.php">Tentang</a>
-    <a href="#">Kontak</a>
+    <a href="kontak.php">Kontak</a>
   </nav>
 </header>
 
