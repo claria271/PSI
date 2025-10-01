@@ -107,7 +107,7 @@
       text-align: justify;
     }
     .circle {
-      width: 40%;           /* circle lebih kecil */
+      width: 30%;           /* circle lebih kecil */
       aspect-ratio: 1/1;
       border-radius: 50%;
       background: #ccc;
@@ -162,7 +162,6 @@
     <nav>
       <a href="dashboard.php">Beranda</a>
       <a href="tambah.php">Tambah Data</a>
-      <a href="kehadiran.php">Kehadiran</a>
       <a href="tentang.php">Tentang</a>
       <a href="kontak.php">Kontak</a>
     </nav>
