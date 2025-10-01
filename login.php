@@ -35,7 +35,7 @@ $email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
     .container {
       background: #fff;
       padding: 30px;
-      border-radius: 0 0 20px 20px; /* rounded bawah */
+      border-radius: 10px 10px 20px 20px; /* rounded bawah */
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       width: 100%;
       box-sizing: border-box;

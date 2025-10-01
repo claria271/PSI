@@ -1,6 +1,6 @@
 <?php
 // daftar.php
-include 'koneksi/config.php'; // panggil file config
+include 'koneksi/config.php';
 
 // Proses form ketika disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -14,7 +14,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             VALUES ('$nama_lengkap', '$alamat_lengkap', '$nomor_telepon', '$alamat_email', '$password')";
 
     if ($conn->query($sql) === TRUE) {
-        echo "<script>alert('Pendaftaran berhasil!'); window.location='login.php';</script>";
+        echo "<script>
+                alert('Pendaftaran berhasil!');
+                window.location='login.php';
+              </script>";
+        exit;
     } else {
         echo "Error: " . $conn->error;
     }
@@ -30,93 +34,89 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       font-family: Arial, sans-serif;
       background: #fff;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
     }
-
-    /* Gambar header */
-    .header-img {
-      width: 50%; /* lebar container diperkecil */
+    .wrapper {
+      width: 50%;
+      max-width: 600px;
     }
-    .header-img img {
+    .logo {
+      text-align: center;
+      margin-top: 30px; /* GAP ATAS LOGO */
+      margin-bottom: 15px;
+    }
+    .logo img {
       width: 100%;
       height: auto;
-      display: block;
-      border-radius: 10px 10px 0 0;
+      border-radius: 20px 20px 0 0;
       opacity: 0.5;
     }
-
-    /* Container form */
     .container {
       background: #fff;
-      border-radius: 0 0 10px 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 50%; /* sama dengan gambar */
-      padding: 12px 0;
+      padding: 30px;
+      border-radius: 10px 10px 20px 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 100%;
       box-sizing: border-box;
-      display: flex;
-      justify-content: center;
+      margin-bottom: 40px; /* GAP BAWAH CONTAINER */
     }
-
     h2 {
       text-align: center;
-      margin-bottom: 10px;
-      font-size: 18px;
+      margin-bottom: 20px;
     }
-
     form {
-      width: 70%; /* form tetap ramping 30% dari container */
-      margin: 0 auto;
+      margin: 0 7%; /* jarak kanan kiri 10% */
     }
-
     label {
       display: block;
-      margin-top: 4px;
-      margin-bottom: 2px;
-      font-weight: normal; 
-      font-size: 13px;
-      color: #333;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 5px;
-      border-radius: 5px;
-      box-sizing: border-box;
-    }
-
-    input {
-      border: 1px solid #ccc;
       font-size: 14px;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      font-weight: bold;
     }
-
-    button {
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: 0.3s;
+    }
+    input:focus {
+      border-color: #00aeffff;
+      box-shadow: 0 0 6px rgba(74,144,226,0.4);
+      outline: none;
+    }
+    .btn {
+      width: 100%;
+      padding: 10px;
       border: none;
-      background: #4a90e2;
-      color: #fff;
-      font-size: 15px;
+      border-radius: 10px;
+      font-size: 16px;
       cursor: pointer;
       margin-top: 8px;
+      box-sizing: border-box;
     }
-
-    button:hover {
+    .btn-primary {
+      background: #4a90e2;
+      color: #fff;
+    }
+    .btn-primary:hover {
       background: #357abd;
     }
   </style>
 </head>
 <body>
-  <!-- Gambar di luar container -->
-  <div class="header-img">
-    <img src="assets/image/psi2.jpg" alt="psi">
-  </div>
-
-  <!-- Form container -->
-  <div class="container">
-    <div style="width:100%">
+  <div class="wrapper">
+    <div class="logo">
+      <img src="assets/image/psi2.jpg" alt="PSI">
+    </div>
+    <div class="container">
       <h2>Daftar</h2>
       <form method="POST">
         <label for="nama_lengkap">Nama Lengkap</label>
@@ -134,7 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <label for="password">Password</label>
         <input type="password" id="password" name="password" placeholder="Password" required>
 
-        <button type="submit">Daftar</button>
+        <button type="submit" class="btn btn-primary">Daftar</button>
       </form>
     </div>
   </div>
