@@ -17,6 +17,7 @@
 
     body {
       background: #f5f5f5;
+      color: #333;
     }
 
     /* Header */
@@ -38,17 +39,25 @@
 
     /* Tombol kembali */
     .back-btn {
-      display: inline-block;
-      margin: 20px 0 0 10%;
-      font-size: 36px;
-      font-weight: 900;
-      color: #000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 25px 0 0 10%;
       text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      background: #ff4b4b;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
       transition: 0.3s;
     }
 
     .back-btn:hover {
-      color: #ff4b4b;
+      background: #e03c3c;
+      transform: scale(1.05);
     }
 
     /* Judul halaman */
@@ -71,7 +80,7 @@
       width: 80%;
       max-width: 700px;
       background: #e9e9e9;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 25px auto;
       border-radius: 10px;
       padding: 30px;
     }
@@ -113,11 +122,12 @@
       font-size: 12px;
     }
 
-    /* Kotak hasil pilihan */
+    /* Summary Box */
     .summary-box {
       background: #cfcfcf;
       border-radius: 10px;
       padding: 15px;
+      margin-top: 15px;
     }
 
     .summary-item {
@@ -130,22 +140,25 @@
       font-size: 14px;
     }
 
-    /* Radio Button */
+    /* Radio Group */
     .radio-group {
-      margin-bottom: 20px;
+      margin: 15px 0;
     }
 
     .radio-group label {
       display: flex;
       align-items: center;
+      gap: 10px;
       margin-bottom: 10px;
       font-weight: 500;
+      cursor: pointer;
     }
 
     .radio-group input[type="radio"] {
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
+      accent-color: #ff4b4b;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
     }
 
     /* Tombol */
@@ -218,26 +231,24 @@
   <!-- FORM 2 -->
   <div class="container">
     <div class="section-title">Pendataan Daerah Pemilihan</div>
-    <form>
+    <form id="form-dapil">
       <label>Pilih Daerah Pemilihan</label>
-      <select>
-        <option>Dapil I</option>
-        <option>Dapil II</option>
+      <select id="dapil">
+        <option value="">-- Pilih Dapil --</option>
+        <option value="Dapil I">Dapil I</option>
+        <option value="Dapil II">Dapil II</option>
       </select>
 
       <label>Pilih Kecamatan</label>
-      <select>
-        <option>Mulyorejo</option>
-        <option>Gubeng</option>
+      <select id="kecamatan">
+        <option value="">-- Pilih Kecamatan --</option>
+        <option value="Mulyorejo">Mulyorejo</option>
+        <option value="Gubeng">Gubeng</option>
       </select>
 
-      <div class="summary-box">
-        <div class="summary-item">
-          <span>Daerah Pemilihan</span><span>Dapil I</span>
-        </div>
-        <div class="summary-item">
-          <span>Kecamatan</span><span>Mulyorejo</span>
-        </div>
+      <div class="summary-box" id="summary">
+        <div class="summary-item"><span>Daerah Pemilihan</span><span>-</span></div>
+        <div class="summary-item"><span>Kecamatan</span><span>-</span></div>
       </div>
     </form>
   </div>
@@ -266,7 +277,7 @@
     </form>
   </div>
 
-  <!-- FORM 4: Informasi -->
+  <!-- FORM 4 -->
   <div class="container">
     <div class="section-title">Informasi</div>
     <form>
@@ -285,11 +296,27 @@
     </form>
   </div>
 
-  <!-- TOMBOL AKHIR -->
+  <!-- Tombol -->
   <div class="btn-container">
     <button type="submit">Simpan Data</button>
     <button type="reset" class="btn-reset">Kosongkan Form</button>
   </div>
+
+  <script>
+    // Update summary box sesuai pilihan
+    const dapil = document.getElementById('dapil');
+    const kecamatan = document.getElementById('kecamatan');
+    const summary = document.getElementById('summary');
+
+    function updateSummary() {
+      const items = summary.querySelectorAll('.summary-item span:last-child');
+      items[0].textContent = dapil.value || '-';
+      items[1].textContent = kecamatan.value || '-';
+    }
+
+    dapil.addEventListener('change', updateSummary);
+    kecamatan.addEventListener('change', updateSummary);
+  </script>
 
 </body>
 </html>
