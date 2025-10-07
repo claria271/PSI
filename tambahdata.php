@@ -16,7 +16,6 @@
       background: #f5f5f5;
     }
 
-    /* Header */
     header {
       background: #d9d9d9;
       display: flex;
@@ -33,7 +32,6 @@
       font-weight: 500;
     }
 
-    /* Tombol kembali */
     .back-btn {
       display: inline-block;
       margin: 20px 0 0 10%;
@@ -48,7 +46,6 @@
       color: #ff4b4b;
     }
 
-    /* Judul halaman */
     h1 {
       text-align: center;
       font-size: 26px;
@@ -63,7 +60,6 @@
       margin-bottom: 25px;
     }
 
-    /* Container umum */
     .container {
       width: 80%;
       max-width: 700px;
@@ -110,7 +106,6 @@
       font-size: 12px;
     }
 
-    /* Kotak hasil pilihan */
     .summary-box {
       background: #cfcfcf;
       border-radius: 10px;
@@ -127,7 +122,6 @@
       font-size: 14px;
     }
 
-    /* Radio Button */
     .radio-group {
       margin-bottom: 20px;
     }
@@ -145,7 +139,6 @@
       margin-right: 10px;
     }
 
-    /* Tombol */
     .btn-container {
       width: 80%;
       max-width: 700px;
@@ -193,100 +186,84 @@
   <h1>Entri Data Keluarga</h1>
   <p class="subtitle">Masukkan Data Keluarga Dengan Akurat</p>
 
-  <!-- FORM 1 -->
-  <div class="container">
-    <div class="section-title">Data Pribadi</div>
-    <form>
+  <!-- FORM UTAMA -->
+  <form action="proses_keluarga.php" method="POST">
+    <!-- FORM 1 -->
+    <div class="container">
+      <div class="section-title">Data Pribadi</div>
       <label>Nama Lengkap</label>
-      <input type="text" placeholder="Mawar Lenjana" disabled>
+      <input type="text" name="nama_lengkap" placeholder="Mawar Lenjana" required>
 
       <label>NIK (Nomor Induk Kependudukan)</label>
-      <input type="text" placeholder="10050983728200938">
+      <input type="text" name="nik" placeholder="10050983728200938">
       <small>*opsional</small>
 
       <label>No WhatsApp</label>
-      <input type="text" placeholder="082264780939">
+      <input type="text" name="no_wa" placeholder="082264780939">
 
       <label>Alamat Lengkap</label>
-      <textarea placeholder="Ketintang Madya No.12"></textarea>
-    </form>
-  </div>
+      <textarea name="alamat" placeholder="Ketintang Madya No.12"></textarea>
+    </div>
 
-  <!-- FORM 2 -->
-  <div class="container">
-    <div class="section-title">Pendataan Daerah Pemilihan</div>
-    <form>
+    <!-- FORM 2 -->
+    <div class="container">
+      <div class="section-title">Pendataan Daerah Pemilihan</div>
       <label>Pilih Daerah Pemilihan</label>
-      <select>
+      <select name="dapil">
         <option>Dapil I</option>
         <option>Dapil II</option>
       </select>
 
       <label>Pilih Kecamatan</label>
-      <select>
+      <select name="kecamatan">
         <option>Mulyorejo</option>
         <option>Gubeng</option>
       </select>
+    </div>
 
-      <div class="summary-box">
-        <div class="summary-item">
-          <span>Daerah Pemilihan</span><span>Dapil I</span>
-        </div>
-        <div class="summary-item">
-          <span>Kecamatan</span><span>Mulyorejo</span>
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <!-- FORM 3 -->
-  <div class="container">
-    <div class="section-title">Data Ekonomi Keluarga</div>
-    <form>
+    <!-- FORM 3 -->
+    <div class="container">
+      <div class="section-title">Data Ekonomi Keluarga</div>
       <label>Jumlah Anggota Keluarga</label>
-      <input type="number" placeholder="4">
+      <input type="number" name="jumlah_anggota" placeholder="4">
       <small>*Jumlah anggota termasuk kepala keluarga</small>
 
       <label>Jumlah Orang yang Bekerja</label>
-      <select>
+      <select name="jumlah_bekerja">
         <option>1</option><option>2</option><option>3</option>
       </select>
 
       <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
-      <select>
+      <select name="total_penghasilan">
         <option>< Rp 1.000.000</option>
         <option>Rp 1.000.000 - Rp 3.000.000</option>
         <option>Rp 3.000.000 - Rp 5.000.000</option>
         <option>> Rp 5.000.000</option>
       </select>
-      <small>*Jumlahkan semua penghasilan dari seluruh anggota keluarga yang bekerja</small>
-    </form>
-  </div>
+    </div>
 
-  <!-- FORM 4: Informasi -->
-  <div class="container">
-    <div class="section-title">Informasi</div>
-    <form>
+    <!-- FORM 4 -->
+    <div class="container">
+      <div class="section-title">Informasi</div>
       <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael</b></p>
       <div class="radio-group">
-        <label><input type="radio" name="kenal"> Ya</label>
-        <label><input type="radio" name="kenal"> Tidak Pernah</label>
+        <label><input type="radio" name="kenal" value="Ya"> Ya</label>
+        <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
       </div>
 
       <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael</b></p>
       <div class="radio-group">
-        <label><input type="radio" name="sumber"> Kegiatan PSI Surabaya</label>
-        <label><input type="radio" name="sumber"> Dari teman atau relasi</label>
-        <label><input type="radio" name="sumber"> Lainnya ___________________</label>
+        <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
+        <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
+        <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
       </div>
-    </form>
-  </div>
+    </div>
 
-  <!-- TOMBOL AKHIR -->
-  <div class="btn-container">
-    <button type="submit">Simpan Data</button>
-    <button type="reset" class="btn-reset">Kosongkan Form</button>
-  </div>
+    <div class="btn-container">
+      <button type="submit">Simpan Data</button>
+      <button type="reset" class="btn-reset">Kosongkan Form</button>
+    </div>
+  </form>
 
 </body>
 </html>
