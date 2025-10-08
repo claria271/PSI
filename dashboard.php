@@ -16,15 +16,16 @@ if (!isset($_SESSION['alamat_email'])) {
       margin: 0; padding: 0;
       box-sizing: border-box;
     }
+
     body {
       font-family: Arial, sans-serif;
       background: #f9f9f9;
       color: #333;
     }
 
-    /* Header */
+    /* === HEADER dengan gradasi putih ke hitam === */
     header {
-      background: #999999; /* navbar abu lebih terang */
+      background: linear-gradient(to right, #ffffff, #000000);
       border-bottom: 1px solid #ddd;
       padding: 12px 40px;
       display: flex;
@@ -34,53 +35,51 @@ if (!isset($_SESSION['alamat_email'])) {
       top: 0;
       z-index: 100;
     }
+
     header .logo {
       display: flex;
       align-items: center;
       gap: 10px;
     }
+
     header img {
       height: 40px;
     }
+
+    /* Navigasi */
     nav a {
       margin: 0 15px;
       text-decoration: none;
       font-weight: bold;
       color: #fff;
-    }
-    nav a:hover {
-      color: #ffcccc;
+      transition: 0.3s;
     }
 
-    /* Container atas & bawah */
+    nav a:hover {
+      color: #ff4b4b;
+    }
+
+    /* === CONTAINER ATAS & BAWAH === */
     .container-atas, .container-bawah {
-      width: 90%;            /* perkecil gap kanan kiri */
-      max-width: 1200px;     /* batas maksimum di layar besar */
+      width: 90%;
+      max-width: 1200px;
       margin: 30px auto;
       display: flex;
       gap: 20px;
       align-items: stretch;
     }
 
-    /* Kolom */
     .kolom {
       flex: 1;
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
-    .kolom-tengah {
-      flex: 2;
-    }
-    .kolom-kanan {
-      flex: 1;
-    }
-    .kolom-kiri-bawah {
-      flex: 1;
-    }
-    .kolom-kanan-bawah {
-      flex: 2;
-    }
+
+    .kolom-tengah { flex: 2; }
+    .kolom-kanan { flex: 1; }
+    .kolom-kiri-bawah { flex: 1; }
+    .kolom-kanan-bawah { flex: 2; }
 
     /* Box umum */
     .box {
@@ -92,16 +91,18 @@ if (!isset($_SESSION['alamat_email'])) {
       display: flex;
       flex-direction: column;
     }
+
     .box h2 {
       margin-bottom: 15px;
       font-size: 20px;
     }
+
     .box p {
       font-size: 14px;
       line-height: 1.6;
     }
 
-    /* Foto placeholder */
+    /* Foto Placeholder */
     .foto {
       background: #ddd;
       border-radius: 8px;
@@ -121,21 +122,26 @@ if (!isset($_SESSION['alamat_email'])) {
       display: flex;
       flex-direction: column;
     }
+
     .stats h2 {
       margin-bottom: 15px;
     }
+
     .stat-boxes, .stat-boxes-bottom {
       display: grid;
       gap: 15px;
-      flex: 1; /* biar isi ikut membesar */
+      flex: 1;
     }
+
     .stat-boxes {
       grid-template-columns: repeat(3, 1fr);
     }
+
     .stat-boxes-bottom {
       grid-template-columns: repeat(2, 1fr);
       margin-top: 15px;
     }
+
     .stat-box {
       background: #eee;
       border-radius: 8px;
@@ -145,37 +151,40 @@ if (!isset($_SESSION['alamat_email'])) {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 120px; /* lebih tinggi */
+      min-height: 120px;
     }
 
+    /* Kutipan */
     .quote {
       display: block;
       text-align: center;
-      margin: 5% auto; /* beri jarak atas bawah */
+      margin: 5% auto;
       color: #555;
       font-style: italic;
       max-width: 900px;
       line-height: 1.6;
     }
 
+    /* Footer */
     footer {
       margin-top: 0;
       padding: 15px 5%;
       text-align: center;
-      background: #999999; /* sama dengan navbar */
-      font-size: 14px;
+      background: #000; /* Ubah jadi hitam */
       color: #fff;
-      border-top: 1px solid #ccc;
+      font-size: 14px;
+      border-top: 4px solid #ff0000; /* Garis merah di atas footer */
     }
+
     footer img {
       height: 20px;
       vertical-align: middle;
       margin-left: 5px;
     }
-    footer img:first-child {
-      height: 20px; /* samakan dengan logo PSI putih */
-    }
 
+    footer img:first-child {
+      height: 20px;
+    }
 
     /* Responsive */
     @media (max-width: 900px) {
@@ -201,7 +210,6 @@ if (!isset($_SESSION['alamat_email'])) {
 
 <!-- Container Atas -->
 <div class="container-atas">
-  <!-- Kolom Tengah -->
   <div class="kolom kolom-tengah">
     <div class="box">
       <h2>Selamat Datang di Website PSI<br>Entri Data Bantuan</h2>
@@ -213,7 +221,6 @@ if (!isset($_SESSION['alamat_email'])) {
     </div>
   </div>
 
-  <!-- Kolom Kanan -->
   <div class="kolom kolom-kanan">
     <div class="foto">[Foto]</div>
   </div>
@@ -221,13 +228,11 @@ if (!isset($_SESSION['alamat_email'])) {
 
 <!-- Container Bawah -->
 <div class="container-bawah">
-  <!-- Kolom Kiri Bawah -->
   <div class="kolom kolom-kiri-bawah">
     <div class="foto">[Foto]</div>
     <div class="foto">[Foto]</div>
   </div>
 
-  <!-- Kolom Kanan Bawah (Statistik) -->
   <div class="kolom kolom-kanan-bawah">
     <div class="box stats">
       <h2>Statistik</h2>
@@ -238,7 +243,7 @@ if (!isset($_SESSION['alamat_email'])) {
       </div>
       <div class="stat-boxes-bottom">
         <div class="stat-box">[Gaji dibawah UMR]</div>
-        <div class="stat-box">[Gaji dibawah UMR]</div>
+        <div class="stat-box">[Gaji diatas UMR]</div>
       </div>
     </div>
   </div>
@@ -248,12 +253,11 @@ if (!isset($_SESSION['alamat_email'])) {
   "Website PSI - Entri Data Bantuan membantu pencatatan bantuan jadi lebih transparan dan efisien."
 </i>
 
-
 <footer>
-    <img src="assets/image/logodprd.png" alt="dprd Logo">
-    <img src="assets/image/psiputih.png" alt="PSI Logo">
-    Hak cipta © 2025 - Partai Solidaritas Indonesia
-  </footer>
+  <img src="assets/image/logodprd.png" alt="dprd Logo">
+  <img src="assets/image/psiputih.png" alt="PSI Logo">
+  Hak cipta © 2025 - Partai Solidaritas Indonesia
+</footer>
 
 </body>
 </html>

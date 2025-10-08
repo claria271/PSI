@@ -1,9 +1,13 @@
+<?php
+// tambahdata.php
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Entri Data Keluarga</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * {
       margin: 0;
@@ -14,6 +18,7 @@
 
     body {
       background: #f5f5f5;
+      color: #333;
     }
 
     header {
@@ -33,17 +38,25 @@
     }
 
     .back-btn {
-      display: inline-block;
-      margin: 20px 0 0 10%;
-      font-size: 36px;
-      font-weight: 900;
-      color: #000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 25px 0 0 10%;
       text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      background: #ff4b4b;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
       transition: 0.3s;
     }
 
     .back-btn:hover {
-      color: #ff4b4b;
+      background: #e03c3c;
+      transform: scale(1.05);
     }
 
     h1 {
@@ -64,7 +77,7 @@
       width: 80%;
       max-width: 700px;
       background: #e9e9e9;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 25px auto;
       border-radius: 10px;
       padding: 30px;
     }
@@ -110,6 +123,7 @@
       background: #cfcfcf;
       border-radius: 10px;
       padding: 15px;
+      margin-top: 15px;
     }
 
     .summary-item {
@@ -123,20 +137,23 @@
     }
 
     .radio-group {
-      margin-bottom: 20px;
+      margin: 15px 0;
     }
 
     .radio-group label {
       display: flex;
       align-items: center;
+      gap: 10px;
       margin-bottom: 10px;
       font-weight: 500;
+      cursor: pointer;
     }
 
     .radio-group input[type="radio"] {
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
+      accent-color: #ff4b4b;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
     }
 
     .btn-container {
@@ -188,6 +205,7 @@
 
   <!-- FORM UTAMA -->
   <form action="proses_keluarga.php" method="POST">
+    
     <!-- FORM 1 -->
     <div class="container">
       <div class="section-title">Data Pribadi</div>
@@ -209,16 +227,23 @@
     <div class="container">
       <div class="section-title">Pendataan Daerah Pemilihan</div>
       <label>Pilih Daerah Pemilihan</label>
-      <select name="dapil">
-        <option>Dapil I</option>
-        <option>Dapil II</option>
+      <select name="dapil" id="dapil">
+        <option value="">-- Pilih Dapil --</option>
+        <option value="Dapil I">Dapil I</option>
+        <option value="Dapil II">Dapil II</option>
       </select>
 
       <label>Pilih Kecamatan</label>
-      <select name="kecamatan">
-        <option>Mulyorejo</option>
-        <option>Gubeng</option>
+      <select name="kecamatan" id="kecamatan">
+        <option value="">-- Pilih Kecamatan --</option>
+        <option value="Mulyorejo">Mulyorejo</option>
+        <option value="Gubeng">Gubeng</option>
       </select>
+
+      <div class="summary-box" id="summary">
+        <div class="summary-item"><span>Daerah Pemilihan</span><span>-</span></div>
+        <div class="summary-item"><span>Kecamatan</span><span>-</span></div>
+      </div>
     </div>
 
     <!-- FORM 3 -->
@@ -264,6 +289,45 @@
       <button type="reset" class="btn-reset">Kosongkan Form</button>
     </div>
   </form>
+
+  <script>
+    // Update summary box sesuai pilihan
+    const dapil = document.getElementById('dapil');
+    const kecamatan = document.getElementById('kecamatan');
+    const summary = document.getElementById('summary');
+
+    function updateSummary() {
+      const items = summary.querySelectorAll('.summary-item span:last-child');
+      items[0].textContent = dapil.value || '-';
+      items[1].textContent = kecamatan.value || '-';
+    }
+
+    dapil.addEventListener('change', updateSummary);
+    kecamatan.addEventListener('change', updateSummary);
+
+    // --- SweetAlert2 setelah submit ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+
+    if (status === 'success') {
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Data keluarga berhasil disimpan 🎉',
+        icon: 'success',
+        showConfirmButton: false,
+        timer: 2000
+      }).then(() => {
+        window.location.href = 'dashboard.php';
+      });
+    } else if (status === 'failed') {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Terjadi kesalahan saat menyimpan data 😥',
+        icon: 'error',
+        confirmButtonText: 'Coba Lagi'
+      });
+    }
+  </script>
 
 </body>
 </html>

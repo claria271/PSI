@@ -108,7 +108,7 @@ nav a:hover {
     </div>
     <nav>
       <a href="dashboard.php">Beranda</a>
-      <a href="tambah.php">Tambah Data</a>
+      <a href="tambahdata.php">Tambah Data</a>
       <a href="tentang.php">Tentang</a>
       <a href="kontak.php" class="active">Kontak</a>
     </nav>
