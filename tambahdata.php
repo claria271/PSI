@@ -93,38 +93,52 @@
       margin-bottom: 25px;
     }
 
-    .container {
-      width: 80%;
-      max-width: 700px;
-      background: #e9e9e9;
-      margin: 0 auto 25px auto;
-      border-radius: 10px;
-      padding: 30px;
-    }
+.container {
+  width: 80%;
+  max-width: 700px;
+  background: linear-gradient(to bottom, #c0c0c0ff, #6d6d6dff); /* gradasi vertikal abu muda ke abu tua */
+  margin: 0 auto 25px auto;
+  border-radius: 10px;
+  padding: 30px;
+  color: #fff; /* teks putih agar kontras dengan sisi bawah */
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
 
-    .section-title {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 20px;
-      font-size: 18px;
-    }
+/* Judul section */
+.section-title {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #fff;
+}
 
-    form label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
+/* Label */
+form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #fff;
+}
 
-    form input, 
-    form textarea,
-    form select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-      background-color: #f9f9f9;
-    }
+/* Input, textarea, dan select */
+form input, 
+form textarea,
+form select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  background-color: rgba(255, 255, 255, 0.9); /* putih semi transparan di atas gradasi */
+  color: #000;
+  font-weight: 500;
+}
+
+form textarea {
+  height: 80px;
+  resize: none;
+}
 
     form textarea {
       height: 80px;
@@ -247,7 +261,7 @@ footer img:first-child {
   </nav>
 </header>
 
-  <a class="back-btn" href="javascript:history.back()">←</a>
+  <!--<a class="back-btn" href="javascript:history.back()">←</a>-->
 
   <h1>Entri Data Keluarga</h1>
   <p class="subtitle">Masukkan Data Keluarga Dengan Akurat</p>
