@@ -17,36 +17,41 @@
       background: #f5f5f5;
       color: #000;
     }
-    /* Header */
-header {
-  background: #999999; /* warna abu-abu */
-  border-bottom: 1px solid #ddd;
-  padding: 12px 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-header .logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-header img {
-  height: 40px;
-}
-nav a {
-  margin: 0 15px;
-  text-decoration: none;
-  font-weight: bold;
-  color: #fff;
-}
-nav a:hover {
-  color: #ffcccc;
-}
+/* === HEADER dengan gradasi putih ke hitam === */
+    header {
+      background: linear-gradient(to right, #ffffff, #000000);
+      border-bottom: 1px solid #ddd;
+      padding: 12px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
+    header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header img {
+      height: 40px;
+    }
+
+    /* Navigasi */
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      color: #fff;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      color: #ff4b4b;
+    }
 
     /* Box utama */
     .container {
@@ -82,23 +87,27 @@ nav a:hover {
                   inset -2px -2px 5px rgba(255,255,255,0.1);
     }
 
-    footer {
-      margin-top: 0;
-      padding: 15px 5%;
-      text-align: center;
-      background: #999999; /* sama dengan navbar */
-      font-size: 14px;
-      color: #fff;
-      border-top: 1px solid #ccc;
-    }
-    footer img {
-      height: 20px;
-      vertical-align: middle;
-      margin-left: 5px;
-    }
-    footer img:first-child {
-      height: 20px; /* samakan dengan logo PSI putih */
-    }
+   footer {
+  margin-top: 0;
+  padding: 15px 5%;
+  text-align: center;
+  background: linear-gradient(to right, #ffffff, #000000); /* gradasi sama seperti header */
+  font-size: 14px;
+  color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+footer img {
+  height: 20px;
+  vertical-align: middle;
+  margin-left: 5px;
+  filter: brightness(0) invert(1); /* agar logo tetap terlihat di background gelap */
+}
+
+footer img:first-child {
+  height: 20px;
+}
+
   </style>
 </head>
 <body>
@@ -111,6 +120,7 @@ nav a:hover {
       <a href="tambahdata.php">Tambah Data</a>
       <a href="tentang.php">Tentang</a>
       <a href="kontak.php" class="active">Kontak</a>
+      <a href="profil.php">profil</a>
     </nav>
   </header>
 

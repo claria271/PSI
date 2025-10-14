@@ -20,21 +20,40 @@
       color: #333;
     }
 
-    /* Header */
+   /* === HEADER dengan gradasi putih ke hitam === */
     header {
-      background: #d9d9d9;
+      background: linear-gradient(to right, #ffffff, #000000);
+      border-bottom: 1px solid #ddd;
+      padding: 12px 40px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     header img {
       height: 40px;
     }
 
-    header .user {
-      font-weight: 500;
+    /* Navigasi */
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      color: #fff;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      color: #ff4b4b;
     }
 
     /* Tombol kembali */
@@ -195,14 +214,43 @@
     .btn-reset:hover {
       background-color: #8b8b8b;
     }
+    footer {
+  margin-top: 0;
+  padding: 15px 5%;
+  text-align: center;
+  background: linear-gradient(to right, #ffffff, #000000); /* gradasi sama seperti header */
+  font-size: 14px;
+  color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+footer img {
+  height: 20px;
+  vertical-align: middle;
+  margin-left: 5px;
+  filter: brightness(0) invert(1); /* agar logo tetap terlihat di background gelap */
+}
+
+footer img:first-child {
+  height: 20px;
+}
+
   </style>
 </head>
 <body>
 
   <header>
-    <img src="assets/image/logo.png" alt="Logo PSI">
-    <div class="user">Sugeng ⚙️</div>
-  </header>
+  <div class="logo">
+    <img src="assets/image/logo.png" alt="PSI">
+  </div>
+  <nav>
+    <a href="dashboard.php">Beranda</a>
+    <a href="tambahdata.php">Tambah Data</a>
+    <a href="tentang.php">Tentang</a>
+    <a href="kontak.php">Kontak</a>
+    <a href="profil.php">profil</a>
+  </nav>
+</header>
 
   <a class="back-btn" href="javascript:history.back()">←</a>
 
@@ -317,6 +365,10 @@
     dapil.addEventListener('change', updateSummary);
     kecamatan.addEventListener('change', updateSummary);
   </script>
-
+<footer>
+    <img src="assets/image/logodprd.png" alt="dprd Logo">
+    <img src="assets/image/psiputih.png" alt="PSI Logo">
+    Hak cipta © 2025 - Partai Solidaritas Indonesia
+  </footer>
 </body>
 </html>
