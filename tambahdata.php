@@ -7,6 +7,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Entri Data Keluarga</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * {
       margin: 0;
@@ -20,7 +21,7 @@
       color: #333;
     }
 
-   /* === HEADER dengan gradasi putih ke hitam === */
+    /* Header */
     header {
       background: linear-gradient(to right, #ffffff, #000000);
       border-bottom: 1px solid #ddd;
@@ -56,7 +57,6 @@
       color: #ff4b4b;
     }
 
-    /* Tombol kembali */
     .back-btn {
       display: inline-flex;
       align-items: center;
@@ -79,7 +79,6 @@
       transform: scale(1.05);
     }
 
-    /* Judul halaman */
     h1 {
       text-align: center;
       font-size: 26px;
@@ -94,7 +93,6 @@
       margin-bottom: 25px;
     }
 
-    /* Container umum */
     .container {
       width: 80%;
       max-width: 700px;
@@ -141,7 +139,6 @@
       font-size: 12px;
     }
 
-    /* Summary Box */
     .summary-box {
       background: #cfcfcf;
       border-radius: 10px;
@@ -159,7 +156,6 @@
       font-size: 14px;
     }
 
-    /* Radio Group */
     .radio-group {
       margin: 15px 0;
     }
@@ -180,7 +176,6 @@
       cursor: pointer;
     }
 
-    /* Tombol */
     .btn-container {
       width: 80%;
       max-width: 700px;
@@ -257,38 +252,38 @@ footer img:first-child {
   <h1>Entri Data Keluarga</h1>
   <p class="subtitle">Masukkan Data Keluarga Dengan Akurat</p>
 
-  <!-- FORM 1 -->
-  <div class="container">
-    <div class="section-title">Data Pribadi</div>
-    <form>
+  <!-- FORM UTAMA -->
+  <form action="proses_keluarga.php" method="POST">
+    
+    <!-- FORM 1 -->
+    <div class="container">
+      <div class="section-title">Data Pribadi</div>
       <label>Nama Lengkap</label>
-      <input type="text" placeholder="Mawar Lenjana" disabled>
+      <input type="text" name="nama_lengkap" placeholder="Mawar Lenjana" required>
 
       <label>NIK (Nomor Induk Kependudukan)</label>
-      <input type="text" placeholder="10050983728200938">
+      <input type="text" name="nik" placeholder="10050983728200938">
       <small>*opsional</small>
 
       <label>No WhatsApp</label>
-      <input type="text" placeholder="082264780939">
+      <input type="text" name="no_wa" placeholder="082264780939">
 
       <label>Alamat Lengkap</label>
-      <textarea placeholder="Ketintang Madya No.12"></textarea>
-    </form>
-  </div>
+      <textarea name="alamat" placeholder="Ketintang Madya No.12"></textarea>
+    </div>
 
-  <!-- FORM 2 -->
-  <div class="container">
-    <div class="section-title">Pendataan Daerah Pemilihan</div>
-    <form id="form-dapil">
+    <!-- FORM 2 -->
+    <div class="container">
+      <div class="section-title">Pendataan Daerah Pemilihan</div>
       <label>Pilih Daerah Pemilihan</label>
-      <select id="dapil">
+      <select name="dapil" id="dapil">
         <option value="">-- Pilih Dapil --</option>
         <option value="Dapil I">Dapil I</option>
         <option value="Dapil II">Dapil II</option>
       </select>
 
       <label>Pilih Kecamatan</label>
-      <select id="kecamatan">
+      <select name="kecamatan" id="kecamatan">
         <option value="">-- Pilih Kecamatan --</option>
         <option value="Mulyorejo">Mulyorejo</option>
         <option value="Gubeng">Gubeng</option>
@@ -298,57 +293,51 @@ footer img:first-child {
         <div class="summary-item"><span>Daerah Pemilihan</span><span>-</span></div>
         <div class="summary-item"><span>Kecamatan</span><span>-</span></div>
       </div>
-    </form>
-  </div>
+    </div>
 
-  <!-- FORM 3 -->
-  <div class="container">
-    <div class="section-title">Data Ekonomi Keluarga</div>
-    <form>
+    <!-- FORM 3 -->
+    <div class="container">
+      <div class="section-title">Data Ekonomi Keluarga</div>
       <label>Jumlah Anggota Keluarga</label>
-      <input type="number" placeholder="4">
+      <input type="number" name="jumlah_anggota" placeholder="4">
       <small>*Jumlah anggota termasuk kepala keluarga</small>
 
       <label>Jumlah Orang yang Bekerja</label>
-      <select>
+      <select name="jumlah_bekerja">
         <option>1</option><option>2</option><option>3</option>
       </select>
 
       <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
-      <select>
+      <select name="total_penghasilan">
         <option>< Rp 1.000.000</option>
         <option>Rp 1.000.000 - Rp 3.000.000</option>
         <option>Rp 3.000.000 - Rp 5.000.000</option>
         <option>> Rp 5.000.000</option>
       </select>
-      <small>*Jumlahkan semua penghasilan dari seluruh anggota keluarga yang bekerja</small>
-    </form>
-  </div>
+    </div>
 
-  <!-- FORM 4 -->
-  <div class="container">
-    <div class="section-title">Informasi</div>
-    <form>
+    <!-- FORM 4 -->
+    <div class="container">
+      <div class="section-title">Informasi</div>
       <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael</b></p>
       <div class="radio-group">
-        <label><input type="radio" name="kenal"> Ya</label>
-        <label><input type="radio" name="kenal"> Tidak Pernah</label>
+        <label><input type="radio" name="kenal" value="Ya"> Ya</label>
+        <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
       </div>
 
       <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael</b></p>
       <div class="radio-group">
-        <label><input type="radio" name="sumber"> Kegiatan PSI Surabaya</label>
-        <label><input type="radio" name="sumber"> Dari teman atau relasi</label>
-        <label><input type="radio" name="sumber"> Lainnya ___________________</label>
+        <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
+        <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
+        <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
       </div>
-    </form>
-  </div>
+    </div>
 
-  <!-- Tombol -->
-  <div class="btn-container">
-    <button type="submit">Simpan Data</button>
-    <button type="reset" class="btn-reset">Kosongkan Form</button>
-  </div>
+    <div class="btn-container">
+      <button type="submit">Simpan Data</button>
+      <button type="reset" class="btn-reset">Kosongkan Form</button>
+    </div>
+  </form>
 
   <script>
     // Update summary box sesuai pilihan
@@ -364,6 +353,29 @@ footer img:first-child {
 
     dapil.addEventListener('change', updateSummary);
     kecamatan.addEventListener('change', updateSummary);
+
+    // --- SweetAlert2 setelah submit ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+
+    if (status === 'success') {
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Data keluarga berhasil disimpan 🎉',
+        icon: 'success',
+        showConfirmButton: false,
+        timer: 2000
+      }).then(() => {
+        window.location.href = 'dashboard.php';
+      });
+    } else if (status === 'failed') {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Terjadi kesalahan saat menyimpan data 😥',
+        icon: 'error',
+        confirmButtonText: 'Coba Lagi'
+      });
+    }
   </script>
 <footer>
     <img src="assets/image/logodprd.png" alt="dprd Logo">
