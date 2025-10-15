@@ -168,7 +168,7 @@ footer img:first-child {
 <body>
   <header>
     <div class="logo">
-      <img src="assets/image/logo.png" alt="PSI Logo">
+      <img src="../assets/image/logo.png" alt="PSI Logo">
     </div>
     <nav>
       <a href="dashboard.php">Beranda</a>
@@ -224,12 +224,12 @@ footer img:first-child {
         yang terbuka, adil, dan akuntabel.
       </p>
     </div>
-    <img src="assets/image/logo.png" alt="Logo DPRD">
+    <img src="../assets/image/logo.png" alt="Logo DPRD">
   </div>
 
   <footer>
-    <img src="assets/image/logodprd.png" alt="dprd Logo">
-    <img src="assets/image/psiputih.png" alt="PSI Logo">
+    <img src="../assets/image/logodprd.png" alt="dprd Logo">
+    <img src="../assets/image/psiputih.png" alt="PSI Logo">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
 </body>
