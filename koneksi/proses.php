@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['alamat_email'] = $user['alamat_email'];
 
             // Arahkan ke index
-            header("Location: user/dashboard.php");
+            header("Location:../user/dashboard.php");
             exit();
         } else {
             echo "<script>alert('Password salah!'); window.location.href='login.php';</script>";
