@@ -138,7 +138,7 @@ $email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
         </div>
 
         <button type="submit" class="btn btn-primary">Masuk</button>
-        <a href="register.php"><button type="button" class="btn btn-secondary">Daftar</button></a>
+        <a href="user/register.php"><button type="button" class="btn btn-secondary">Daftar</button></a>
       </form>
     </div>
   </div>
