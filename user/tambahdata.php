@@ -93,52 +93,44 @@
       margin-bottom: 25px;
     }
 
-.container {
-  width: 80%;
-  max-width: 700px;
-  background: linear-gradient(to bottom, #c0c0c0ff, #6d6d6dff); /* gradasi vertikal abu muda ke abu tua */
-  margin: 0 auto 25px auto;
-  border-radius: 10px;
-  padding: 30px;
-  color: #fff; /* teks putih agar kontras dengan sisi bawah */
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-}
+    .container {
+      width: 80%;
+      max-width: 700px;
+      background: linear-gradient(to bottom, #c0c0c0ff, #6d6d6dff);
+      margin: 0 auto 25px auto;
+      border-radius: 10px;
+      padding: 30px;
+      color: #fff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
 
-/* Judul section */
-.section-title {
-  text-align: center;
-  font-weight: bold;
-  margin-bottom: 20px;
-  font-size: 18px;
-  color: #fff;
-}
+    .section-title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #fff;
+    }
 
-/* Label */
-form label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: #fff;
-}
+    form label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #fff;
+    }
 
-/* Input, textarea, dan select */
-form input, 
-form textarea,
-form select {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin-bottom: 20px;
-  background-color: rgba(255, 255, 255, 0.9); /* putih semi transparan di atas gradasi */
-  color: #000;
-  font-weight: 500;
-}
-
-form textarea {
-  height: 80px;
-  resize: none;
-}
+    form input, 
+    form textarea,
+    form select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      background-color: rgba(255, 255, 255, 0.9);
+      color: #000;
+      font-weight: 500;
+    }
 
     form textarea {
       height: 80px;
@@ -223,52 +215,48 @@ form textarea {
     .btn-reset:hover {
       background-color: #8b8b8b;
     }
+
     footer {
-  margin-top: 0;
-  padding: 15px 5%;
-  text-align: center;
-  background: linear-gradient(to right, #ffffff, #000000); /* gradasi sama seperti header */
-  font-size: 14px;
-  color: #fff;
-  border-top: 1px solid #ccc;
-}
+      margin-top: 0;
+      padding: 15px 5%;
+      text-align: center;
+      background: linear-gradient(to right, #ffffff, #000000);
+      font-size: 14px;
+      color: #fff;
+      border-top: 1px solid #ccc;
+    }
 
-footer img {
-  height: 20px;
-  vertical-align: middle;
-  margin-left: 5px;
-  filter: brightness(0) invert(1); /* agar logo tetap terlihat di background gelap */
-}
+    footer img {
+      height: 20px;
+      vertical-align: middle;
+      margin-left: 5px;
+      filter: brightness(0) invert(1);
+    }
 
-footer img:first-child {
-  height: 20px;
-}
-
+    footer img:first-child {
+      height: 20px;
+    }
   </style>
 </head>
 <body>
 
   <header>
-  <div class="logo">
-    <img src="../assets/image/logo.png" alt="PSI">
-  </div>
-  <nav>
-    <a href="dashboard.php">Beranda</a>
-    <a href="tambahdata.php">Tambah Data</a>
-    <a href="tentang.php">Tentang</a>
-    <a href="kontak.php">Kontak</a>
-    <a href="profil.php">profil</a>
-  </nav>
-</header>
-
-  <!--<a class="back-btn" href="javascript:history.back()">←</a>-->
+    <div class="logo">
+      <img src="../assets/image/logo.png" alt="PSI">
+    </div>
+    <nav>
+      <a href="dashboard.php">Beranda</a>
+      <a href="tambahdata.php">Tambah Data</a>
+      <a href="tentang.php">Tentang</a>
+      <a href="kontak.php">Kontak</a>
+      <a href="profil.php">Profil</a>
+    </nav>
+  </header>
 
   <h1>Entri Data Keluarga</h1>
   <p class="subtitle">Masukkan Data Keluarga Dengan Akurat</p>
 
-  <!-- FORM UTAMA -->
   <form action="proses_keluarga.php" method="POST">
-    
     <!-- FORM 1 -->
     <div class="container">
       <div class="section-title">Data Pribadi</div>
@@ -290,17 +278,18 @@ footer img:first-child {
     <div class="container">
       <div class="section-title">Pendataan Daerah Pemilihan</div>
       <label>Pilih Daerah Pemilihan</label>
-      <select name="dapil" id="dapil">
+      <select name="dapil" id="dapil" required>
         <option value="">-- Pilih Dapil --</option>
-        <option value="Dapil I">Dapil I</option>
-        <option value="Dapil II">Dapil II</option>
+        <option value="Kota Surabaya 1">Kota Surabaya 1</option>
+        <option value="Kota Surabaya 2">Kota Surabaya 2</option>
+        <option value="Kota Surabaya 3">Kota Surabaya 3</option>
+        <option value="Kota Surabaya 4">Kota Surabaya 4</option>
+        <option value="Kota Surabaya 5">Kota Surabaya 5</option>
       </select>
 
       <label>Pilih Kecamatan</label>
-      <select name="kecamatan" id="kecamatan">
+      <select name="kecamatan" id="kecamatan" required>
         <option value="">-- Pilih Kecamatan --</option>
-        <option value="Mulyorejo">Mulyorejo</option>
-        <option value="Gubeng">Gubeng</option>
       </select>
 
       <div class="summary-box" id="summary">
@@ -333,13 +322,13 @@ footer img:first-child {
     <!-- FORM 4 -->
     <div class="container">
       <div class="section-title">Informasi</div>
-      <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael</b></p>
+      <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
       <div class="radio-group">
         <label><input type="radio" name="kenal" value="Ya"> Ya</label>
         <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
       </div>
 
-      <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael</b></p>
+      <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
       <div class="radio-group">
         <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
         <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
@@ -354,10 +343,33 @@ footer img:first-child {
   </form>
 
   <script>
-    // Update summary box sesuai pilihan
     const dapil = document.getElementById('dapil');
     const kecamatan = document.getElementById('kecamatan');
     const summary = document.getElementById('summary');
+
+    // Pembagian 5 Dapil Kota Surabaya
+    const dataDapil = {
+      "Kota Surabaya 1": ["Bubutan", "Genteng", "Gubeng", "Krembangan", "Simokerto", "Tegalsari"],
+      "Kota Surabaya 2": ["Kenjeran", "Pabean Cantikan", "Semampir", "Tambaksari"],
+      "Kota Surabaya 3": ["Bulak", "Gunung Anyar", "Mulyorejo", "Rungkut", "Sukolilo", "Tenggilis Mejoyo", "Wonocolo"],
+      "Kota Surabaya 4": ["Gayungan", "Jambangan", "Sawahan", "Sukomanunggal", "Wonokromo"],
+      "Kota Surabaya 5": ["Asemrowo", "Benowo", "Dukuhpakis", "Karangpilang", "Lakarsantri", "Pakal", "Sambikerep", "Tandes", "Wiyung"]
+    };
+
+    dapil.addEventListener('change', () => {
+      const selectedDapil = dapil.value;
+      kecamatan.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+
+      if (dataDapil[selectedDapil]) {
+        dataDapil[selectedDapil].forEach(kec => {
+          const option = document.createElement('option');
+          option.value = kec;
+          option.textContent = kec;
+          kecamatan.appendChild(option);
+        });
+      }
+      updateSummary();
+    });
 
     function updateSummary() {
       const items = summary.querySelectorAll('.summary-item span:last-child');
@@ -365,10 +377,9 @@ footer img:first-child {
       items[1].textContent = kecamatan.value || '-';
     }
 
-    dapil.addEventListener('change', updateSummary);
     kecamatan.addEventListener('change', updateSummary);
 
-    // --- SweetAlert2 setelah submit ---
+    // SweetAlert2 setelah submit
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status');
 
@@ -391,7 +402,8 @@ footer img:first-child {
       });
     }
   </script>
-<footer>
+
+  <footer>
     <img src="../assets/image/logodprd.png" alt="dprd Logo">
     <img src="../assets/image/psiputih.png" alt="PSI Logo">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
