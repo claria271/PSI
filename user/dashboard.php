@@ -205,7 +205,7 @@ footer img:first-child {
     <a href="tambahdata.php">Tambah Data</a>
     <a href="tentang.php">Tentang</a>
     <a href="kontak.php">Kontak</a>
-    <a href="profil.php">profil</a>
+    <a href="profil.php">Profil</a>
   </nav>
 </header>
 
@@ -213,7 +213,7 @@ footer img:first-child {
 <div class="container-atas">
   <div class="kolom kolom-tengah">
     <div class="box">
-      <h2>Selamat Datang di Website PSI<br>Entri Data Bantuan</h2>
+      <h2>Selamat Datang di Website PSI<br>Entri Data Keluarga</h2>
       <p>
         Kami hadir untuk menghadirkan kemudahan, kecepatan, dan transparansi dalam pengelolaan data bantuan.
         Dengan sistem yang terintegrasi, setiap informasi tercatat dengan rapi, akurat, dan dapat diakses secara aman.
@@ -251,7 +251,7 @@ footer img:first-child {
 </div>
 
 <i class="quote">
-  "Website PSI - Entri Data Bantuan membantu pencatatan bantuan jadi lebih transparan dan efisien."
+  "Website PSI - Entri Data Keluarga"
 </i>
 
 <footer>

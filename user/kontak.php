@@ -120,7 +120,7 @@ footer img:first-child {
       <a href="tambahdata.php">Tambah Data</a>
       <a href="tentang.php">Tentang</a>
       <a href="kontak.php" class="active">Kontak</a>
-      <a href="profil.php">profil</a>
+      <a href="profil.php">Profil</a>
     </nav>
   </header>
 
