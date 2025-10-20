@@ -19,6 +19,7 @@
     body {
       background: #f5f5f5;
       color: #333;
+      overflow-x: hidden;
     }
 
     /* Header */
@@ -42,6 +43,7 @@
 
     header img {
       height: 40px;
+      cursor: pointer;
     }
 
     /* Navigasi */
@@ -57,28 +59,6 @@
       color: #ff4b4b;
     }
 
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin: 25px 0 0 10%;
-      text-decoration: none;
-      font-size: 18px;
-      font-weight: 600;
-      background: #ff4b4b;
-      color: white;
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-      transition: 0.3s;
-    }
-
-    .back-btn:hover {
-      background: #e03c3c;
-      transform: scale(1.05);
-    }
-
     h1 {
       text-align: center;
       font-size: 26px;
@@ -86,21 +66,38 @@
       margin-bottom: 5px;
     }
 
-    .subtitle {
-      text-align: center;
-      font-size: 13px;
-      color: #777;
-      margin-bottom: 25px;
-    }
-
     .container {
       width: 80%;
       max-width: 700px;
-      background: linear-gradient(to bottom, #c0c0c0ff, #6d6d6dff);
+      background: linear-gradient(to bottom, #c6c6c6ff, #757575ff);
       margin: 0 auto 25px auto;
       border-radius: 10px;
       padding: 30px;
       color: #fff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+      transition: transform 0.6s ease, opacity 0.4s ease;
+    }
+
+    .form-slider {
+      display: flex;
+      width: 400%;
+      transition: transform 0.6s ease;
+    }
+
+    .form-wrapper {
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .container1 {
+      width: 80%;
+      max-width: 700px;
+      background-color: rgba(255, 255, 255, 0.9);
+      margin: 0 auto 25px auto;
+      border-radius: 10px;
+      padding: 30px;
+      color: #000000ff;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
     }
 
@@ -145,47 +142,10 @@
       font-size: 12px;
     }
 
-    .summary-box {
-      background: #cfcfcf;
-      border-radius: 10px;
-      padding: 15px;
-      margin-top: 15px;
-    }
-
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      background: #bfbfbf;
-      padding: 8px 10px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .radio-group {
-      margin: 15px 0;
-    }
-
-    .radio-group label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .radio-group input[type="radio"] {
-      accent-color: #ff4b4b;
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
     .btn-container {
       width: 80%;
       max-width: 700px;
-      margin: 10px auto 40px auto;
+      margin: 20px auto 40px auto;
       display: flex;
       justify-content: space-between;
       gap: 20px;
@@ -233,16 +193,37 @@
       filter: brightness(0) invert(1);
     }
 
-    footer img:first-child {
-      height: 20px;
+    /* Tombol navigasi slide */
+    .nav-slide {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px;
     }
+
+    .nav-slide button {
+      background: #ff4b4b;
+      color: #fff;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .nav-slide button:hover {
+      background: #e03c3c;
+      transform: scale(1.05);
+    }
+
   </style>
 </head>
 <body>
 
   <header>
     <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI">
+      <a href="../index.php"><img src="../assets/image/logo.png" alt="PSI"></a>
     </div>
     <nav>
       <a href="tambahdata.php">Tambah Data</a>
@@ -250,87 +231,99 @@
     </nav>
   </header>
 
-  <h1>Entri Data Keluarga</h1>
-  <p class="subtitle">Masukkan Data Keluarga Dengan Akurat</p>
+  <h1>Silahkan lengkapi data keluarga Anda untuk lanjut ke halaman utama</h1>
+  
+  <div class="container1">
+    <h1>ENTRI DATA KELUARGA</h1>
+    <p>Silakan lengkapi data keluarga Anda sesuai dengan form di bawah ini.</p>
+  </div>
 
   <form action="proses_keluarga.php" method="POST">
-    <!-- FORM 1 -->
-    <div class="container">
-      <div class="section-title">Data Pribadi</div>
-      <label>Nama Lengkap</label>
-      <input type="text" name="nama_lengkap" placeholder="Mawar Lenjana" required>
+    <div class="form-wrapper">
+      <div class="form-slider">
+        
+        <!-- FORM 1 -->
+        <div class="container">
+          <div class="section-title">Data Pribadi</div>
+          <label>Nama Lengkap</label>
+          <input type="text" name="nama_lengkap" placeholder="Mawar Lenjana" required>
+          <label>NIK (Nomor Induk Kependudukan)</label>
+          <input type="text" name="nik" placeholder="10050983728200938">
+          <small>*opsional</small>
+          <label>No WhatsApp</label>
+          <input type="text" name="no_wa" placeholder="082264780939">
+          <label>Alamat Lengkap</label>
+          <textarea name="alamat" placeholder="Ketintang Madya No.12"></textarea>
+        </div>
 
-      <label>NIK (Nomor Induk Kependudukan)</label>
-      <input type="text" name="nik" placeholder="10050983728200938">
-      <small>*opsional</small>
+        <!-- FORM 2 -->
+        <div class="container">
+          <div class="section-title">Pendataan Daerah Pemilihan</div>
+          <label>Pilih Daerah Pemilihan</label>
+          <select name="dapil" id="dapil" required>
+            <option value="">-- Pilih Dapil --</option>
+            <option value="Kota Surabaya 1">Kota Surabaya 1</option>
+            <option value="Kota Surabaya 2">Kota Surabaya 2</option>
+            <option value="Kota Surabaya 3">Kota Surabaya 3</option>
+            <option value="Kota Surabaya 4">Kota Surabaya 4</option>
+            <option value="Kota Surabaya 5">Kota Surabaya 5</option>
+          </select>
 
-      <label>No WhatsApp</label>
-      <input type="text" name="no_wa" placeholder="082264780939">
+          <label>Pilih Kecamatan</label>
+          <select name="kecamatan" id="kecamatan" required>
+            <option value="">-- Pilih Kecamatan --</option>
+          </select>
 
-      <label>Alamat Lengkap</label>
-      <textarea name="alamat" placeholder="Ketintang Madya No.12"></textarea>
-    </div>
+          <div class="summary-box" id="summary">
+            <div class="summary-item"><span>Daerah Pemilihan</span><span>-</span></div>
+            <div class="summary-item"><span>Kecamatan</span><span>-</span></div>
+          </div>
+        </div>
 
-    <!-- FORM 2 -->
-    <div class="container">
-      <div class="section-title">Pendataan Daerah Pemilihan</div>
-      <label>Pilih Daerah Pemilihan</label>
-      <select name="dapil" id="dapil" required>
-        <option value="">-- Pilih Dapil --</option>
-        <option value="Kota Surabaya 1">Kota Surabaya 1</option>
-        <option value="Kota Surabaya 2">Kota Surabaya 2</option>
-        <option value="Kota Surabaya 3">Kota Surabaya 3</option>
-        <option value="Kota Surabaya 4">Kota Surabaya 4</option>
-        <option value="Kota Surabaya 5">Kota Surabaya 5</option>
-      </select>
+        <!-- FORM 3 -->
+        <div class="container">
+          <div class="section-title">Data Ekonomi Keluarga</div>
+          <label>Jumlah Anggota Keluarga</label>
+          <input type="number" name="jumlah_anggota" placeholder="4">
+          <small>*Jumlah anggota termasuk kepala keluarga</small>
 
-      <label>Pilih Kecamatan</label>
-      <select name="kecamatan" id="kecamatan" required>
-        <option value="">-- Pilih Kecamatan --</option>
-      </select>
+          <label>Jumlah Orang yang Bekerja</label>
+          <select name="jumlah_bekerja">
+            <option>1</option><option>2</option><option>3</option>
+          </select>
 
-      <div class="summary-box" id="summary">
-        <div class="summary-item"><span>Daerah Pemilihan</span><span>-</span></div>
-        <div class="summary-item"><span>Kecamatan</span><span>-</span></div>
+          <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
+          <select name="total_penghasilan">
+            <option>< Rp 1.000.000</option>
+            <option>Rp 1.000.000 - Rp 3.000.000</option>
+            <option>Rp 3.000.000 - Rp 5.000.000</option>
+            <option>> Rp 5.000.000</option>
+          </select>
+        </div>
+
+        <!-- FORM 4 -->
+        <div class="container">
+          <div class="section-title">Informasi</div>
+          <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+          <div class="radio-group">
+            <label><input type="radio" name="kenal" value="Ya"> Ya</label>
+            <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
+          </div>
+          <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+          <div class="radio-group">
+            <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
+            <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
+            <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- FORM 3 -->
-    <div class="container">
-      <div class="section-title">Data Ekonomi Keluarga</div>
-      <label>Jumlah Anggota Keluarga</label>
-      <input type="number" name="jumlah_anggota" placeholder="4">
-      <small>*Jumlah anggota termasuk kepala keluarga</small>
-
-      <label>Jumlah Orang yang Bekerja</label>
-      <select name="jumlah_bekerja">
-        <option>1</option><option>2</option><option>3</option>
-      </select>
-
-      <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
-      <select name="total_penghasilan">
-        <option>< Rp 1.000.000</option>
-        <option>Rp 1.000.000 - Rp 3.000.000</option>
-        <option>Rp 3.000.000 - Rp 5.000.000</option>
-        <option>> Rp 5.000.000</option>
-      </select>
-    </div>
-
-    <!-- FORM 4 -->
-    <div class="container">
-      <div class="section-title">Informasi</div>
-      <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-      <div class="radio-group">
-        <label><input type="radio" name="kenal" value="Ya"> Ya</label>
-        <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
-      </div>
-
-      <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-      <div class="radio-group">
-        <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
-        <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
-        <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
-      </div>
+    <!-- Tombol Navigasi -->
+    <div class="nav-slide">
+      <button type="button" id="prevBtn">← Sebelumnya</button>
+      <button type="button" id="nextBtn">Selanjutnya →</button>
     </div>
 
     <div class="btn-container">
@@ -340,29 +333,32 @@
   </form>
 
   <script>
+    // Logo klik balik ke index
+    document.querySelector('header img').addEventListener('click', () => {
+      window.location.href = '../index.php';
+    });
+
     const dapil = document.getElementById('dapil');
     const kecamatan = document.getElementById('kecamatan');
     const summary = document.getElementById('summary');
 
-    // Pembagian 5 Dapil Kota Surabaya
     const dataDapil = {
-      "Kota Surabaya 1": ["Bubutan", "Genteng", "Gubeng", "Krembangan", "Simokerto", "Tegalsari"],
-      "Kota Surabaya 2": ["Kenjeran", "Pabean Cantikan", "Semampir", "Tambaksari"],
-      "Kota Surabaya 3": ["Bulak", "Gunung Anyar", "Mulyorejo", "Rungkut", "Sukolilo", "Tenggilis Mejoyo", "Wonocolo"],
-      "Kota Surabaya 4": ["Gayungan", "Jambangan", "Sawahan", "Sukomanunggal", "Wonokromo"],
-      "Kota Surabaya 5": ["Asemrowo", "Benowo", "Dukuhpakis", "Karangpilang", "Lakarsantri", "Pakal", "Sambikerep", "Tandes", "Wiyung"]
+      "Kota Surabaya 1": ["Bubutan","Genteng","Gubeng","Krembangan","Simokerto","Tegalsari"],
+      "Kota Surabaya 2": ["Kenjeran","Pabean Cantikan","Semampir","Tambaksari"],
+      "Kota Surabaya 3": ["Bulak","Gunung Anyar","Mulyorejo","Rungkut","Sukolilo","Tenggilis Mejoyo","Wonocolo"],
+      "Kota Surabaya 4": ["Gayungan","Jambangan","Sawahan","Sukomanunggal","Wonokromo"],
+      "Kota Surabaya 5": ["Asemrowo","Benowo","Dukuhpakis","Karangpilang","Lakarsantri","Pakal","Sambikerep","Tandes","Wiyung"]
     };
 
     dapil.addEventListener('change', () => {
-      const selectedDapil = dapil.value;
+      const selected = dapil.value;
       kecamatan.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
-
-      if (dataDapil[selectedDapil]) {
-        dataDapil[selectedDapil].forEach(kec => {
-          const option = document.createElement('option');
-          option.value = kec;
-          option.textContent = kec;
-          kecamatan.appendChild(option);
+      if (dataDapil[selected]) {
+        dataDapil[selected].forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = k;
+          kecamatan.appendChild(opt);
         });
       }
       updateSummary();
@@ -373,29 +369,54 @@
       items[0].textContent = dapil.value || '-';
       items[1].textContent = kecamatan.value || '-';
     }
-
     kecamatan.addEventListener('change', updateSummary);
 
-    // SweetAlert2 setelah submit
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
+    // SLIDER NAVIGATION
+    const slider = document.querySelector('.form-slider');
+    const slides = document.querySelectorAll('.container');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    let index = 0;
 
-    if (status === 'success') {
+    function updateSlide() {
+      slider.style.transform = `translateX(-${index * 100}%)`;
+      prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
+      nextBtn.textContent = index === slides.length - 1 ? 'Selesai' : 'Selanjutnya →';
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (index < slides.length - 1) {
+        index++;
+        updateSlide();
+      } else {
+        document.querySelector('form').submit();
+      }
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (index > 0) {
+        index--;
+        updateSlide();
+      }
+    });
+
+    updateSlide();
+
+    // SweetAlert
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('status') === 'success') {
       Swal.fire({
         title: 'Berhasil!',
         text: 'Data keluarga berhasil disimpan 🎉',
         icon: 'success',
-        showConfirmButton: false,
-        timer: 2000
-      }).then(() => {
-        window.location.href = 'dashboard.php';
-      });
-    } else if (status === 'failed') {
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => window.location.href = 'dashboard.php');
+    } else if (params.get('status') === 'failed') {
       Swal.fire({
         title: 'Gagal!',
         text: 'Terjadi kesalahan saat menyimpan data 😥',
-        icon: 'error',
-        confirmButtonText: 'Coba Lagi'
+        icon: 'error'
       });
     }
   </script>
