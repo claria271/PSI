@@ -71,10 +71,10 @@ session_start(); // penting untuk mendeteksi status login
       <img src="assets/image/logo.png" alt="PSI Logo">
     </div>
     <nav class="d-flex align-items-center">
-      <a href="dashboard.php">Beranda</a>
-      <a href="tambahdata.php">Tambah Data</a>
-      <a href="tentang.php">Tentang</a>
-      <a href="kontak.php">Kontak</a>
+      <!-- <a href="dashboard.php">Beranda</a> -->
+      <!-- <a href="tambahdata.php">Tambah Data</a> -->
+      <!-- <a href="tentang.php">Tentang</a> -->
+      <!-- <a href="kontak.php">Kontak</a> -->
 
       <?php if (isset($_SESSION['user_id'])): ?>
         <!-- Jika sudah login -->
