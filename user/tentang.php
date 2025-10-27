@@ -171,8 +171,6 @@ footer img:first-child {
       <img src="../assets/image/logo.png" alt="PSI Logo">
     </div>
     <nav>
-      <a href="dashboard.php">Beranda</a>
-      <a href="tambahdata.php">Tambah Data</a>
       <a href="tentang.php">Tentang</a>
       <a href="kontak.php">Kontak</a>
       <a href="profil.php">Profil</a>
