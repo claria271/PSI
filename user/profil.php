@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'koneksi/config.php';
+include '../koneksi/config.php';
 
 // Pastikan user sudah login
 if (!isset($_SESSION['alamat_email'])) {
@@ -104,7 +104,7 @@ $user = $result->fetch_assoc();
           <h3><?= htmlspecialchars($user['nama_lengkap']); ?></h3>
           <p><?= htmlspecialchars($user['alamat_email']); ?></p>
         </div>
-        <a href="edit_profil.php" style="text-decoration:none;">✏️</a>
+        <a href="editprofil.php" style="text-decoration:none;">✏️</a>
       </div>
 
       <button class="btn" onclick="window.location.href='edit_profil.php'">Edit Data</button>
