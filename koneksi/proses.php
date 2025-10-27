@@ -22,15 +22,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['id']; 
             $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
             $_SESSION['alamat_email'] = $user['alamat_email'];
+            $_SESSION['role'] = $user['role'];
 
-            // Arahkan ke index
-            header("Location:../user/tambahdata.php");
+            // Redirect berdasarkan role
+            if ($user['role'] === 'admin') {
+                header("Location: http://localhost/PSI/admin/dashboardadmin.php");
+            } else {
+                header("Location: http://localhost/PSI/user/dashboard.php");
+            }
             exit();
         } else {
-            echo "<script>alert('Password salah!'); window.location.href='login.php';</script>";
+            echo "<script>alert('Password salah!'); window.location.href='../user/login.php';</script>";
         }
     } else {
-        echo "<script>alert('Email tidak ditemukan!'); window.location.href='login.php';</script>";
+        echo "<script>alert('Email tidak ditemukan!'); window.location.href='../user/login.php';</script>";
     }
 }
 ?>

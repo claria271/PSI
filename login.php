@@ -1,7 +1,44 @@
 <?php
 include 'koneksi/config.php';
 session_start();
-$email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['alamat_email'];
+    $password = $_POST['password'];
+
+    // Cek apakah email ada di database
+    $query = "SELECT * FROM login WHERE alamat_email = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 1) {
+        $row = $result->fetch_assoc();
+
+        // Verifikasi password
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['id'] = $row['id'];
+            $_SESSION['nama_lengkap'] = $row['nama_lengkap'];
+            $_SESSION['alamat_email'] = $row['alamat_email'];
+            $_SESSION['role'] = $row['role'];
+
+            // Redirect sesuai role
+           // Redirect sesuai role
+            if ($row['role'] === 'admin') {
+                header("Location: http://localhost/PSI/admin/dashboardadmin.php");
+          } else {
+                header("Location: http://localhost/PSI/user/dashboard.php");
+    }
+    exit();
+
+        } else {
+            echo "<script>alert('Password salah!'); window.location.href='../login.php';</script>";
+        }
+    } else {
+        echo "<script>alert('Email tidak ditemukan!'); window.location.href='../login.php';</script>";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -11,7 +48,7 @@ $email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #fff; /* putih */
+      background: #fff;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -19,8 +56,8 @@ $email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
       margin: 0;
     }
     .wrapper {
-      width: 50%; /* 50% layar */
-      max-width: 600px; /* biar ga terlalu gede di layar besar */
+      width: 50%;
+      max-width: 600px;
     }
     .logo {
       text-align: center;
@@ -29,13 +66,13 @@ $email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
     .logo img {
       width: 100%;
       height: auto;
-      border-radius: 20px 20px 0 0; /* lebih rounded */
-      opacity: 0.5; /* transparan 50% */
+      border-radius: 20px 20px 0 0;
+      opacity: 0.5;
     }
     .container {
       background: #fff;
       padding: 30px;
-      border-radius: 10px 10px 20px 20px; /* rounded bawah */
+      border-radius: 10px 10px 20px 20px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       width: 100%;
       box-sizing: border-box;
@@ -45,7 +82,7 @@ $email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
       margin-bottom: 20px;
     }
     form {
-      margin: 0 10%; /* jarak kanan kiri 10% */
+      margin: 0 10%;
     }
     label {
       display: block;
@@ -122,10 +159,10 @@ $email = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : "";
     </div>
     <div class="container">
       <h2>Masuk ke Akun Anda</h2>
-      <form method="POST" action="koneksi/proses.php">
+      <form method="POST">
         
         <label for="email">Nama Pengguna atau Email</label>
-        <input type="email" id="email" name="alamat_email" value="<?php echo $email; ?>" placeholder="Alamat Email" required>
+        <input type="email" id="email" name="alamat_email" placeholder="Alamat Email" required>
         
         <label for="password">Password</label>
         <div class="input-group">

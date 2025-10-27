@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Oct 20, 2025 at 05:10 AM
+-- Generation Time: Oct 27, 2025 at 06:38 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.1.10
 
@@ -49,7 +49,9 @@ CREATE TABLE `keluarga` (
 
 INSERT INTO `keluarga` (`id`, `nama_lengkap`, `nik`, `no_wa`, `alamat`, `dapil`, `kecamatan`, `jumlah_anggota`, `jumlah_bekerja`, `total_penghasilan`, `kenal`, `sumber`, `created_at`) VALUES
 (1, 'Claria Privana Ratna Wati', '256984365987589', '14865159555', 'yos sudarso', 'Kota Surabaya 2', 'Tambaksari', 7, 1, '0', 'Tidak Pernah', NULL, '2025-10-19 23:29:04'),
-(2, 'Claria Privana Ratna Wati', '256984365987589', '14865159555', 'yos sudarso', 'Kota Surabaya 2', 'Pabean Cantikan', 7, 1, '0', 'Tidak Pernah', NULL, '2025-10-20 03:58:50');
+(2, 'Claria Privana Ratna Wati', '256984365987589', '14865159555', 'yos sudarso', 'Kota Surabaya 2', 'Pabean Cantikan', 7, 1, '0', 'Tidak Pernah', NULL, '2025-10-20 03:58:50'),
+(3, 'Claria Privana Ratna Wati', '256984365987589', '14865159555', 'Surabaya', 'Kota Surabaya 2', 'Pabean Cantikan', 7, 1, '0', 'Tidak Pernah', NULL, '2025-10-20 05:26:05'),
+(4, 'Claria Privana Ratna Wati', '256984365987589', '14865159555', 'Surabaya', 'Kota Surabaya 3', 'Mulyorejo', 8, 1, '0', 'Ya', 'Lainnya', '2025-10-27 04:05:39');
 
 -- --------------------------------------------------------
 
@@ -63,15 +65,17 @@ CREATE TABLE `login` (
   `alamat_lengkap` varchar(255) NOT NULL,
   `nomor_telepon` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `alamat_email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `password` varchar(255) NOT NULL
+  `password` varchar(255) NOT NULL,
+  `role` enum('user','admin') NOT NULL DEFAULT 'user'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `login`
 --
 
-INSERT INTO `login` (`id`, `nama_lengkap`, `alamat_lengkap`, `nomor_telepon`, `alamat_email`, `password`) VALUES
-(1, 'ardya', 'surabaya', '8921379289182', 'ardya@gmail.com', '$2y$10$PDOsujCgF9Ovcp3R2O8vY./j8hjdfTwvWwM7g0.Y5YhewicK1JIsy');
+INSERT INTO `login` (`id`, `nama_lengkap`, `alamat_lengkap`, `nomor_telepon`, `alamat_email`, `password`, `role`) VALUES
+(1, 'ardya', 'surabaya', '8921379289182', 'ardya@gmail.com', '$2y$10$pDGjgi7kzIvOKWDOKpRIVe4IEO9MRRvfmtOt3lqg4hDtiyAlX47cq', 'user'),
+(2, 'Claria Privana Ratna Wati', 'Surabaya', '8585708680', 'claria@gmail.com', '$2y$10$zesK3EUcLUVjrQOvzhOZreyqJaQWNhemiVqG9Lr3x7Hvr.LRyCrBm', 'admin');
 
 --
 -- Indexes for dumped tables
@@ -98,13 +102,13 @@ ALTER TABLE `login`
 -- AUTO_INCREMENT for table `keluarga`
 --
 ALTER TABLE `keluarga`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `login`
 --
 ALTER TABLE `login`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
