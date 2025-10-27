@@ -184,7 +184,7 @@ footer img:first-child {
     <div class="top-inner">
       <h1>
         PSI Peduli - Hadir Untuk Melayani Masyarakat 
-        <img src="assets/image/hati.png" alt="Hati">
+        <img src="../assets/image/hati.png" alt="Hati">
       </h1>
       <div class="underline"></div>
     </div>

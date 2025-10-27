@@ -43,10 +43,8 @@
 
     header img {
       height: 40px;
-      cursor: pointer;
     }
 
-    /* Navigasi */
     nav a {
       margin: 0 15px;
       text-decoration: none;
@@ -79,16 +77,6 @@
       transition: transform 0.6s ease, opacity 0.4s ease;
     }
 
-    .form-slider {
-      display: flex;
-      width: 400%;
-      transition: transform 0.6s ease;
-    }
-
-    .form-wrapper {
-      overflow: hidden;
-      width: 100%;
-    }
 
     .container1 {
       width: 80%;
@@ -142,10 +130,47 @@
       font-size: 12px;
     }
 
+    .summary-box {
+      background: #cfcfcf;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      background: #bfbfbf;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .radio-group {
+      margin: 15px 0;
+    }
+
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .radio-group input[type="radio"] {
+      accent-color: #ff4b4b;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
     .btn-container {
       width: 80%;
       max-width: 700px;
-      margin: 20px auto 40px auto;
+      margin: 10px auto 40px auto;
       display: flex;
       justify-content: space-between;
       gap: 20px;
@@ -193,22 +218,45 @@
       filter: brightness(0) invert(1);
     }
 
-    /* Tombol navigasi slide */
+    /* 🎞️ Efek Slide Seperti PowerPoint */
+    .slide {
+      display: none;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.6s ease-in-out;
+    }
+
+    .slide.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .slide.exit-left {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+
+    .slide.exit-right {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
     .nav-slide {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 15px;
       margin: 20px;
     }
 
     .nav-slide button {
+      padding: 10px 20px;
       background: #ff4b4b;
       color: #fff;
-      padding: 10px 18px;
       border: none;
       border-radius: 8px;
-      font-weight: 600;
       cursor: pointer;
+      font-weight: 600;
       transition: 0.3s;
     }
 
@@ -223,7 +271,7 @@
 
   <header>
     <div class="logo">
-      <a href="../index.php"><img src="../assets/image/logo.png" alt="PSI"></a>
+      <img src="../assets/image/logo.png" alt="PSI">
     </div>
     <nav>
       <a href="tambahdata.php">Tambah Data</a>
@@ -238,85 +286,82 @@
     <p>Silakan lengkapi data keluarga Anda sesuai dengan form di bawah ini.</p>
   </div>
 
-  <form action="proses_keluarga.php" method="POST">
-    <div class="form-wrapper">
-      <div class="form-slider">
-        
-        <!-- FORM 1 -->
-        <div class="container">
-          <div class="section-title">Data Pribadi</div>
-          <label>Nama Lengkap</label>
-          <input type="text" name="nama_lengkap" placeholder="Mawar Lenjana" required>
-          <label>NIK (Nomor Induk Kependudukan)</label>
-          <input type="text" name="nik" placeholder="10050983728200938">
-          <small>*opsional</small>
-          <label>No WhatsApp</label>
-          <input type="text" name="no_wa" placeholder="082264780939">
-          <label>Alamat Lengkap</label>
-          <textarea name="alamat" placeholder="Ketintang Madya No.12"></textarea>
-        </div>
+  <form id="multiForm" action="proses_keluarga.php" method="POST">
+    <!-- Slide 1 -->
+    <div class="container slide active">
+      <div class="section-title">Data Pribadi</div>
+      <label>Nama Lengkap</label>
+      <input type="text" name="nama_lengkap" placeholder="Mawar Lenjana" required>
+      <label>NIK (Nomor Induk Kependudukan)</label>
+      <input type="text" name="nik" placeholder="10050983728200938">
+      <small>*opsional</small>
+      <label>No WhatsApp</label>
+      <input type="text" name="no_wa" placeholder="082264780939">
+      <label>Alamat Lengkap</label>
+      <textarea name="alamat" placeholder="Ketintang Madya No.12"></textarea>
+    </div>
 
-        <!-- FORM 2 -->
-        <div class="container">
-          <div class="section-title">Pendataan Daerah Pemilihan</div>
-          <label>Pilih Daerah Pemilihan</label>
-          <select name="dapil" id="dapil" required>
-            <option value="">-- Pilih Dapil --</option>
-            <option value="Kota Surabaya 1">Kota Surabaya 1</option>
-            <option value="Kota Surabaya 2">Kota Surabaya 2</option>
-            <option value="Kota Surabaya 3">Kota Surabaya 3</option>
-            <option value="Kota Surabaya 4">Kota Surabaya 4</option>
-            <option value="Kota Surabaya 5">Kota Surabaya 5</option>
-          </select>
+    <!-- Slide 2 -->
+    <div class="container slide">
+      <div class="section-title">Pendataan Daerah Pemilihan</div>
+      <label>Pilih Daerah Pemilihan</label>
+      <select name="dapil" id="dapil" required>
+        <option value="">-- Pilih Dapil --</option>
+        <option value="Kota Surabaya 1">Kota Surabaya 1</option>
+        <option value="Kota Surabaya 2">Kota Surabaya 2</option>
+        <option value="Kota Surabaya 3">Kota Surabaya 3</option>
+        <option value="Kota Surabaya 4">Kota Surabaya 4</option>
+        <option value="Kota Surabaya 5">Kota Surabaya 5</option>
+      </select>
 
-          <label>Pilih Kecamatan</label>
-          <select name="kecamatan" id="kecamatan" required>
-            <option value="">-- Pilih Kecamatan --</option>
-          </select>
+      <label>Pilih Kecamatan</label>
+      <select name="kecamatan" id="kecamatan" required>
+        <option value="">-- Pilih Kecamatan --</option>
+      </select>
 
-          <div class="summary-box" id="summary">
-            <div class="summary-item"><span>Daerah Pemilihan</span><span>-</span></div>
-            <div class="summary-item"><span>Kecamatan</span><span>-</span></div>
-          </div>
-        </div>
+      <div class="summary-box" id="summary">
+        <div class="summary-item"><span>Daerah Pemilihan</span><span>-</span></div>
+        <div class="summary-item"><span>Kecamatan</span><span>-</span></div>
+      </div>
+    </div>
 
-        <!-- FORM 3 -->
-        <div class="container">
-          <div class="section-title">Data Ekonomi Keluarga</div>
-          <label>Jumlah Anggota Keluarga</label>
-          <input type="number" name="jumlah_anggota" placeholder="4">
-          <small>*Jumlah anggota termasuk kepala keluarga</small>
+    <!-- Slide 3 -->
+    <div class="container slide">
+      <div class="section-title">Data Ekonomi Keluarga</div>
+      <label>Jumlah Anggota Keluarga</label>
+      <input type="number" name="jumlah_anggota" placeholder="4">
+      <small>*Jumlah anggota termasuk kepala keluarga</small>
+      <label>Jumlah Orang yang Bekerja</label>
+      <select name="jumlah_bekerja">
+        <option>1</option><option>2</option><option>3</option>
+      </select>
+      <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
+      <select name="total_penghasilan">
+        <option>< Rp 1.000.000</option>
+        <option>Rp 1.000.000 - Rp 3.000.000</option>
+        <option>Rp 3.000.000 - Rp 5.000.000</option>
+        <option>> Rp 5.000.000</option>
+      </select>
+    </div>
 
-          <label>Jumlah Orang yang Bekerja</label>
-          <select name="jumlah_bekerja">
-            <option>1</option><option>2</option><option>3</option>
-          </select>
+    <!-- Slide 4 -->
+    <div class="container slide">
+      <div class="section-title">Informasi</div>
+      <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+      <div class="radio-group">
+        <label><input type="radio" name="kenal" value="Ya"> Ya</label>
+        <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
+      </div>
+      <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+      <div class="radio-group">
+        <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
+        <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
+        <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
+      </div>
 
-          <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
-          <select name="total_penghasilan">
-            <option>< Rp 1.000.000</option>
-            <option>Rp 1.000.000 - Rp 3.000.000</option>
-            <option>Rp 3.000.000 - Rp 5.000.000</option>
-            <option>> Rp 5.000.000</option>
-          </select>
-        </div>
-
-        <!-- FORM 4 -->
-        <div class="container">
-          <div class="section-title">Informasi</div>
-          <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-          <div class="radio-group">
-            <label><input type="radio" name="kenal" value="Ya"> Ya</label>
-            <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
-          </div>
-          <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-          <div class="radio-group">
-            <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
-            <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
-            <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
-          </div>
-        </div>
-
+      <div class="btn-container">
+        <button type="submit">Simpan Data</button>
+        <button type="reset" class="btn-reset">Kosongkan Form</button>
       </div>
     </div>
 
@@ -325,19 +370,10 @@
       <button type="button" id="prevBtn">← Sebelumnya</button>
       <button type="button" id="nextBtn">Selanjutnya →</button>
     </div>
-
-    <div class="btn-container">
-      <button type="submit">Simpan Data</button>
-      <button type="reset" class="btn-reset">Kosongkan Form</button>
-    </div>
   </form>
 
   <script>
-    // Logo klik balik ke index
-    document.querySelector('header img').addEventListener('click', () => {
-      window.location.href = '../index.php';
-    });
-
+    // === Dropdown dinamis ===
     const dapil = document.getElementById('dapil');
     const kecamatan = document.getElementById('kecamatan');
     const summary = document.getElementById('summary');
@@ -371,38 +407,39 @@
     }
     kecamatan.addEventListener('change', updateSummary);
 
-    // SLIDER NAVIGATION
-    const slider = document.querySelector('.form-slider');
-    const slides = document.querySelectorAll('.container');
+    // === Slide PPT Logic ===
+    const slides = document.querySelectorAll('.slide');
     const nextBtn = document.getElementById('nextBtn');
     const prevBtn = document.getElementById('prevBtn');
     let index = 0;
 
-    function updateSlide() {
-      slider.style.transform = `translateX(-${index * 100}%)`;
+    function showSlide(newIndex, direction = 'right') {
+      slides[index].classList.remove('active');
+      slides[index].classList.add(direction === 'right' ? 'exit-left' : 'exit-right');
+      setTimeout(() => slides[index].classList.remove('exit-left', 'exit-right'), 600);
+      index = newIndex;
+      slides[index].classList.add('active');
       prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
       nextBtn.textContent = index === slides.length - 1 ? 'Selesai' : 'Selanjutnya →';
     }
 
     nextBtn.addEventListener('click', () => {
       if (index < slides.length - 1) {
-        index++;
-        updateSlide();
+        showSlide(index + 1, 'right');
       } else {
-        document.querySelector('form').submit();
+        document.getElementById('multiForm').submit();
       }
     });
 
     prevBtn.addEventListener('click', () => {
       if (index > 0) {
-        index--;
-        updateSlide();
+        showSlide(index - 1, 'left');
       }
     });
 
-    updateSlide();
+    prevBtn.style.display = 'none';
 
-    // SweetAlert
+    // === SweetAlert ===
     const params = new URLSearchParams(window.location.search);
     if (params.get('status') === 'success') {
       Swal.fire({
