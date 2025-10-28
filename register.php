@@ -103,11 +103,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       box-sizing: border-box;
     }
     .btn-primary {
-      background: #4a90e2;
+      background: #e24a4aff;
       color: #fff;
     }
     .btn-primary:hover {
-      background: #357abd;
+      background: #ff0000ff;
     }
   </style>
 </head>

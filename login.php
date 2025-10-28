@@ -140,11 +140,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       box-sizing: border-box;
     }
     .btn-primary {
-      background: #4a90e2;
+      background: #ff3e3ed4;
       color: #fff;
     }
     .btn-primary:hover {
-      background: #357abd;
+      background: #ff0000ff;
     }
     .btn-secondary {
       background: #ccc;
