@@ -8,17 +8,13 @@ if (!isset($_SESSION['alamat_email'])) {
   exit;
 }
 
-// Ambil data user dari database (JANGAN DIHAPUS)
+// Ambil data user dari database
 $email = $_SESSION['alamat_email'];
 $sql = "SELECT * FROM login WHERE alamat_email='$email'";
 $result = $conn->query($sql);
 $user = $result->fetch_assoc();
 
-/* 
-  Bagian query data keluarga dikosongkan sementara.
-  Nanti kamu bisa isi ulang dengan query seperti:
-  $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'")->fetch_assoc();
-*/
+// Data keluarga sementara dikosongkan
 $dataKeluarga = [];
 ?>
 <!DOCTYPE html>
@@ -43,9 +39,15 @@ $dataKeluarga = [];
     header nav a { color: white; margin-left: 20px; text-decoration: none; }
     header nav a:hover { text-decoration: underline; }
 
-    /* === Profil Section === */
+    /* === PROFILE SECTION DENGAN TEKSTUR KOTAK === */
     .profile-section {
       background-color: #111;
+      background-image:
+        linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.05) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.05) 75%);
+      background-size: 40px 40px;
       color: #fff;
       padding: 60px 10%;
       display: flex;
@@ -60,7 +62,7 @@ $dataKeluarga = [];
       width: 180px;
       height: 180px;
       border-radius: 50%;
-      background: #bbb; /* abu-abu polos */
+      background: #bbb;
       overflow: hidden;
       position: relative;
     }
@@ -76,8 +78,8 @@ $dataKeluarga = [];
       position: absolute;
       bottom: 10px;
       right: -25px;
-      width: 45px;
-      height: 45px;
+      width: 40px;
+      height: 40px;
       background-color: #fff;
       color: #111;
       border: none;
@@ -100,7 +102,11 @@ $dataKeluarga = [];
     .profile-info h1 { font-size: 32px; margin-bottom: 5px; }
     .profile-info p.email { font-size: 18px; color: #ccc; }
 
-    /* === Tabs === */
+    .detail {
+      margin-top: 8px;
+      color: #ddd;
+    }
+
     .section-tabs {
       display: flex;
       justify-content: center;
@@ -121,7 +127,26 @@ $dataKeluarga = [];
       color: #e60000;
     }
 
-    /* === Form Edit Data === */
+    .logout-btn {
+      display: block;
+      width: 90%;
+      margin: 20px auto;
+      padding: 12px 0;
+      background: #e60000;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: #b80000;
+      transform: translateY(-2px);
+    }
+
     .form-container {
       display: none;
       width: 70%;
@@ -209,15 +234,19 @@ $dataKeluarga = [];
       <div class="profile-pic">
         <img src="../assets/image/user.png" alt="Foto Profil">
       </div>
-      <button class="edit-profile-btn" id="openEdit">✏️</button>
+      <button class="edit-profile-btn" onclick="window.location.href='editprofil.php'">📷</button>
     </div>
 
     <div class="profile-info">
       <h1><?= htmlspecialchars($user['nama_lengkap']); ?></h1>
       <p class="email"><?= htmlspecialchars($user['alamat_email']); ?></p>
-      <p>📍 Surabaya</p>
+      <div class="detail">🕓 Bergabung sejak 2023</div>
+      <div class="detail">📍 Kota Surabaya</div>
     </div>
   </section>
+
+  <!-- Tombol Logout -->
+  <button class="logout-btn" onclick="window.location.href='logout.php'">Logout</button>
 
   <!-- Tabs -->
   <div class="section-tabs">
@@ -227,22 +256,14 @@ $dataKeluarga = [];
   <!-- Form Edit Data -->
   <div class="form-container" id="formEdit">
     <form action="update_data.php" method="POST">
-      <!--
-        Query form ini dikosongkan sementara.
-        Nanti isi value-nya dari tabel 'keluarga' seperti sebelumnya.
-      -->
       <label>Nama Lengkap</label>
       <input type="text" name="nama_lengkap" value="">
-
       <label>NIK</label>
       <input type="text" name="nik" value="">
-
       <label>No WhatsApp</label>
       <input type="text" name="no_wa" value="">
-
       <label>Alamat Lengkap</label>
       <textarea name="alamat"></textarea>
-
       <label>Daerah Pemilihan</label>
       <select name="dapil">
         <option value="">-- Pilih Dapil --</option>
@@ -252,16 +273,12 @@ $dataKeluarga = [];
         <option value="Kota Surabaya 4">Kota Surabaya 4</option>
         <option value="Kota Surabaya 5">Kota Surabaya 5</option>
       </select>
-
       <label>Kecamatan</label>
       <input type="text" name="kecamatan" value="">
-
       <label>Jumlah Anggota Keluarga</label>
       <input type="number" name="jumlah_anggota" value="">
-
       <label>Total Penghasilan</label>
       <input type="text" name="total_penghasilan" value="">
-
       <button type="submit" class="btn-save">💾 Simpan Perubahan</button>
     </form>
   </div>
@@ -277,12 +294,6 @@ $dataKeluarga = [];
     // Tombol tab Edit Data
     document.getElementById('tabEdit').addEventListener('click', function() {
       document.getElementById('formEdit').classList.toggle('active');
-    });
-
-    // Tombol bulat depan foto profil
-    document.getElementById('openEdit').addEventListener('click', function() {
-      window.scrollTo({ top: document.getElementById('formEdit').offsetTop - 100, behavior: 'smooth' });
-      document.getElementById('formEdit').classList.add('active');
     });
   </script>
 </body>

@@ -11,109 +11,161 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
     }
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background: #f2f2f2;
       color: #000;
     }
-/* === HEADER dengan gradasi putih ke hitam === */
+
+    /* === HEADER === */
     header {
       background: linear-gradient(to right, #ffffff, #000000);
-      border-bottom: 1px solid #ddd;
       padding: 12px 40px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    header .logo {
-      display: flex;
       align-items: center;
-      gap: 10px;
     }
 
     header img {
       height: 40px;
     }
 
-    /* Navigasi */
     nav a {
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: bold;
+      margin-left: 20px;
       color: #fff;
+      text-decoration: none;
+      font-weight: 600;
       transition: 0.3s;
     }
 
-    nav a:hover {
+    nav a:hover,
+    nav a.active {
       color: #ff4b4b;
     }
 
-    /* Box utama */
+    /* === Container Utama === */
     .container {
-      max-width: 80%;
+      max-width: 1000px;
       margin: 40px auto;
-      padding: 30px;
       background: #fff;
-      border-radius: 12px;
-
-      /* Efek 3D */
-      box-shadow: 8px 8px 18px rgba(0,0,0,0.25),
-                  -5px -5px 12px rgba(255,255,255,0.2);
-    }
-    .container p {
-      margin-bottom: 10px;
-      font-size: 16px;
-      line-height: 1.6;
+      border-radius: 8px;
+      padding: 30px 40px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
-    /* Kotak www.psi.id */
-    .web-box {
-      background: linear-gradient(145deg, #4d4d4d, #5c5c5c);
-      color: #fff;
-      padding: 14px 20px;
-      margin-top: 20px;
-      font-size: 16px;
+    .title {
+      font-size: 22px;
       font-weight: bold;
-      text-align: center;
-      border-radius: 6px;
-      width: 100%;
-      display: block;
-      box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3),
-                  inset -2px -2px 5px rgba(255,255,255,0.1);
+      color: #333;
+      margin-bottom: 25px;
     }
 
-   footer {
-  margin-top: 0;
-  padding: 15px 5%;
-  text-align: center;
-  background: linear-gradient(to right, #ffffff, #000000); /* gradasi sama seperti header */
-  font-size: 14px;
-  color: #fff;
-  border-top: 1px solid #ccc;
-}
+    .content {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
 
-footer img {
-  height: 20px;
-  vertical-align: middle;
-  margin-left: 5px;
-  filter: brightness(0) invert(1); /* agar logo tetap terlihat di background gelap */
-}
+    /* === Map === */
+    .map {
+      flex: 1;
+      min-width: 350px;
+      height: 250px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
 
-footer img:first-child {
-  height: 20px;
-}
+    .map iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
 
+    /* === Info Kontak === */
+    .info {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .info p {
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    /* Kotak PSI.id */
+    .web-box {
+      background: #d9d9d9;
+      color: #555;
+      padding: 12px 15px;
+      margin-top: 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 16px;
+      display: inline-block;
+    }
+
+    /* === Ikon Sosial Media === */
+    .social-icons {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .social-icons a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #333;
+      color: #fff;
+      font-size: 16px;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .social-icons a:hover {
+      background: #ff4b4b;
+    }
+
+    /* === Footer === */
+    footer {
+      margin-top: 60px;
+      padding: 15px 5%;
+      text-align: center;
+      background: linear-gradient(to right, #ffffff, #000000);
+      font-size: 14px;
+      color: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    footer img {
+      height: 20px;
+      vertical-align: middle;
+      margin-left: 5px;
+      filter: brightness(0) invert(1);
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        flex-direction: column;
+      }
+      .map {
+        height: 220px;
+      }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Header -->
   <header>
     <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI Logo"> <!-- ganti logo asli -->
+      <img src="../assets/image/logo.png" alt="PSI Logo">
     </div>
     <nav>
       <a href="dashboard.php">Beranda</a>
@@ -124,23 +176,44 @@ footer img:first-child {
     </nav>
   </header>
 
+  <!-- Konten -->
   <div class="container">
-    <p>Gedung DPRD Kota Surabaya</p>
-    <p>Lantai 5 Ruang FPSI</p>
-    <p>Jalan Yos Sudarso No. 18 - 22</p>
-    <p>Surabaya 6022</p>
-    <p>Tlp/WA: 0822 - 0102 - 40555</p>
-    <p>email: fraksipsisurabaya@gmail.com</p>
+    <div class="title">Peta</div>
 
-    <div class="web-box">
-      www.psi.id
+    <div class="content">
+      <div class="map">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.885879286427!2d112.74004047424264!3d-7.913127779629628!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fa2c0f2c2f69%3A0x63e4cc7b9eb35f33!2sDPRD%20Kota%20Surabaya!5e0!3m2!1sid!2sid!4v1696921874995!5m2!1sid!2sid"
+          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+
+      <div class="info">
+        <p><strong>Gedung DPRD Kota Surabaya</strong></p>
+        <p>Jalan Yos Sudarso No 18–22</p>
+        <p>Surabaya 6022</p>
+        <p>Telp/WA: 0822-0102-40555</p>
+        <p>Email: fraksipsisurabaya@gmail.com</p>
+
+        <div class="web-box">www.psi.id</div>
+
+        <div class="social-icons">
+          <a href="#"><i>in</i></a>
+          <a href="#"><i>@</i></a>
+          <a href="#"><i>✉️</i></a>
+          <a href="#"><i>📞</i></a>
+          <a href="#"><i>f</i></a>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Footer -->
   <footer>
-    <img src="../assets/image/logodprd.png" alt="dprd Logo">
-    <img src="../assets/image/psiputih.png" alt="PSI Logo">
+    <img src="../assets/image/logodprd.png" alt="Logo DPRD">
+    <img src="../assets/image/psiputih.png" alt="Logo PSI">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
+
 </body>
 </html>
