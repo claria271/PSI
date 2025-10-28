@@ -8,14 +8,18 @@ if (!isset($_SESSION['alamat_email'])) {
   exit;
 }
 
-// Ambil data user dari database
+// Ambil data user dari database (JANGAN DIHAPUS)
 $email = $_SESSION['alamat_email'];
 $sql = "SELECT * FROM login WHERE alamat_email='$email'";
 $result = $conn->query($sql);
 $user = $result->fetch_assoc();
 
-// Ambil data keluarga dari tabel lain (misalnya 'keluarga')
-$dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'")->fetch_assoc();
+/* 
+  Bagian query data keluarga dikosongkan sementara.
+  Nanti kamu bisa isi ulang dengan query seperti:
+  $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'")->fetch_assoc();
+*/
+$dataKeluarga = [];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -51,22 +55,47 @@ $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'
     }
 
     .profile-wrapper { position: relative; display: inline-block; }
+
     .profile-pic {
-      width: 180px; height: 180px; border-radius: 50%;
-      background: #bbb; overflow: hidden;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: #bbb; /* abu-abu polos */
+      overflow: hidden;
+      position: relative;
+    }
+
+    .profile-pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .edit-profile-btn {
-      position: absolute; bottom: 0; right: -20px;
-      width: 45px; height: 45px;
-      background-color: #fff; color: #111;
-      border: none; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 18px;
+      position: absolute;
+      bottom: 10px;
+      right: -25px;
+      width: 45px;
+      height: 45px;
+      background-color: #fff;
+      color: #111;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: 0.3s;
     }
-    .edit-profile-btn:hover { background-color: #e60000; color: #fff; transform: scale(1.1); }
+
+    .edit-profile-btn:hover {
+      background-color: #e60000;
+      color: #fff;
+      transform: scale(1.1);
+    }
 
     .profile-info h1 { font-size: 32px; margin-bottom: 5px; }
     .profile-info p.email { font-size: 18px; color: #ccc; }
@@ -86,7 +115,11 @@ $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'
       cursor: pointer;
       transition: 0.3s;
     }
-    .tab:hover, .tab.active { border-bottom: 3px solid #e60000; color: #e60000; }
+
+    .tab:hover, .tab.active {
+      border-bottom: 3px solid #e60000;
+      color: #e60000;
+    }
 
     /* === Form Edit Data === */
     .form-container {
@@ -101,24 +134,41 @@ $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'
       color: #000;
     }
 
-    .form-container.active { display: block; animation: fadeIn 0.6s ease-in-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .form-container.active {
+      display: block;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     label { font-weight: 600; display: block; margin-top: 10px; }
     input, textarea, select {
-      width: 100%; padding: 10px; border-radius: 8px;
-      border: 1px solid #ccc; margin-bottom: 15px;
-      background: rgba(255,255,255,0.9); color: #111;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      background: rgba(255,255,255,0.9);
+      color: #111;
     }
+
     textarea { resize: none; height: 70px; }
 
     .btn-save {
-      width: 100%; padding: 12px;
-      background: #e60000; color: #fff;
-      border: none; border-radius: 8px;
-      cursor: pointer; font-weight: 600;
+      width: 100%;
+      padding: 12px;
+      background: #e60000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
       transition: 0.3s;
     }
+
     .btn-save:hover { background: #b80000; }
 
     footer {
@@ -130,7 +180,13 @@ $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'
       color: #fff;
       border-top: 1px solid #ccc;
     }
-    footer img { height: 20px; vertical-align: middle; margin-left: 5px; filter: brightness(0) invert(1); }
+
+    footer img {
+      height: 20px;
+      vertical-align: middle;
+      margin-left: 5px;
+      filter: brightness(0) invert(1);
+    }
   </style>
 </head>
 <body>
@@ -151,7 +207,7 @@ $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'
   <section class="profile-section">
     <div class="profile-wrapper">
       <div class="profile-pic">
-        <img src="../assets/image/user.png" alt="Foto Profil" style="width:100%;height:100%;object-fit:cover;">
+        <img src="../assets/image/user.png" alt="Foto Profil">
       </div>
       <button class="edit-profile-btn" id="openEdit">✏️</button>
     </div>
@@ -171,38 +227,40 @@ $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'
   <!-- Form Edit Data -->
   <div class="form-container" id="formEdit">
     <form action="update_data.php" method="POST">
+      <!--
+        Query form ini dikosongkan sementara.
+        Nanti isi value-nya dari tabel 'keluarga' seperti sebelumnya.
+      -->
       <label>Nama Lengkap</label>
-      <input type="text" name="nama_lengkap" value="<?= htmlspecialchars($dataKeluarga['nama_lengkap'] ?? '') ?>">
+      <input type="text" name="nama_lengkap" value="">
 
       <label>NIK</label>
-      <input type="text" name="nik" value="<?= htmlspecialchars($dataKeluarga['nik'] ?? '') ?>">
+      <input type="text" name="nik" value="">
 
       <label>No WhatsApp</label>
-      <input type="text" name="no_wa" value="<?= htmlspecialchars($dataKeluarga['no_wa'] ?? '') ?>">
+      <input type="text" name="no_wa" value="">
 
       <label>Alamat Lengkap</label>
-      <textarea name="alamat"><?= htmlspecialchars($dataKeluarga['alamat'] ?? '') ?></textarea>
+      <textarea name="alamat"></textarea>
 
       <label>Daerah Pemilihan</label>
       <select name="dapil">
         <option value="">-- Pilih Dapil --</option>
-        <?php
-        $dapilList = ["Kota Surabaya 1", "Kota Surabaya 2", "Kota Surabaya 3", "Kota Surabaya 4", "Kota Surabaya 5"];
-        foreach ($dapilList as $d) {
-          $selected = ($dataKeluarga['dapil'] ?? '') == $d ? 'selected' : '';
-          echo "<option value='$d' $selected>$d</option>";
-        }
-        ?>
+        <option value="Kota Surabaya 1">Kota Surabaya 1</option>
+        <option value="Kota Surabaya 2">Kota Surabaya 2</option>
+        <option value="Kota Surabaya 3">Kota Surabaya 3</option>
+        <option value="Kota Surabaya 4">Kota Surabaya 4</option>
+        <option value="Kota Surabaya 5">Kota Surabaya 5</option>
       </select>
 
       <label>Kecamatan</label>
-      <input type="text" name="kecamatan" value="<?= htmlspecialchars($dataKeluarga['kecamatan'] ?? '') ?>">
+      <input type="text" name="kecamatan" value="">
 
       <label>Jumlah Anggota Keluarga</label>
-      <input type="number" name="jumlah_anggota" value="<?= htmlspecialchars($dataKeluarga['jumlah_anggota'] ?? '') ?>">
+      <input type="number" name="jumlah_anggota" value="">
 
       <label>Total Penghasilan</label>
-      <input type="text" name="total_penghasilan" value="<?= htmlspecialchars($dataKeluarga['total_penghasilan'] ?? '') ?>">
+      <input type="text" name="total_penghasilan" value="">
 
       <button type="submit" class="btn-save">💾 Simpan Perubahan</button>
     </form>
@@ -216,12 +274,12 @@ $dataKeluarga = $conn->query("SELECT * FROM keluarga WHERE alamat_email='$email'
   </footer>
 
   <script>
-    // Tombol Edit Data klik = tampilkan form
+    // Tombol tab Edit Data
     document.getElementById('tabEdit').addEventListener('click', function() {
       document.getElementById('formEdit').classList.toggle('active');
     });
 
-    // Tombol di foto profil juga buka form edit
+    // Tombol bulat depan foto profil
     document.getElementById('openEdit').addEventListener('click', function() {
       window.scrollTo({ top: document.getElementById('formEdit').offsetTop - 100, behavior: 'smooth' });
       document.getElementById('formEdit').classList.add('active');
