@@ -1,32 +1,28 @@
 <?php
-session_start();
-if (!isset($_SESSION['alamat_email'])) {
-    header("Location: login.php");
-    exit;
-}
+// tentang.php
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Website PSI - Entri Data Bantuan</title>
+  <title>PSI - Tentang</title>
   <style>
     * {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
     }
 
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      font-family: 'Poppins', sans-serif;
+      background: #e9e9e9;
       color: #333;
+      line-height: 1.6;
     }
 
-    /* === HEADER dengan gradasi putih ke hitam === */
+    /* === HEADER === */
     header {
       background: linear-gradient(to right, #ffffff, #000000);
-      border-bottom: 1px solid #ddd;
       padding: 12px 40px;
       display: flex;
       align-items: center;
@@ -46,7 +42,6 @@ if (!isset($_SESSION['alamat_email'])) {
       height: 40px;
     }
 
-    /* Navigasi */
     nav a {
       margin: 0 15px;
       text-decoration: none;
@@ -59,205 +54,239 @@ if (!isset($_SESSION['alamat_email'])) {
       color: #ff4b4b;
     }
 
-    /* === CONTAINER ATAS & BAWAH === */
-    .container-atas, .container-bawah {
-      width: 90%;
-      max-width: 1200px;
-      margin: 30px auto;
+    /* === CONTAINER PALING ATAS (tidak diubah) === */
+    .top-content {
+      max-width: 90%;
+      margin: 20px auto;
+      padding: 20px;
       display: flex;
-      gap: 20px;
-      align-items: stretch;
-    }
-
-    .kolom {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .kolom-tengah { flex: 2; }
-    .kolom-kanan { flex: 1; }
-    .kolom-kiri-bawah { flex: 1; }
-    .kolom-kanan-bawah { flex: 2; }
-
-    /* Box umum */
-    .box {
+      align-items: flex-start;
+      justify-content: flex-start;
       background: #fff;
-      border-radius: 10px;
-      padding: 25px;
-      box-shadow: 0 2px 2px rgba(0,0,0,0.1);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .box h2 {
-      margin-bottom: 15px;
-      font-size: 20px;
-    }
-
-    .box p {
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    /* Foto Placeholder */
-    .foto {
-      background: #ddd;
+      box-shadow: none;
       border-radius: 8px;
+    }
+
+    .top-inner {
+      width: 40%;
+      text-align: left;
+    }
+
+    .top-content h1 {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: #555;
-      flex: 1;
-      min-height: 200px;
+      gap: 10px;
     }
 
-    /* Statistik */
-    .stats {
-      text-align: center;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+    .top-content img {
+      height: 160px;
     }
 
-    .stats h2 {
-      margin-bottom: 15px;
+    .underline {
+      width: 100%;
+      height: 5px;
+      background: red;
+      margin-top: 10px;
     }
 
-    .stat-boxes, .stat-boxes-bottom {
-      display: grid;
-      gap: 15px;
-      flex: 1;
+    /* === SECTION UMUM === */
+    .section {
+      background: #fff;
+      max-width: 90%;
+      margin: 30px auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 30px;
+      opacity: 0;
+      transform: translateY(40px);
+      animation: fadeUp 1s ease forwards;
     }
 
-    .stat-boxes {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .stat-boxes-bottom {
-      grid-template-columns: repeat(2, 1fr);
-      margin-top: 15px;
-    }
-
-    .stat-box {
-      background: #eee;
-      border-radius: 8px;
-      padding: 20px 10px;
-      font-weight: bold;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 120px;
-    }
-
-    /* Kutipan */
-    .quote {
-      display: block;
-      text-align: center;
-      margin: 5% auto;
-      color: #555;
-      font-style: italic;
-      max-width: 900px;
-      line-height: 1.6;
-    }
-
-   footer {
-  margin-top: 0;
-  padding: 15px 5%;
-  text-align: center;
-  background: linear-gradient(to right, #ffffff, #000000); /* gradasi sama seperti header */
-  font-size: 14px;
-  color: #fff;
-  border-top: 1px solid #ccc;
-}
-
-footer img {
-  height: 20px;
-  vertical-align: middle;
-  margin-left: 5px;
-  filter: brightness(0) invert(1); /* agar logo tetap terlihat di background gelap */
-}
-
-footer img:first-child {
-  height: 20px;
-}
-
-    /* Responsive */
-    @media (max-width: 900px) {
-      .container-atas, .container-bawah {
-        flex-direction: column;
+    /* Animasi muncul */
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
+    }
+
+    .section:nth-of-type(2) {
+      animation-delay: 0.3s;
+    }
+
+    .section:nth-of-type(3) {
+      animation-delay: 0.6s;
+    }
+
+    .section:nth-of-type(4) {
+      animation-delay: 0.9s;
+    }
+
+    /* === FLEX LAYOUT === */
+    .flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .flex .text {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .text p {
+      text-align: justify;
+    }
+
+    /* === GANTI LINGKARAN JADI PERSEGI === */
+    .image-box {
+      width: 200px;
+      height: 200px;
+      border-radius: 10px;
+      background: #ccc;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* === LEADER SECTION (bagian bawah tetap) === */
+    .leader-section {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .leader-card {
+      background: #f0f0f0;
+      border-radius: 10px;
+      width: 28%;
+      text-align: center;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+
+    .leader-card:hover {
+      transform: scale(1.05);
+    }
+
+    .leader-card .photo {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 10px;
+      background: #ccc;
+      margin-bottom: 10px;
+    }
+
+    .leader-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* === FOOTER === */
+    footer {
+      margin-top: 40px;
+      padding: 15px 5%;
+      text-align: center;
+      background: linear-gradient(to right, #ffffff, #000000);
+      font-size: 14px;
+      color: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    footer img {
+      height: 20px;
+      vertical-align: middle;
+      margin: 0 5px;
+      filter: brightness(0) invert(1);
     }
   </style>
 </head>
 <body>
+  <header>
+    <div class="logo">
+      <img src="../assets/image/logo.png" alt="PSI Logo">
+    </div>
+    <nav>
+      <a href="tentang.php">Tentang</a>
+      <a href="kontak.php">Kontak</a>
+      <a href="profil.php">Profil</a>
+    </nav>
+  </header>
 
-<header>
-  <div class="logo">
-    <img src="../assets/image/logo.png" alt="PSI">
-  </div>
-  <nav>
-    <a href="dashboard.php">Beranda</a>
-    <a href="tentang.php">Tentang</a>
-    <a href="kontak.php">Kontak</a>
-    <a href="profil.php">Profil</a>
-  </nav>
-</header>
-
-<!-- Container Atas -->
-<div class="container-atas">
-  <div class="kolom kolom-tengah">
-    <div class="box">
-      <h2>Selamat Datang di Website PSI<br>Entri Data Keluarga</h2>
-      <p>
-        Kami hadir untuk menghadirkan kemudahan, kecepatan, dan transparansi dalam pengelolaan data bantuan.
-        Dengan sistem yang terintegrasi, setiap informasi tercatat dengan rapi, akurat, dan dapat diakses secara aman.
-        Mari bersama wujudkan pelayanan yang lebih baik melalui teknologi yang terpercaya.
-      </p>
+  <!-- CONTAINER PALING ATAS (tidak diubah) -->
+  <div class="top-content">
+    <div class="top-inner">
+      <h1>
+        PSI Peduli - Hadir Untuk Melayani Masyarakat 
+        <img src="../assets/image/hati.png" alt="Hati">
+      </h1>
+      <div class="underline"></div>
     </div>
   </div>
 
-  <div class="kolom kolom-kanan">
-    <div class="foto">[Foto]</div>
-  </div>
-</div>
-
-<!-- Container Bawah -->
-<div class="container-bawah">
-  <div class="kolom kolom-kiri-bawah">
-    <div class="foto">[Foto]</div>
-    <div class="foto">[Foto]</div>
-  </div>
-
-  <div class="kolom kolom-kanan-bawah">
-    <div class="box stats">
-      <h2>Statistik</h2>
-      <div class="stat-boxes">
-        <div class="stat-box">[Total Penerima Bantuan]</div>
-        <div class="stat-box">[Jumlah Data Terkumpul]</div>
-        <div class="stat-box">[Wilayah Data]</div>
+  <!-- SECTION 1 -->
+  <section class="section">
+    <div class="flex">
+      <div class="text">
+        <p>
+          Kita percaya, solidaritas bukan sekadar kata. Melalui program bantuan dana sosial,
+          PSI berupaya meringankan beban masyarakat yang membutuhkan, dengan proses yang terbuka,
+          cepat, dan tanpa diskriminasi.
+        </p>
       </div>
-      <div class="stat-boxes-bottom">
-        <div class="stat-box">[Gaji dibawah UMR]</div>
-        <div class="stat-box">[Gaji diatas UMR]</div>
+      <div class="image-box" style="background-image: url('../assets/image/psi1.jpg');"></div>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section class="section">
+    <div class="flex">
+      <div class="image-box" style="background-image: url('../assets/image/psi2.jpg');"></div>
+      <div class="text">
+        <p>
+          Sebagai bagian dari komitmen untuk mendukung masyarakat, PSI menghadirkan program bantuan
+          sosial yang dikelola dengan prinsip keterbukaan, keadilan, dan akuntabilitas. Melalui sistem
+          pendataan yang terintegrasi, kami memastikan bahwa setiap bantuan dapat diterima tepat sasaran
+          dan bermanfaat bagi yang membutuhkan.
+        </p>
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<i class="quote">
-  "Website PSI - Entri Data Keluarga"
-</i>
+  <!-- SECTION 3 (tetap sama seperti sebelumnya) -->
+  <section class="section">
+    <p>
+      PSI meyakini bahwa solidaritas adalah kekuatan utama dalam membangun kehidupan yang lebih 
+      baik bagi masyarakat. Melalui program bantuan sosial, PSI berkomitmen untuk hadir dengan cara
+      yang terbuka, adil, dan akuntabel.
+    </p>
 
-<footer>
-  <img src="../assets/image/logodprd.png" alt="dprd Logo">
-  <img src="../assets/image/psiputih.png" alt="PSI Logo">
-  Hak cipta © 2025 - Partai Solidaritas Indonesia
-</footer>
+    <div class="leader-section">
+      <div class="leader-card">
+        <div class="photo"></div>
+        <h3>Ketua Fraksi PSI</h3>
+      </div>
+      <div class="leader-card">
+        <div class="photo"></div>
+        <h3>Wakil Ketua Fraksi PSI</h3>
+      </div>
+      <div class="leader-card">
+        <div class="photo"></div>
+        <h3>Fairuz Fraksi</h3>
+      </div>
+    </div>
+  </section>
 
+  <footer>
+    <img src="../assets/image/logodprd.png" alt="DPRD Logo">
+    <img src="../assets/image/psiputih.png" alt="PSI Logo">
+    Hak cipta © 2025 - Partai Solidaritas Indonesia
+  </footer>
 </body>
 </html>

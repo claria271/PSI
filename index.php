@@ -74,7 +74,7 @@ session_start();
     .hero-content {
       position: relative;
       z-index: 2;
-      background: rgba(255, 255, 255, 0.1); /* 90% transparan */
+      background: rgba(255, 255, 255, 0.03); /* 90% transparan */
       backdrop-filter: blur(6px);
       width: 80%;
       height: 90vh;
