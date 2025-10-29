@@ -1,26 +1,30 @@
 <?php
-// daftar.php
+// register.php
+session_start();
 include 'koneksi/config.php';
 
 // Proses form ketika disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Ambil dan amankan data input
     $nama_lengkap   = $conn->real_escape_string($_POST['nama_lengkap']);
     $alamat_lengkap = $conn->real_escape_string($_POST['alamat_lengkap']);
     $nomor_telepon  = $conn->real_escape_string($_POST['nomor_telepon']);
     $alamat_email   = $conn->real_escape_string($_POST['alamat_email']);
     $password       = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
+    // Simpan data ke database
     $sql = "INSERT INTO login (nama_lengkap, alamat_lengkap, nomor_telepon, alamat_email, password) 
             VALUES ('$nama_lengkap', '$alamat_lengkap', '$nomor_telepon', '$alamat_email', '$password')";
 
     if ($conn->query($sql) === TRUE) {
-        echo "<script>
-                alert('Pendaftaran berhasil!');
-                window.location='login.php';
-              </script>";
+        // Simpan email ke session agar bisa digunakan di tambahdata.php
+        $_SESSION['alamat_email'] = $alamat_email;
+
+        // Arahkan langsung ke halaman tambahdata.php milik user
+        header("Location: user/tambahdata.php");
         exit;
     } else {
-        echo "Error: " . $conn->error;
+        echo "<script>alert('Terjadi kesalahan saat pendaftaran: " . $conn->error . "');</script>";
     }
 }
 ?>
@@ -28,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Daftar</title>
+  <title>Daftar Akun</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -45,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     .logo {
       text-align: center;
-      margin-top: 30px; /* GAP ATAS LOGO */
+      margin-top: 30px;
       margin-bottom: 15px;
     }
     .logo img {
@@ -61,14 +65,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       width: 100%;
       box-sizing: border-box;
-      margin-bottom: 40px; /* GAP BAWAH CONTAINER */
+      margin-bottom: 40px;
     }
     h2 {
       text-align: center;
       margin-bottom: 20px;
     }
     form {
-      margin: 0 7%; /* jarak kanan kiri 10% */
+      margin: 0 7%;
     }
     label {
       display: block;
@@ -88,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       transition: 0.3s;
     }
     input:focus {
-      border-color: #00aeffff;
+      border-color: #00aeff;
       box-shadow: 0 0 6px rgba(74,144,226,0.4);
       outline: none;
     }
@@ -114,10 +118,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
   <div class="wrapper">
     <div class="logo">
-      <img src="assets/image/psi2.jpg" alt="PSI">
+      <img src="assets/image/psi2.jpg" alt="Logo PSI">
     </div>
     <div class="container">
-      <h2>Daftar</h2>
+      <h2>Form Pendaftaran</h2>
       <form method="POST">
         <label for="nama_lengkap">Nama Lengkap</label>
         <input type="text" id="nama_lengkap" name="nama_lengkap" placeholder="Nama Lengkap" required>

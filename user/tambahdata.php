@@ -1,10 +1,25 @@
 <?php
 session_start();
+
+/*
+ * Kalau user baru saja selesai register, biasanya sudah ada alamat_email di session,
+ * tapi role belum diset. Kita set default role=‘user’ supaya guard tidak melempar ke login.
+ */
+if (!isset($_SESSION['role']) && isset($_SESSION['alamat_email'])) {
+    $_SESSION['role'] = 'user';
+}
+
+/* Guard akses: pastikan role user */
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
+    // Jika file login kamu ada di folder /PSI/user/login.php (sesuai screenshot), biarkan seperti ini:
     header("Location: login.php");
+
+    // Kalau ternyata login ada di root (/PSI/login.php), pakai:
+    // header("Location: ../login.php");
     exit();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
