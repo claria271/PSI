@@ -1,53 +1,43 @@
 <?php
-// proses_keluarga.php
+// user/proses_keluarga.php
 declare(strict_types=1);
+session_start();
 
-// --- SESUAIKAN PATH CONFIG ---
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
+    header('Location: login.php'); exit;
+}
+
 require_once __DIR__ . '/../koneksi/config.php';
-
-// Nyalakan exception untuk mysqli agar lebih mudah ditangani
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
-    // Pastikan metode adalah POST
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Location: tambahdata.php?status=failed');
-        exit;
+        header('Location: tambahdata.php?status=failed'); exit;
     }
 
-    // Helper: trim semua input
-    $input = array_map(static fn($v) => is_string($v) ? trim($v) : $v, $_POST);
+    // Trim input
+    $in = array_map(static fn($v) => is_string($v) ? trim($v) : $v, $_POST);
 
-    // Ambil & validasi field wajib
-    $nama_lengkap = $input['nama_lengkap'] ?? '';
-    $dapil        = $input['dapil']        ?? '';
-    $kecamatan    = $input['kecamatan']    ?? '';
-
+    // Wajib
+    $nama_lengkap = $in['nama_lengkap'] ?? '';
+    $dapil        = $in['dapil'] ?? '';
+    $kecamatan    = $in['kecamatan'] ?? '';
     if ($nama_lengkap === '' || $dapil === '' || $kecamatan === '') {
-        header('Location: tambahdata.php?status=failed');
-        exit;
+        header('Location: tambahdata.php?status=failed'); exit;
     }
 
-    // Field opsional
-    $nik               = $input['nik']            ?? null;
-    $no_wa             = $input['no_wa']          ?? null;
-    $alamat            = $input['alamat']         ?? null;
-    $jumlah_anggota    = $input['jumlah_anggota'] ?? null;
-    $jumlah_bekerja    = $input['jumlah_bekerja'] ?? null;
-    $total_penghasilan = $input['total_penghasilan'] ?? null;
-    $kenal             = $input['kenal']          ?? null;
-    $sumber            = $input['sumber']         ?? null;
+    // Opsional
+    $nik               = $in['nik'] ?? null;
+    $no_wa             = $in['no_wa'] ?? null;
+    $alamat            = $in['alamat'] ?? null;
+    $jumlah_anggota    = $in['jumlah_anggota'] ?? null;
+    $jumlah_bekerja    = $in['jumlah_bekerja'] ?? null;
+    $total_penghasilan = $in['total_penghasilan'] ?? null;
+    $kenal             = $in['kenal'] ?? null;
+    $sumber            = $in['sumber'] ?? null;
 
-    // --- Whitelist nilai select agar data konsisten ---
-    $allowedDapil = [
-        'Kota Surabaya 1','Kota Surabaya 2','Kota Surabaya 3','Kota Surabaya 4','Kota Surabaya 5'
-    ];
-    if (!in_array($dapil, $allowedDapil, true)) {
-        header('Location: tambahdata.php?status=failed');
-        exit;
-    }
-
-    // Kumpulan kecamatan per dapil
+    // Whitelist Dapil & Kecamatan
+    $allowedDapil = ['Kota Surabaya 1','Kota Surabaya 2','Kota Surabaya 3','Kota Surabaya 4','Kota Surabaya 5'];
     $dapilMap = [
         'Kota Surabaya 1' => ['Bubutan','Genteng','Gubeng','Krembangan','Simokerto','Tegalsari'],
         'Kota Surabaya 2' => ['Kenjeran','Pabean Cantikan','Semampir','Tambaksari'],
@@ -55,27 +45,14 @@ try {
         'Kota Surabaya 4' => ['Gayungan','Jambangan','Sawahan','Sukomanunggal','Wonokromo'],
         'Kota Surabaya 5' => ['Asemrowo','Benowo','Dukuhpakis','Karangpilang','Lakarsantri','Pakal','Sambikerep','Tandes','Wiyung'],
     ];
-    if (!isset($dapilMap[$dapil]) || !in_array($kecamatan, $dapilMap[$dapil], true)) {
-        header('Location: tambahdata.php?status=failed');
-        exit;
+    if (!in_array($dapil, $allowedDapil, true) || !isset($dapilMap[$dapil]) || !in_array($kecamatan, $dapilMap[$dapil], true)) {
+        header('Location: tambahdata.php?status=failed'); exit;
     }
 
-    // Normalisasi numeric
-    if ($jumlah_anggota !== null && $jumlah_anggota !== '') {
-        $jumlah_anggota = (int)$jumlah_anggota;
-        if ($jumlah_anggota < 0) $jumlah_anggota = 0;
-    } else {
-        $jumlah_anggota = null;
-    }
-
-    if ($jumlah_bekerja !== null && $jumlah_bekerja !== '') {
-        $jumlah_bekerja = (int)$jumlah_bekerja;
-        if (!in_array($jumlah_bekerja, [1,2,3], true)) {
-            $jumlah_bekerja = null;
-        }
-    } else {
-        $jumlah_bekerja = null;
-    }
+    // Normalisasi angka
+    $jumlah_anggota = ($jumlah_anggota !== null && $jumlah_anggota !== '') ? max((int)$jumlah_anggota, 0) : null;
+    $jumlah_bekerja = ($jumlah_bekerja !== null && $jumlah_bekerja !== '') ? (int)$jumlah_bekerja : null;
+    if ($jumlah_bekerja !== null && !in_array($jumlah_bekerja, [1,2,3], true)) $jumlah_bekerja = null;
 
     // Whitelist penghasilan
     $allowedPenghasilan = [
@@ -89,79 +66,72 @@ try {
     }
 
     // Kenal & sumber
-    $allowedKenal = ['Ya', 'Tidak Pernah'];
-    if ($kenal !== null && !in_array($kenal, $allowedKenal, true)) {
-        $kenal = null;
-    }
-
+    $allowedKenal  = ['Ya','Tidak Pernah'];
     $allowedSumber = ['Kegiatan PSI Surabaya','Dari teman atau relasi','Lainnya'];
-    if ($kenal !== 'Ya') {
-        $sumber = null;
-    } else {
-        if ($sumber !== null && !in_array($sumber, $allowedSumber, true)) {
-            $sumber = null;
-        }
-    }
+    if ($kenal !== null && !in_array($kenal, $allowedKenal, true)) $kenal = null;
+    if ($kenal !== 'Ya') { $sumber = null; }
+    elseif ($sumber !== null && !in_array($sumber, $allowedSumber, true)) { $sumber = null; }
 
-    // Sanitasi ringan untuk teks panjang
+    // Kosong -> null
     $nik    = ($nik === '') ? null : $nik;
     $no_wa  = ($no_wa === '') ? null : $no_wa;
     $alamat = ($alamat === '') ? null : $alamat;
 
-    // --- Validasi panjang digit NIK dan No WA ---
-    if ($nik !== null && $nik !== '') {
-        // Hanya angka dan maksimal 17 digit
-        if (!preg_match('/^\d{1,17}$/', $nik)) {
-            header('Location: tambahdata.php?status=failed&error=nik');
-            exit;
-        }
-    }
+    // Validasi format angka
+    if ($nik !== null && !preg_match('/^\d{1,17}$/', $nik))   { header('Location: tambahdata.php?status=failed&error=nik'); exit; }
+    if ($no_wa !== null && !preg_match('/^\d{1,13}$/', $no_wa)) { header('Location: tambahdata.php?status=failed&error=no_wa'); exit; }
 
-    if ($no_wa !== null && $no_wa !== '') {
-        // Hanya angka dan maksimal 13 digit
-        if (!preg_match('/^\d{1,13}$/', $no_wa)) {
-            header('Location: tambahdata.php?status=failed&error=no_wa');
-            exit;
-        }
-    }
-
-    // --- Koneksi DB dari config.php ---
+    // Koneksi
     if (!isset($conn) || !($conn instanceof mysqli)) {
-        throw new RuntimeException('Koneksi database tidak valid. Pastikan config.php membuat $conn.');
+        throw new RuntimeException('Koneksi database tidak valid.');
     }
     $conn->set_charset('utf8mb4');
 
-    // --- Query INSERT ---
-    $sql = "INSERT INTO keluarga 
-        (nama_lengkap, nik, no_wa, alamat, dapil, kecamatan, jumlah_anggota, jumlah_bekerja, total_penghasilan, kenal, sumber, created_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    // (Opsional) simpan relasi user jika tabel keluarga punya user_id/alamat_email
+    $hasUserIdCol = $conn->query("SHOW COLUMNS FROM keluarga LIKE 'user_id'")->num_rows > 0;
+    $hasEmailCol  = $conn->query("SHOW COLUMNS FROM keluarga LIKE 'alamat_email'")->num_rows > 0;
 
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param(
-        'ssssssiiiss',
-        $nama_lengkap,
-        $nik,
-        $no_wa,
-        $alamat,
-        $dapil,
-        $kecamatan,
-        $jumlah_anggota,
-        $jumlah_bekerja,
-        $total_penghasilan,
-        $kenal,
-        $sumber
-    );
+    if ($hasUserIdCol) {
+        $user_id = $_SESSION['user_id'] ?? null;
+        $sql = "INSERT INTO keluarga (user_id, nama_lengkap, nik, no_wa, alamat, dapil, kecamatan, jumlah_anggota, jumlah_bekerja, total_penghasilan, kenal, sumber, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            'issssssiiiss',
+            $user_id, $nama_lengkap, $nik, $no_wa, $alamat, $dapil, $kecamatan,
+            $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, $kenal, $sumber
+        );
+    } elseif ($hasEmailCol) {
+        $alamat_email = $_SESSION['alamat_email'] ?? null;
+        $sql = "INSERT INTO keluarga (alamat_email, nama_lengkap, nik, no_wa, alamat, dapil, kecamatan, jumlah_anggota, jumlah_bekerja, total_penghasilan, kenal, sumber, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            'sssssssiiiss',
+            $alamat_email, $nama_lengkap, $nik, $no_wa, $alamat, $dapil, $kecamatan,
+            $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, $kenal, $sumber
+        );
+    } else {
+        $sql = "INSERT INTO keluarga (nama_lengkap, nik, no_wa, alamat, dapil, kecamatan, jumlah_anggota, jumlah_bekerja, total_penghasilan, kenal, sumber, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            'ssssssiiiss',
+            $nama_lengkap, $nik, $no_wa, $alamat, $dapil, $kecamatan,
+            $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, $kenal, $sumber
+        );
+    }
+
     $stmt->execute();
     $stmt->close();
 
-    // Sukses
-    header('Location: tambahdata.php?status=success');
+    // → Setelah tambah data, langsung menuju Beranda
+    // Jika beranda ada di /user/dashboard.php:
+    header('Location: dashboard.php?status=created');
+    // Jika beranda ada di root: header('Location: ../dashboard.php?status=created');
     exit;
 
 } catch (Throwable $e) {
-    // Kamu bisa log error ke file untuk debugging
     // error_log('[PROSES_KELUARGA] ' . $e->getMessage());
-    header('Location: tambahdata.php?status=failed');
-    exit;
+    header('Location: tambahdata.php?status=failed'); exit;
 }
-?>
