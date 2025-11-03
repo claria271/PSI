@@ -33,10 +33,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit();
 
         } else {
-            echo "<script>alert('Password salah!'); window.location.href='../login.php';</script>";
+            echo "<script>alert('Password salah!'); window.location.href='login.php';</script>";
         }
     } else {
-        echo "<script>alert('Email tidak ditemukan!'); window.location.href='../login.php';</script>";
+        echo "<script>alert('Email tidak ditemukan!'); window.location.href='login.php';</script>";
     }
 }
 ?>
