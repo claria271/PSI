@@ -25,6 +25,19 @@ $resUser = $stmt->get_result();
 $user = $resUser->fetch_assoc() ?: [];
 $stmt->close();
 
+/**
+ * TAHUN GABUNG (PERUBAHAN DI SINI)
+ * - Jika kolom created_at ada & berisi tanggal valid -> ambil tahunnya
+ * - Jika kosong / tidak ada -> pakai tahun sekarang
+ */
+$tahunGabung = date('Y'); // default: tahun berjalan
+if (!empty($user['created_at'])) {
+  $ts = strtotime((string)$user['created_at']);
+  if ($ts !== false) {
+    $tahunGabung = date('Y', $ts);
+  }
+}
+
 // Ambil data keluarga terbaru milik user
 $keluarga = null;
 $hasUserIdCol = $conn->query("SHOW COLUMNS FROM keluarga LIKE 'user_id'")->num_rows > 0;
@@ -173,7 +186,8 @@ $dapilNow = $keluarga['dapil'] ?? '';
     <div class="profile-info">
       <h1><?= h($user['nama_lengkap'] ?? '') ?></h1>
       <p class="email"><?= h($user['alamat_email'] ?? $email) ?></p>
-      <div class="detail">🕓 Bergabung sejak <?= h($user['created_at'] ?? '2023') ?></div>
+      <!-- PERUBAHAN DI SINI -->
+      <div class="detail">🕓 Bergabung sejak <?= h($tahunGabung) ?></div>
       <div class="detail">📍 <?= h($user['kota'] ?? 'Kota Surabaya') ?></div>
     </div>
   </section>
@@ -206,7 +220,7 @@ $dapilNow = $keluarga['dapil'] ?? '';
         <div><strong>Dapil:</strong> <?= h($keluarga['dapil'] ?? '-') ?></div>
         <div><strong>Kecamatan:</strong> <?= h($keluarga['kecamatan'] ?? '-') ?></div>
         <div><strong>Jumlah Anggota:</strong> <?= h($keluarga['jumlah_anggota'] ?? '-') ?></div>
-        <div><strong>Total Penghasilan:</strong> <?= h($keluarga['total_penghasilan'] ?? '-') ?></div>
+        <div><strong>Total Penghasilan:</strong> <?= 'Rp ' . number_format((int)($keluarga['total_penghasilan'] ?? 0), 0, ',', '.') ?></div>
         <div><strong>Dibuat:</strong> <?= h($keluarga['created_at'] ?? '-') ?></div>
         <div><strong>Diperbarui:</strong> <?= h($keluarga['updated_at'] ?? '-') ?></div>
       </div>
@@ -248,14 +262,6 @@ $dapilNow = $keluarga['dapil'] ?? '';
 
       <label>Total Penghasilan</label>
       <input type="text" name="total_penghasilan" value="<?= fv($keluarga, 'total_penghasilan') ?>">
-
-      <!-- Field berikut disiapkan jika nanti diperlukan (komentari jika tidak dipakai di update_data.php)
-      <label>Pernah Kenal PSI?</label>
-      <input type="text" name="kenal" value="<?= fv($keluarga, 'kenal') ?>">
-
-      <label>Sumber Kenal</label>
-      <input type="text" name="sumber" value="<?= fv($keluarga, 'sumber') ?>">
-      -->
 
       <button type="submit" class="btn-save">💾 Simpan Perubahan</button>
     </form>
