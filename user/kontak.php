@@ -6,6 +6,10 @@
 <head>
   <meta charset="UTF-8">
   <title>PSI - Kontak</title>
+
+  <!-- Tambahkan Font Awesome untuk ikon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
     * {
       margin: 0;
@@ -123,7 +127,7 @@
       border-radius: 50%;
       background: #333;
       color: #fff;
-      font-size: 16px;
+      font-size: 18px;
       text-decoration: none;
       transition: 0.3s;
     }
@@ -198,11 +202,26 @@
         <div class="web-box">www.psi.id</div>
 
         <div class="social-icons">
-          <a href="#"><i>in</i></a>
-          <a href="#"><i>@</i></a>
-          <a href="#"><i>✉️</i></a>
-          <a href="#"><i>📞</i></a>
-          <a href="#"><i>f</i></a>
+          <!-- LinkedIn -->
+          <a href="" target="_blank" title="LinkedIn PSI">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <!-- Email -->
+          <a href="mailto:fraksipsisurabaya@gmail.com" title="Kirim Email">
+            <i class="fas fa-envelope"></i>
+          </a>
+          <!-- WhatsApp -->
+          <a href="https://wa.me/6282201024055" target="_blank" title="Chat WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <!-- Telepon -->
+          <a href="tel:+6282201024055" title="Hubungi via Telepon">
+            <i class="fas fa-phone"></i>
+          </a>
+          <!-- Facebook (ini yang kamu minta) -->
+          <a href="https://www.facebook.com/share/17LizCopS2/?mibextid=wwXIfr" target="_blank" title="Kunjungi Facebook PSI Surabaya">
+            <i class="fab fa-facebook-f"></i>
+          </a>
         </div>
       </div>
     </div>
