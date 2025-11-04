@@ -20,7 +20,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama_lengkap = $conn->real_escape_string($_POST['nama_lengkap']);
     $nomor_telepon = $conn->real_escape_string($_POST['nomor_telepon']);
     $alamat_email = $conn->real_escape_string($_POST['alamat_email']);
-    $bio = $conn->real_escape_string($_POST['bio']);
     $password_baru = $_POST['password'];
 
     // Password
@@ -29,13 +28,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         : $user['password'];
 
     // Upload foto profil
-    $foto_profil = $user['foto_profil'];
-    if (!empty($_FILES['foto_profil']['name'])) {
+    $foto = $user['foto'];
+    if (!empty($_FILES['foto']['name'])) {
         $target_dir = "../uploads/";
-        if (!is_dir($target_dir)) mkdir($target_dir);
-        $target_file = $target_dir . basename($_FILES["foto_profil"]["name"]);
-        move_uploaded_file($_FILES["foto_profil"]["tmp_name"], $target_file);
-        $foto_profil = $target_file;
+        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+
+        $nama_file = time() . "_" . basename($_FILES["foto"]["name"]);
+        $target_file = $target_dir . $nama_file;
+
+        $allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+        if (in_array($_FILES["foto"]["type"], $allowed_types)) {
+            if (move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
+                $foto = "uploads/" . $nama_file;
+            }
+        }
     }
 
     // Update data
@@ -43,8 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                SET nama_lengkap='$nama_lengkap', 
                    nomor_telepon='$nomor_telepon',
                    alamat_email='$alamat_email', 
-                   bio='$bio',
-                   foto_profil='$foto_profil',
+                   foto='$foto',
                    password='$password_hashed'
                WHERE alamat_email='$email'";
 
@@ -89,6 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       background: linear-gradient(#e6e6e6, #a6a6a6);
       padding: 30px;
       border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
     h2 {
@@ -99,9 +105,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     .profile-info {
       text-align: center;
       margin-bottom: 20px;
-      position: relative;
-      display: inline-block;
-      width: 100%;
     }
 
     .profile-wrapper {
@@ -114,10 +117,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       height: 120px;
       border-radius: 50%;
       object-fit: cover;
-      background: #bbb; /* warna abu */
+      background: #bbb;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
     }
 
-    /* Tombol kamera lingkaran di kanan bawah depan */
+    .profile-wrapper img:hover {
+      transform: scale(1.05);
+    }
+
     .upload-btn {
       position: absolute;
       right: 0;
@@ -134,6 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       cursor: pointer;
       font-size: 18px;
       box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+      transition: 0.3s;
     }
 
     .upload-btn:hover {
@@ -148,7 +158,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       margin-bottom: 5px;
     }
 
-    input, textarea {
+    input {
       width: 100%;
       padding: 10px;
       border-radius: 10px;
@@ -157,12 +167,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       box-sizing: border-box;
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    input:focus, textarea:focus {
+    input:focus {
       border-color: #4a90e2;
       outline: none;
     }
@@ -176,6 +181,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       border-radius: 10px;
       cursor: pointer;
       font-weight: bold;
+      transition: 0.3s;
     }
 
     .btn:hover {
@@ -183,7 +189,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     footer {
-      margin-top: 0;
+      margin-top: 40px;
       padding: 15px 5%;
       text-align: center;
       background: linear-gradient(to right, #ffffff, #000000);
@@ -215,17 +221,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   <div class="container">
     <h2>Edit Profil</h2>
-    <div class="profile-info">
-      <div class="profile-wrapper">
-        <img src="<?= !empty($user['foto_profil']) ? htmlspecialchars($user['foto_profil']) : '../assets/image/user.png'; ?>" alt="User Icon">
-        <button type="button" class="upload-btn" onclick="document.getElementById('foto_profil').click()">📷</button>
-      </div>
-      <input type="file" id="foto_profil" name="foto_profil" accept="image/*" style="display:none;">
-      <p><b><?= htmlspecialchars($user['nama_lengkap']); ?></b></p>
-      <small><?= htmlspecialchars($user['alamat_email']); ?></small>
-    </div>
-
     <form method="POST" enctype="multipart/form-data">
+      <div class="profile-info">
+        <div class="profile-wrapper">
+          <img id="previewImage" 
+               src="<?= !empty($user['foto']) ? '../' . htmlspecialchars($user['foto']) : '../assets/image/user.png'; ?>" 
+               alt="User Icon">
+          <button type="button" class="upload-btn" onclick="document.getElementById('foto').click()">📷</button>
+        </div>
+        <input type="file" id="foto" name="foto" accept="image/*" style="display:none;">
+        <p><b><?= htmlspecialchars($user['nama_lengkap']); ?></b></p>
+        <small><?= htmlspecialchars($user['alamat_email']); ?></small>
+      </div>
+
       <label for="nama_lengkap">Nama Lengkap</label>
       <input type="text" id="nama_lengkap" name="nama_lengkap" value="<?= htmlspecialchars($user['nama_lengkap']); ?>" required>
 
@@ -238,18 +246,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <label for="nomor_telepon">No Telepon</label>
       <input type="text" id="nomor_telepon" name="nomor_telepon" value="<?= htmlspecialchars($user['nomor_telepon']); ?>" required>
 
-      <label for="bio">Bio</label>
-      <textarea id="bio" name="bio" placeholder="Tulis sedikit tentang diri Anda..."><?= htmlspecialchars($user['bio'] ?? ''); ?></textarea>
-
       <button type="submit" class="btn">Simpan Perubahan</button>
     </form>
   </div>
 
-  <!-- Footer -->
   <footer>
     <img src="../assets/image/logodprd.png" alt="dprd Logo">
     <img src="../assets/image/psiputih.png" alt="PSI Logo">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
+
+  <script>
+    // Preview foto sebelum disimpan
+    document.getElementById('foto').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('previewImage').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
 </body>
 </html>

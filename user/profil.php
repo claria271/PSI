@@ -176,21 +176,40 @@ $dapilNow = $keluarga['dapil'] ?? '';
 
   <!-- Profil -->
   <section class="profile-section">
-    <div class="profile-wrapper">
-      <div class="profile-pic">
-        <img src="../assets/image/user.png" alt="Foto Profil">
-      </div>
-      <button class="edit-profile-btn" onclick="window.location.href='editprofil.php'">📷</button>
+  <div class="profile-wrapper">
+    <?php
+      // Tentukan foto profil default
+      $fotoPath = '../assets/image/user.png';
+
+      if (!empty($user['foto'])) {
+          $fotoFile = basename($user['foto']); // hindari path traversal
+          $fotoFullPath = "../uploads/" . $fotoFile;
+
+          if (file_exists($fotoFullPath)) {
+              $fotoPath = $fotoFullPath;
+          }
+      }
+
+      // Tahun bergabung (ambil dari kolom created_at jika ada, atau fallback)
+      $tahunGabung = !empty($user['created_at'])
+          ? date('Y', strtotime($user['created_at']))
+          : '2025';
+    ?>
+    <div class="profile-pic">
+      <img src="<?= htmlspecialchars($fotoPath) ?>" alt="Foto Profil" id="fotoPreview">
     </div>
 
-    <div class="profile-info">
-      <h1><?= h($user['nama_lengkap'] ?? '') ?></h1>
-      <p class="email"><?= h($user['alamat_email'] ?? $email) ?></p>
-      <!-- PERUBAHAN DI SINI -->
-      <div class="detail">🕓 Bergabung sejak <?= h($tahunGabung) ?></div>
-      <div class="detail">📍 <?= h($user['kota'] ?? 'Kota Surabaya') ?></div>
-    </div>
-  </section>
+    <button class="edit-profile-btn" onclick="window.location.href='editprofil.php'">📷</button>
+  </div>
+
+  <div class="profile-info">
+    <h1><?= htmlspecialchars($user['nama_lengkap'] ?? '') ?></h1>
+    <p class="email"><?= htmlspecialchars($user['alamat_email'] ?? $email) ?></p>
+    <div class="detail">🕓 Bergabung sejak <?= htmlspecialchars($tahunGabung) ?></div>
+    <div class="detail">📍 <?= htmlspecialchars($user['kota'] ?? 'Kota Surabaya') ?></div>
+  </div>
+</section>
+
 
   <!-- Logout -->
   <button class="logout-btn" onclick="window.location.href='logout.php'">Logout</button>

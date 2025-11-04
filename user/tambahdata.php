@@ -294,7 +294,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       <img src="../assets/image/logo.png" alt="PSI">
     </div>
     <nav>
-      <a href="tambahdata.php">Tambah Data</a>
       <a href="logout.php">Logout</a>
     </nav>
   </header>
