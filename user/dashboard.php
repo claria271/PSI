@@ -266,7 +266,8 @@
       baik bagi masyarakat. Melalui program bantuan sosial, PSI berkomitmen untuk hadir dengan cara
       yang terbuka, adil, dan akuntabel.
     </p>
-
+  </section>
+  <section class="section">
     <div class="leader-section">
       <div class="leader-card">
         <div class="photo"></div>
@@ -282,7 +283,6 @@
       </div>
     </div>
   </section>
-
   <footer>
     <img src="../assets/image/logodprd.png" alt="DPRD Logo">
     <img src="../assets/image/psiputih.png" alt="PSI Logo">
