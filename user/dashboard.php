@@ -1,11 +1,11 @@
 <?php
-// tentang.php
+// dashboard.php
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>PSI - Tentang</title>
+  <title>PSI - dashboard</title>
   <style>
     * {
       margin: 0;
@@ -89,6 +89,82 @@
       margin-top: 10px;
     }
 
+    /* === HERO SLIDER === */
+    .hero {
+      position: relative;
+      width: 100%;
+      height: 450px;
+      overflow: hidden;
+      border-radius: 10px;
+      margin: 0 auto;
+    }
+
+    .hero-slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      background-size: cover;
+      background-position: center;
+      transition: opacity 1.5s ease-in-out;
+    }
+
+    .hero-slide.active {
+      opacity: 1;
+    }
+
+    .hero-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 20px 40px;
+      border-radius: 12px;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    .hero-content h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .hero-content p {
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn-login {
+      background: #ff4b4b;
+      color: #fff;
+    }
+
+    .btn-register {
+      background: #fff;
+      color: #ff4b4b;
+      border: 2px solid #ff4b4b;
+    }
+
+    .btn-login:hover, .btn-register:hover {
+      transform: scale(1.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -55%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
     /* === SECTION UMUM === */
     .section {
       background: #fff;
@@ -110,17 +186,9 @@
       }
     }
 
-    .section:nth-of-type(2) {
-      animation-delay: 0.3s;
-    }
-
-    .section:nth-of-type(3) {
-      animation-delay: 0.6s;
-    }
-
-    .section:nth-of-type(4) {
-      animation-delay: 0.9s;
-    }
+    .section:nth-of-type(2) { animation-delay: 0.3s; }
+    .section:nth-of-type(3) { animation-delay: 0.6s; }
+    .section:nth-of-type(4) { animation-delay: 0.9s; }
 
     /* === FLEX LAYOUT === */
     .flex {
@@ -152,7 +220,7 @@
       background-position: center;
     }
 
-    /* === LEADER SECTION (bagian bawah tetap) === */
+    /* === LEADER SECTION === */
     .leader-section {
       display: flex;
       justify-content: space-around;
@@ -213,12 +281,17 @@
       <img src="../assets/image/logo.png" alt="PSI Logo">
     </div>
     <nav>
-      <a href="tentang.php">Tentang</a>
+      <a href="dashboard.php">Dashboard</a>
       <a href="kontak.php">Kontak</a>
       <a href="profil.php">Profil</a>
     </nav>
   </header>
-
+  <!-- HERO SLIDER -->
+  <section class="hero">
+    <div class="hero-slide active" style="background-image: url('../assets/image/index.jpeg');"></div>
+    <div class="hero-slide" style="background-image: url('../assets/image/index1.jpeg');"></div>
+    <div class="hero-slide" style="background-image: url('../assets/image/index2.jpeg');"></div>
+  </section>
   <!-- CONTAINER PALING ATAS (tidak diubah) -->
   <div class="top-content">
     <div class="top-inner">
@@ -229,6 +302,7 @@
       <div class="underline"></div>
     </div>
   </div>
+
 
   <!-- SECTION 1 -->
   <section class="section">
@@ -259,7 +333,7 @@
     </div>
   </section>
 
-  <!-- SECTION 3 (tetap sama seperti sebelumnya) -->
+  <!-- SECTION 3 -->
   <section class="section">
     <p>
       PSI meyakini bahwa solidaritas adalah kekuatan utama dalam membangun kehidupan yang lebih 
@@ -267,6 +341,7 @@
       yang terbuka, adil, dan akuntabel.
     </p>
   </section>
+
   <section class="section">
     <div class="leader-section">
       <div class="leader-card">
@@ -283,10 +358,23 @@
       </div>
     </div>
   </section>
+
   <footer>
     <img src="../assets/image/logodprd.png" alt="DPRD Logo">
     <img src="../assets/image/psiputih.png" alt="PSI Logo">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
+
+  <!-- === SCRIPT UNTUK SLIDE OTOMATIS === -->
+  <script>
+    const slides = document.querySelectorAll('.hero-slide');
+    let current = 0;
+
+    setInterval(() => {
+      slides[current].classList.remove('active');
+      current = (current + 1) % slides.length;
+      slides[current].classList.add('active');
+    }, 4000); // Ganti slide setiap 4 detik
+  </script>
 </body>
 </html>
