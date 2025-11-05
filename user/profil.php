@@ -168,9 +168,9 @@ $dapilNow = $keluarga['dapil'] ?? '';
       <img src="../assets/image/logo.png" alt="PSI Logo">
     </div>
     <nav>
-      <a href="dashboard.php">Tentang</a>
+      <a href="dashboard.php">Beranda</a>
       <a href="kontak.php">Kontak</a>
-      <a href="profil.php">Profil</a>
+      <a href="profil.php"class="active">Profil</a>
     </nav>
   </header>
 
