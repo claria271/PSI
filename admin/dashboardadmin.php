@@ -251,7 +251,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
       <div class="admin-name"><?= htmlspecialchars($_SESSION['nama_lengkap']); ?></div>
       <nav>
         <a href="#" class="active">Dashboard</a>
-        <a href="#">Data Keluarga</a>
+        <a href="datakeluarga.php">Data Keluarga</a>
         <a href="#">Hasil Verifikasi</a>
         <a href="#">Laporan</a>
         <a href="logout.php">Logout</a>
