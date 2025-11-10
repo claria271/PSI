@@ -12,7 +12,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 $query = "SELECT * FROM keluarga ORDER BY created_at DESC";
 $result = mysqli_query($conn, $query);
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -27,13 +26,29 @@ $result = mysqli_query($conn, $query);
       box-sizing: border-box;
       font-family: 'Poppins', sans-serif;
     }
-     /* HEADER */
+
+    body {
+      background: #eaeaea;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* HEADER */
     header {
       background: linear-gradient(to right, #ffffff, #000000);
       padding: 10px 30px;
       display: flex;
       align-items: center;
       gap: 15px;
+      height: 60px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
     }
 
     header img {
@@ -46,15 +61,16 @@ $result = mysqli_query($conn, $query);
       font-weight: 600;
     }
 
-    body {
-      background: #eaeaea;
-      color: #333;
+    /* LAYOUT WRAPPER */
+    .wrapper {
       display: flex;
-      min-height: 100vh;
-      overflow: hidden; /* layar tetap */
+      flex: 1;
+      margin-top: 60px; /* ruang untuk header */
+      height: calc(100vh - 60px);
+      overflow: hidden;
     }
 
-     /* SIDEBAR */
+    /* SIDEBAR */
     .sidebar {
       width: 230px;
       background: linear-gradient(to bottom, #d9d9d9, #8c8c8c);
@@ -62,6 +78,11 @@ $result = mysqli_query($conn, $query);
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: fixed;
+      top: 60px;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
     }
 
     .sidebar .admin-photo {
@@ -101,33 +122,15 @@ $result = mysqli_query($conn, $query);
       background: #ff4b4b;
       color: #fff;
     }
-     /* HEADER */
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 10px 30px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
 
-    header img {
-      height: 45px;
-    }
-
-    header h1 {
-      color: #fff;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    /* Main */
+    /* MAIN */
     .main {
-      margin-left: 230px; /* beri ruang untuk sidebar */
       flex: 1;
-      background: #f9f9f9;
+      margin-left: 230px; /* ruang sidebar */
       padding: 30px 40px;
-      height: 100vh;
-      overflow-y: auto; /* biar konten utama bisa discroll vertikal */
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      background: #f9f9f9;
     }
 
     .main h2 {
@@ -194,13 +197,13 @@ $result = mysqli_query($conn, $query);
     /* Table */
     .table-container {
       width: 100%;
-      overflow-x: auto; /* ini bikin slider horizontal */
+      overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1200px; /* biar bisa discroll kalau kolom banyak */
+      min-width: 1200px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -210,14 +213,14 @@ $result = mysqli_query($conn, $query);
       border: 1px solid #ccc;
       font-size: 14px;
       text-align: left;
-      white-space: nowrap; /* biar teks nggak turun ke bawah */
+      white-space: nowrap;
     }
 
     th {
       background: #f2f2f2;
       font-weight: 600;
       position: sticky;
-      top: 0; /* header tetap di atas */
+      top: 0;
       z-index: 2;
     }
 
@@ -260,13 +263,15 @@ $result = mysqli_query($conn, $query);
     }
 
     /* Footer */
-     footer {
+    footer {
       text-align: center;
       padding: 15px 5%;
       background: linear-gradient(to right, #ffffff, #000000);
       color: #fff;
       font-size: 14px;
       border-top: 1px solid #ccc;
+      margin-top: 30px;
+      border-radius: 8px;
     }
 
     footer img {
@@ -278,114 +283,115 @@ $result = mysqli_query($conn, $query);
   </style>
 </head>
 <body>
-    <header>
+
+  <!-- HEADER -->
+  <header>
     <img src="../assets/image/logo.png" alt="Logo PSI">
     <h1>Dashboard Admin</h1>
   </header>
-  <!-- Sidebar -->
-  <div class="sidebar">
+
+  <div class="wrapper">
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="admin-photo"></div>
       <div class="admin-name"><?= htmlspecialchars($_SESSION['nama_lengkap']); ?></div>
       <nav>
-        <a href="#" class="active">Dashboard</a>
-        <a href="datakeluarga.php">Data Keluarga</a>
+        <a href="dashboardadmin.php">Dashboard</a>
+        <a href="datakeluarga.php" class="active">Data Keluarga</a>
         <a href="#">Hasil Verifikasi</a>
         <a href="#">Laporan</a>
         <a href="logout.php">Logout</a>
       </nav>
     </aside>
-  </div>
 
-  <!-- Main Content -->
-  <div class="main">
-    <h2>Sistem Entri Data Keluarga</h2>
-    <h3>Data Keluarga</h3>
+    <!-- MAIN -->
+    <main class="main">
+      <h2>Sistem Entri Data Keluarga</h2>
+      <h3>Data Keluarga</h3>
 
-    <div class="card">
-      <div class="card-header">
-        <button class="btn-tambah" onclick="window.location.href='tambahdata.php'">+ Tambah Data</button>
-        <div class="filters">
-          <input type="text" placeholder="Cari Pengguna, NIK, No HP">
-          <select>
-            <option>Surabaya 1</option>
-            <option>Surabaya 2</option>
-          </select>
-          <select>
-            <option>Semua Status</option>
-            <option>Dibawah UMR</option>
-            <option>Diatas UMR</option>
-          </select>
-          <select>
-            <option>Semua</option>
-            <option>Ya</option>
-            <option>Tidak</option>
-          </select>
-        </div>
-      </div>
-        <div class="card">
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama Lengkap</th>
-                  <th>NIK</th>
-                  <th>No WA</th>
-                  <th>Alamat Lengkap</th>
-                  <th>Dapil</th>
-                  <th>Kecamatan</th>
-                  <th>Jumlah Anggota</th>
-                  <th>Jumlah Bekerja</th>
-                  <th>Total Penghasilan</th>
-                  <th>Kenal</th>
-                  <th>Sumber</th>
-                  <th>Kategori</th>
-                  <th>Created At</th>
-                  <th>Updated At</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                  <?php
-                    $umr = 4000000;
-                    $kategori = $row['total_penghasilan'] < $umr
-                      ? "<span class='dibawah'>Dibawah UMR</span>"
-                      : "<span class='diatas'>Diatas UMR</span>";
-                  ?>
-                  <tr>
-                    <td><?= htmlspecialchars($row['nama_lengkap']); ?></td>
-                    <td><?= htmlspecialchars($row['nik']); ?></td>
-                    <td><?= htmlspecialchars($row['no_wa']); ?></td>
-                    <td><?= htmlspecialchars($row['alamat']); ?></td>
-                    <td><?= htmlspecialchars($row['dapil']); ?></td>
-                    <td><?= htmlspecialchars($row['kecamatan']); ?></td>
-                    <td><?= htmlspecialchars($row['jumlah_anggota']); ?></td>
-                    <td><?= htmlspecialchars($row['jumlah_bekerja']); ?></td>
-                    <td><?= htmlspecialchars($row['total_penghasilan']); ?></td>
-                    <td><?= htmlspecialchars($row['kenal']); ?></td>
-                    <td><?= htmlspecialchars($row['sumber']); ?></td>
-                    <td><?= $kategori ?></td>
-                    <td><?= htmlspecialchars($row['created_at']); ?></td>
-                    <td><?= htmlspecialchars($row['updated_at']); ?></td>
-                    <td class="aksi">
-                      <button class="edit" onclick="window.location.href='editdata.php?id=<?= $row['id'] ?>'">Edit</button>
-                      <button class="hapus">Hapus</button>
-                    </td>
-                  </tr>
-                <?php endwhile; ?>
-              </tbody>
-            </table>
+      <div class="card">
+        <div class="card-header">
+          <button class="btn-tambah" onclick="window.location.href='tambahdata.php'">+ Tambah Data</button>
+          <div class="filters">
+            <input type="text" placeholder="Cari Pengguna, NIK, No HP">
+            <select>
+              <option>Surabaya 1</option>
+              <option>Surabaya 2</option>
+            </select>
+            <select>
+              <option>Semua Status</option>
+              <option>Dibawah UMR</option>
+              <option>Diatas UMR</option>
+            </select>
+            <select>
+              <option>Semua</option>
+              <option>Ya</option>
+              <option>Tidak</option>
+            </select>
           </div>
         </div>
-    </div>
 
-    <footer>
-    <img src="../assets/image/logodprd.png" alt="DPRD">
-    <img src="../assets/image/psiputih.png" alt="PSI">
-    Hak cipta © 2025 - Partai Solidaritas Indonesia
-  </footer>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama Lengkap</th>
+                <th>NIK</th>
+                <th>No WA</th>
+                <th>Alamat Lengkap</th>
+                <th>Dapil</th>
+                <th>Kecamatan</th>
+                <th>Jumlah Anggota</th>
+                <th>Jumlah Bekerja</th>
+                <th>Total Penghasilan</th>
+                <th>Kenal</th>
+                <th>Sumber</th>
+                <th>Kategori</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <?php
+                  $umr = 4000000;
+                  $kategori = $row['total_penghasilan'] < $umr
+                    ? "<span class='dibawah'>Dibawah UMR</span>"
+                    : "<span class='diatas'>Diatas UMR</span>";
+                ?>
+                <tr>
+                  <td><?= htmlspecialchars($row['nama_lengkap']); ?></td>
+                  <td><?= htmlspecialchars($row['nik']); ?></td>
+                  <td><?= htmlspecialchars($row['no_wa']); ?></td>
+                  <td><?= htmlspecialchars($row['alamat']); ?></td>
+                  <td><?= htmlspecialchars($row['dapil']); ?></td>
+                  <td><?= htmlspecialchars($row['kecamatan']); ?></td>
+                  <td><?= htmlspecialchars($row['jumlah_anggota']); ?></td>
+                  <td><?= htmlspecialchars($row['jumlah_bekerja']); ?></td>
+                  <td><?= htmlspecialchars($row['total_penghasilan']); ?></td>
+                  <td><?= htmlspecialchars($row['kenal']); ?></td>
+                  <td><?= htmlspecialchars($row['sumber']); ?></td>
+                  <td><?= $kategori ?></td>
+                  <td><?= htmlspecialchars($row['created_at']); ?></td>
+                  <td><?= htmlspecialchars($row['updated_at']); ?></td>
+                  <td class="aksi">
+                    <button class="edit" onclick="window.location.href='editdata.php?id=<?= $row['id'] ?>'">Edit</button>
+                    <button class="hapus">Hapus</button>
+                  </td>
+                </tr>
+              <?php endwhile; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer>
+        <img src="../assets/image/logodprd.png" alt="DPRD">
+        <img src="../assets/image/psiputih.png" alt="PSI">
+        Hak cipta © 2025 - Partai Solidaritas Indonesia
+      </footer>
+    </main>
   </div>
-
 </body>
 </html>

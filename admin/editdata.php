@@ -2,22 +2,63 @@
 session_start();
 include '../koneksi/config.php';
 
-// Cek login admin
+// Pastikan hanya admin yang bisa akses
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
   header("Location: ../user/login.php");
   exit();
 }
 
-$id = $_GET['id'];
-$result = mysqli_query($conn, "SELECT * FROM keluarga WHERE id='$id'");
-$data = mysqli_fetch_assoc($result);
+// Ambil data berdasarkan ID
+if (isset($_GET['id'])) {
+  $id = $_GET['id'];
+  $stmt = $conn->prepare("SELECT * FROM keluarga WHERE id = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $data = $result->fetch_assoc();
+
+  if (!$data) {
+    echo "<script>alert('Data tidak ditemukan');window.location='datakeluarga.php';</script>";
+    exit;
+  }
+}
+
+// Proses update data
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $id = $_POST['id'];
+  $nama_lengkap = $_POST['nama_lengkap'];
+  $nik = $_POST['nik'];
+  $no_wa = $_POST['no_wa'];
+  $alamat = $_POST['alamat'];
+  $dapil = $_POST['dapil'];
+  $kecamatan = $_POST['kecamatan'];
+  $jumlah_anggota = $_POST['jumlah_anggota'];
+  $jumlah_bekerja = $_POST['jumlah_bekerja'];
+  $total_penghasilan = $_POST['total_penghasilan'];
+  $kenal = $_POST['kenal'];
+  $sumber = $_POST['sumber'];
+
+  $query = "UPDATE keluarga SET 
+              nama_lengkap=?, nik=?, no_wa=?, alamat=?, dapil=?, kecamatan=?, 
+              jumlah_anggota=?, jumlah_bekerja=?, total_penghasilan=?, 
+              kenal=?, sumber=?, updated_at=NOW() 
+            WHERE id=?";
+  $stmt = $conn->prepare($query);
+  $stmt->bind_param("ssssssiiissi", $nama_lengkap, $nik, $no_wa, $alamat, $dapil, $kecamatan, $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, $kenal, $sumber, $id);
+
+  if ($stmt->execute()) {
+    header("Location: editdata.php?id=$id&status=success");
+  } else {
+    header("Location: editdata.php?id=$id&status=failed");
+  }
+  exit();
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Data Keluarga</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -46,10 +87,11 @@ $data = mysqli_fetch_assoc($result);
 
   <div class="container">
     <h2>Form Edit Data</h2>
-    <form action="proses_edit.php" method="POST">
-      <input type="hidden" name="id" value="<?= $data['id'] ?>">
+    <form method="POST" action="">
+      <input type="hidden" name="id" value="<?= htmlspecialchars($data['id']) ?>">
+
       <label>Nama Lengkap</label>
-      <input type="text" name="nama_lengkap" value="<?= htmlspecialchars($data['nama_lengkap']) ?>">
+      <input type="text" name="nama_lengkap" value="<?= htmlspecialchars($data['nama_lengkap']) ?>" required>
 
       <label>NIK</label>
       <input type="text" name="nik" value="<?= htmlspecialchars($data['nik']) ?>">
@@ -62,7 +104,7 @@ $data = mysqli_fetch_assoc($result);
 
       <label>Dapil</label>
       <select name="dapil" id="dapil" required>
-        <option value="<?= $data['dapil'] ?>"><?= $data['dapil'] ?></option>
+        <option value="<?= htmlspecialchars($data['dapil']) ?>"><?= htmlspecialchars($data['dapil']) ?></option>
         <option value="Kota Surabaya 1">Kota Surabaya 1</option>
         <option value="Kota Surabaya 2">Kota Surabaya 2</option>
         <option value="Kota Surabaya 3">Kota Surabaya 3</option>
@@ -72,28 +114,28 @@ $data = mysqli_fetch_assoc($result);
 
       <label>Kecamatan</label>
       <select name="kecamatan" id="kecamatan">
-        <option value="<?= $data['kecamatan'] ?>"><?= $data['kecamatan'] ?></option>
+        <option value="<?= htmlspecialchars($data['kecamatan']) ?>"><?= htmlspecialchars($data['kecamatan']) ?></option>
       </select>
 
       <label>Jumlah Anggota Keluarga</label>
-      <input type="number" name="jumlah_anggota" value="<?= $data['jumlah_anggota'] ?>">
+      <input type="number" name="jumlah_anggota" value="<?= htmlspecialchars($data['jumlah_anggota']) ?>">
 
       <label>Jumlah Orang Bekerja</label>
-      <input type="number" name="jumlah_bekerja" value="<?= $data['jumlah_bekerja'] ?>">
+      <input type="number" name="jumlah_bekerja" value="<?= htmlspecialchars($data['jumlah_bekerja']) ?>">
 
       <label>Total Penghasilan Keluarga</label>
-      <input type="number" name="total_penghasilan" value="<?= $data['total_penghasilan'] ?>">
+      <input type="number" name="total_penghasilan" value="<?= htmlspecialchars($data['total_penghasilan']) ?>">
 
       <label>Apakah mengenal Josiah Michael?</label>
       <select name="kenal">
-        <option value="<?= $data['kenal'] ?>"><?= $data['kenal'] ?></option>
+        <option value="<?= htmlspecialchars($data['kenal']) ?>"><?= htmlspecialchars($data['kenal']) ?></option>
         <option value="Ya">Ya</option>
         <option value="Tidak">Tidak</option>
       </select>
 
       <label>Sumber Mengenal</label>
       <select name="sumber">
-        <option value="<?= $data['sumber'] ?>"><?= $data['sumber'] ?></option>
+        <option value="<?= htmlspecialchars($data['sumber']) ?>"><?= htmlspecialchars($data['sumber']) ?></option>
         <option value="Kegiatan PSI Surabaya">Kegiatan PSI Surabaya</option>
         <option value="Dari teman atau relasi">Dari teman atau relasi</option>
         <option value="Lainnya">Lainnya</option>
@@ -111,5 +153,48 @@ $data = mysqli_fetch_assoc($result);
     <img src="../assets/image/psiputih.png" alt="PSI">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
+
+  <script>
+    // Dapil & Kecamatan dinamis (opsional seperti di tambahdata.php)
+    const dapil = document.getElementById('dapil');
+    const kecamatan = document.getElementById('kecamatan');
+    const dataDapil = {
+      "Kota Surabaya 1": ["Bubutan","Genteng","Gubeng","Krembangan","Simokerto","Tegalsari"],
+      "Kota Surabaya 2": ["Kenjeran","Pabean Cantikan","Semampir","Tambaksari"],
+      "Kota Surabaya 3": ["Bulak","Gunung Anyar","Mulyorejo","Rungkut","Sukolilo","Tenggilis Mejoyo","Wonocolo"],
+      "Kota Surabaya 4": ["Gayungan","Jambangan","Sawahan","Sukomanunggal","Wonokromo"],
+      "Kota Surabaya 5": ["Asemrowo","Benowo","Dukuhpakis","Karangpilang","Lakarsantri","Pakal","Sambikerep","Tandes","Wiyung"]
+    };
+
+    dapil.addEventListener('change', () => {
+      kecamatan.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+      if (dataDapil[dapil.value]) {
+        dataDapil[dapil.value].forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = k;
+          kecamatan.appendChild(opt);
+        });
+      }
+    });
+
+    // SweetAlert notifikasi sukses/gagal
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('status') === 'success') {
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Data keluarga berhasil diperbarui 🎉',
+        icon: 'success',
+        confirmButtonColor: '#ff4b4b'
+      }).then(() => window.location.href = 'datakeluarga.php');
+    } else if (params.get('status') === 'failed') {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Terjadi kesalahan saat memperbarui data 😥',
+        icon: 'error',
+        confirmButtonColor: '#ff4b4b'
+      });
+    }
+  </script>
 </body>
 </html>

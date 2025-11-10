@@ -7,6 +7,37 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
   header("Location: ../user/login.php");
   exit();
 }
+
+// Proses simpan data langsung dari halaman ini
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nama_lengkap = $_POST['nama_lengkap'];
+    $nik = $_POST['nik'];
+    $no_wa = $_POST['no_wa'];
+    $alamat = $_POST['alamat'];
+    $dapil = $_POST['dapil'];
+    $kecamatan = $_POST['kecamatan'];
+    $jumlah_anggota = $_POST['jumlah_anggota'];
+    $jumlah_bekerja = $_POST['jumlah_bekerja'];
+    $total_penghasilan = $_POST['total_penghasilan'];
+    $kenal = $_POST['kenal'];
+    $sumber = $_POST['sumber'];
+
+    $query = "INSERT INTO keluarga 
+      (nama_lengkap, nik, no_wa, alamat, dapil, kecamatan, jumlah_anggota, jumlah_bekerja, total_penghasilan, kenal, sumber, created_at, updated_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ssssssissss", 
+      $nama_lengkap, $nik, $no_wa, $alamat, $dapil, $kecamatan, 
+      $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, $kenal, $sumber
+    );
+
+    if ($stmt->execute()) {
+        $status = 'success';
+    } else {
+        $status = 'failed';
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -86,7 +117,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
   <div class="container">
     <h2>Form Tambah Data Keluarga</h2>
-    <form action="proses_tambah.php" method="POST">
+    <form method="POST">
       <label>Nama Lengkap</label>
       <input type="text" name="nama_lengkap" required>
 
@@ -150,6 +181,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
   </footer>
 
   <script>
+    // Data dinamis Dapil-Kecamatan
     const dapil = document.getElementById('dapil');
     const kecamatan = document.getElementById('kecamatan');
     const dataDapil = {
@@ -166,6 +198,23 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         opt.value = k; opt.textContent = k; kecamatan.appendChild(opt);
       });
     });
+
+    // SweetAlert status hasil simpan
+    <?php if (isset($status) && $status === 'success'): ?>
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Data keluarga berhasil ditambahkan 🎉',
+        icon: 'success',
+        confirmButtonColor: '#ff4b4b'
+      }).then(() => window.location.href = 'datakeluarga.php');
+    <?php elseif (isset($status) && $status === 'failed'): ?>
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Terjadi kesalahan saat menyimpan data 😥',
+        icon: 'error',
+        confirmButtonColor: '#ff4b4b'
+      });
+    <?php endif; ?>
   </script>
 </body>
 </html>
