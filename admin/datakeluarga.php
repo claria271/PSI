@@ -8,8 +8,50 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// Ambil data keluarga
-$query = "SELECT * FROM keluarga ORDER BY created_at DESC";
+// Set nilai UMR (bisa kamu pindah ke config kalau mau)
+$umr = 4000000;
+
+// Ambil filter dari GET
+$search      = isset($_GET['search']) ? trim($_GET['search']) : '';
+$status_umr  = isset($_GET['status_umr']) ? $_GET['status_umr'] : ''; // '', Dibawah, Diatas
+$dapil       = isset($_GET['dapil']) ? $_GET['dapil'] : '';
+$kenal       = isset($_GET['kenal']) ? $_GET['kenal'] : '';
+
+// Bangun query dengan kondisi dinamis
+$conditions = [];
+
+if ($search !== '') {
+    $safe = mysqli_real_escape_string($conn, $search);
+    $conditions[] = "(nama_lengkap LIKE '%$safe%' 
+                  OR nik LIKE '%$safe%' 
+                  OR no_wa LIKE '%$safe%')";
+}
+
+if ($dapil !== '') {
+    $safeDapil = mysqli_real_escape_string($conn, $dapil);
+    $conditions[] = "dapil = '$safeDapil'";
+}
+
+if ($kenal === 'Ya' || $kenal === 'Tidak') {
+    $safeKenal = mysqli_real_escape_string($conn, $kenal);
+    $conditions[] = "kenal = '$safeKenal'";
+}
+
+// FILTER UMR
+if ($status_umr === 'Dibawah') {
+    $conditions[] = "total_penghasilan < $umr";
+} elseif ($status_umr === 'Diatas') {
+    $conditions[] = "total_penghasilan >= $umr";
+}
+
+$query = "SELECT * FROM keluarga";
+
+if (!empty($conditions)) {
+    $query .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$query .= " ORDER BY created_at DESC";
+
 $result = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>
@@ -65,7 +107,7 @@ $result = mysqli_query($conn, $query);
     .wrapper {
       display: flex;
       flex: 1;
-      margin-top: 60px; /* ruang untuk header */
+      margin-top: 60px;
       height: calc(100vh - 60px);
       overflow: hidden;
     }
@@ -126,7 +168,7 @@ $result = mysqli_query($conn, $query);
     /* MAIN */
     .main {
       flex: 1;
-      margin-left: 230px; /* ruang sidebar */
+      margin-left: 230px;
       padding: 30px 40px;
       height: calc(100vh - 60px);
       overflow-y: auto;
@@ -145,7 +187,6 @@ $result = mysqli_query($conn, $query);
       margin-bottom: 20px;
     }
 
-    /* Card */
     .card {
       background: #fff;
       border-radius: 12px;
@@ -194,7 +235,6 @@ $result = mysqli_query($conn, $query);
       background: #f5f5f5;
     }
 
-    /* Table */
     .table-container {
       width: 100%;
       overflow-x: auto;
@@ -262,7 +302,6 @@ $result = mysqli_query($conn, $query);
       opacity: 0.8;
     }
 
-    /* Footer */
     footer {
       text-align: center;
       padding: 15px 5%;
@@ -312,23 +351,39 @@ $result = mysqli_query($conn, $query);
       <div class="card">
         <div class="card-header">
           <button class="btn-tambah" onclick="window.location.href='tambahdata.php'">+ Tambah Data</button>
-          <div class="filters">
-            <input type="text" placeholder="Cari Pengguna, NIK, No HP">
-            <select>
-              <option>Surabaya 1</option>
-              <option>Surabaya 2</option>
+
+          <!-- FORM FILTER -->
+          <form method="GET" class="filters">
+            <input
+              type="text"
+              name="search"
+              placeholder="Cari Pengguna, NIK, No HP"
+              value="<?= htmlspecialchars($search); ?>"
+            >
+
+            <!-- Contoh Dapil (opsional, sesuaikan dengan datamu) -->
+            <select name="dapil" onchange="this.form.submit()">
+              <option value="">Semua Dapil</option>
+              <option value="Kota Surabaya 1" <?= $dapil === 'Kota Surabaya 1' ? 'selected' : '' ?>>Kota Surabaya 1</option>
+              <option value="Kota Surabaya 2" <?= $dapil === 'Surabaya 2' ? 'selected' : '' ?>>Kota Surabaya 2</option>
             </select>
-            <select>
-              <option>Semua Status</option>
-              <option>Dibawah UMR</option>
-              <option>Diatas UMR</option>
+
+            <!-- FILTER STATUS UMR -->
+            <select name="status_umr" onchange="this.form.submit()">
+              <option value="" <?= $status_umr === '' ? 'selected' : '' ?>>Semua Status</option>
+              <option value="Dibawah" <?= $status_umr === 'Dibawah' ? 'selected' : '' ?>>Dibawah UMR</option>
+              <option value="Diatas" <?= $status_umr === 'Diatas' ? 'selected' : '' ?>>Diatas UMR</option>
             </select>
-            <select>
-              <option>Semua</option>
-              <option>Ya</option>
-              <option>Tidak</option>
+
+            <!-- FILTER KENAL -->
+            <select name="kenal" onchange="this.form.submit()">
+              <option value="" <?= $kenal === '' ? 'selected' : '' ?>>Kenal Semua</option>
+              <option value="Ya" <?= $kenal === 'Ya' ? 'selected' : '' ?>>Ya</option>
+              <option value="Tidak" <?= $kenal === 'Tidak' ? 'selected' : '' ?>>Tidak</option>
             </select>
-          </div>
+
+            <button type="submit" style="display:none;"></button>
+          </form>
         </div>
 
         <div class="table-container">
@@ -353,34 +408,39 @@ $result = mysqli_query($conn, $query);
               </tr>
             </thead>
             <tbody>
-              <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                <?php
-                  $umr = 4000000;
-                  $kategori = $row['total_penghasilan'] < $umr
-                    ? "<span class='dibawah'>Dibawah UMR</span>"
-                    : "<span class='diatas'>Diatas UMR</span>";
-                ?>
+              <?php if (mysqli_num_rows($result) > 0): ?>
+                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                  <?php
+                    $kategori = $row['total_penghasilan'] < $umr
+                      ? "<span class='dibawah'>Dibawah UMR</span>"
+                      : "<span class='diatas'>Diatas UMR</span>";
+                  ?>
+                  <tr>
+                    <td><?= htmlspecialchars($row['nama_lengkap']); ?></td>
+                    <td><?= htmlspecialchars($row['nik']); ?></td>
+                    <td><?= htmlspecialchars($row['no_wa']); ?></td>
+                    <td><?= htmlspecialchars($row['alamat']); ?></td>
+                    <td><?= htmlspecialchars($row['dapil']); ?></td>
+                    <td><?= htmlspecialchars($row['kecamatan']); ?></td>
+                    <td><?= htmlspecialchars($row['jumlah_anggota']); ?></td>
+                    <td><?= htmlspecialchars($row['jumlah_bekerja']); ?></td>
+                    <td><?= htmlspecialchars($row['total_penghasilan']); ?></td>
+                    <td><?= htmlspecialchars($row['kenal']); ?></td>
+                    <td><?= htmlspecialchars($row['sumber']); ?></td>
+                    <td><?= $kategori ?></td>
+                    <td><?= htmlspecialchars($row['created_at']); ?></td>
+                    <td><?= htmlspecialchars($row['updated_at']); ?></td>
+                    <td class="aksi">
+                      <button class="edit" onclick="window.location.href='editdata.php?id=<?= $row['id'] ?>'">Edit</button>
+                      <button class="hapus" onclick="if(confirm('Yakin hapus data ini?')) window.location.href='hapusdata.php?id=<?= $row['id'] ?>'">Hapus</button>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else: ?>
                 <tr>
-                  <td><?= htmlspecialchars($row['nama_lengkap']); ?></td>
-                  <td><?= htmlspecialchars($row['nik']); ?></td>
-                  <td><?= htmlspecialchars($row['no_wa']); ?></td>
-                  <td><?= htmlspecialchars($row['alamat']); ?></td>
-                  <td><?= htmlspecialchars($row['dapil']); ?></td>
-                  <td><?= htmlspecialchars($row['kecamatan']); ?></td>
-                  <td><?= htmlspecialchars($row['jumlah_anggota']); ?></td>
-                  <td><?= htmlspecialchars($row['jumlah_bekerja']); ?></td>
-                  <td><?= htmlspecialchars($row['total_penghasilan']); ?></td>
-                  <td><?= htmlspecialchars($row['kenal']); ?></td>
-                  <td><?= htmlspecialchars($row['sumber']); ?></td>
-                  <td><?= $kategori ?></td>
-                  <td><?= htmlspecialchars($row['created_at']); ?></td>
-                  <td><?= htmlspecialchars($row['updated_at']); ?></td>
-                  <td class="aksi">
-                    <button class="edit" onclick="window.location.href='editdata.php?id=<?= $row['id'] ?>'">Edit</button>
-                    <button class="hapus">Hapus</button>
-                  </td>
+                  <td colspan="15" style="text-align:center;">Tidak ada data ditemukan.</td>
                 </tr>
-              <?php endwhile; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
