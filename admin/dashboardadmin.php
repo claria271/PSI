@@ -1,3 +1,58 @@
+<?php
+session_start();
+include '../koneksi/config.php';
+
+// Pastikan admin login
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../user/login.php");
+    exit();
+}
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn->set_charset('utf8mb4');
+
+// Helper aman untuk output HTML
+function e($str) {
+    return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
+}
+
+// Ambil data admin berdasarkan session (bisa dari email atau username)
+$admin = null;
+
+if (!empty($_SESSION['alamat_email'])) {
+    $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? LIMIT 1");
+    $stmt->bind_param('s', $_SESSION['alamat_email']);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($res->num_rows > 0) {
+        $admin = $res->fetch_assoc();
+    }
+} elseif (!empty($_SESSION['username'])) {
+    $stmt = $conn->prepare("SELECT * FROM login WHERE username = ? LIMIT 1");
+    $stmt->bind_param('s', $_SESSION['username']);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($res->num_rows > 0) {
+        $admin = $res->fetch_assoc();
+    }
+}
+
+// Jika tetap tidak ketemu (misal session aneh), paksa logout
+if (!$admin) {
+    header("Location: ../user/login.php");
+    exit();
+}
+
+// Tentukan nama & foto admin
+// Sesuaikan nama kolom di tabelmu: misal 'nama_lengkap', 'username', 'foto'
+$adminName = !empty($admin['nama_lengkap'])
+    ? $admin['nama_lengkap']
+    : (!empty($admin['username']) ? $admin['username'] : 'Admin');
+
+$adminPhoto = !empty($admin['foto'])
+    ? '../uploads/' . $admin['foto']   // misal foto disimpan di folder uploads
+    : '../assets/image/admin_photo.jpg';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -358,9 +413,15 @@
     <aside class="sidebar">
       <div class="admin-profile">
         <div class="admin-photo" onclick="window.location.href='profil_admin.php'">
-          <img src="../assets/image/admin_photo.jpg" alt="Admin Photo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23bbb\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23666\'%3E👤%3C/text%3E%3C/svg%3E'">
+          <img 
+            src="<?php echo e($adminPhoto); ?>" 
+            alt="Admin Photo"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23bbb\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23666\'%3E👤%3C/text%3E%3C/svg%3E';"
+          >
         </div>
-        <div class="admin-name" onclick="window.location.href='profil_admin.php'">Admintasya</div>
+        <div class="admin-name" onclick="window.location.href='profil_admin.php'">
+          <?php echo e($adminName); ?>
+        </div>
       </div>
       <nav>
         <a href="#" class="active">Dashboard</a>
@@ -375,7 +436,7 @@
     <section class="content">
       <div class="page-header">
         <h2>Dashboard Admin</h2>
-        <p>Selamat datang kembali! Berikut ringkasan data terkini</p>
+        <p>Selamat datang kembali, <?php echo e($adminName); ?>! Berikut ringkasan data terkini.</p>
       </div>
 
       <!-- STATS CARDS -->
