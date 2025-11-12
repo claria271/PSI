@@ -1,9 +1,8 @@
 <?php
-// register.php
+// File: PSI/register.php
 session_start();
 include 'koneksi/config.php';
 
-// Proses form ketika disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil dan amankan data input
     $nama_lengkap   = $conn->real_escape_string($_POST['nama_lengkap']);
@@ -17,10 +16,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             VALUES ('$nama_lengkap', '$alamat_lengkap', '$nomor_telepon', '$alamat_email', '$password')";
 
     if ($conn->query($sql) === TRUE) {
-        // Simpan email ke session agar bisa digunakan di tambahdata.php
+        // Simpan data ke session agar halaman user mengenali
         $_SESSION['alamat_email'] = $alamat_email;
+        $_SESSION['nama_lengkap'] = $nama_lengkap;
+        $_SESSION['role'] = 'user';
 
-        // Arahkan langsung ke halaman tambahdata.php milik user
+        // ✅ Arahkan ke halaman tambah data (karena file ini di root)
         header("Location: user/tambahdata.php");
         exit;
     } else {
@@ -107,11 +108,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       box-sizing: border-box;
     }
     .btn-primary {
-      background: #e24a4aff;
+      background: #e24a4a;
       color: #fff;
     }
     .btn-primary:hover {
-      background: #ff0000ff;
+      background: #ff0000;
     }
   </style>
 </head>

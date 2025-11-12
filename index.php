@@ -224,7 +224,7 @@ session_start();
       <img src="assets/image/logo.png" alt="PSI Logo">
     </div>
     <nav>
-      <a href="dashboard.php">beranda</a>
+      <!-- <a href="dashboard.php">Beranda</a> -->
       <a href="kontak.php">Kontak</a>
       <?php if (isset($_SESSION['user_id'])): ?>
         <!-- Jika sudah login -->
