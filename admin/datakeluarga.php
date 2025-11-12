@@ -1,4 +1,5 @@
 <?php
+// laporan.php (final versi)
 session_start();
 include '../koneksi/config.php';
 
@@ -11,570 +12,431 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
 
-// Helper aman untuk output HTML
-function e($str) {
-    return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
-}
+// helper escape
+function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
-// Ambil data admin berdasarkan session (bisa dari email atau username)
+// Ambil data admin
 $admin = null;
-
 if (!empty($_SESSION['alamat_email'])) {
     $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? LIMIT 1");
     $stmt->bind_param('s', $_SESSION['alamat_email']);
     $stmt->execute();
     $res = $stmt->get_result();
-    if ($res->num_rows > 0) {
-        $admin = $res->fetch_assoc();
-    }
+    if ($res->num_rows > 0) $admin = $res->fetch_assoc();
 } elseif (!empty($_SESSION['username'])) {
     $stmt = $conn->prepare("SELECT * FROM login WHERE username = ? LIMIT 1");
     $stmt->bind_param('s', $_SESSION['username']);
     $stmt->execute();
     $res = $stmt->get_result();
-    if ($res->num_rows > 0) {
-        $admin = $res->fetch_assoc();
+    if ($res->num_rows > 0) $admin = $res->fetch_assoc();
+}
+if (!$admin) { header("Location: ../user/login.php"); exit(); }
+
+$adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : (!empty($admin['username']) ? $admin['username'] : 'Admin');
+$adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/admin_photo.jpg';
+
+// UMR per orang (Surabaya 2025)
+define('UMR_PERSON', 4725479);
+
+// Ambil daftar bulan/tahun unik dari created_at (dipakai di dropdown)
+$bulanQ = $conn->query("SELECT DISTINCT MONTH(created_at) AS bulan FROM keluarga WHERE created_at IS NOT NULL ORDER BY bulan ASC");
+$tahunQ = $conn->query("SELECT DISTINCT YEAR(created_at) AS tahun FROM keluarga WHERE created_at IS NOT NULL ORDER BY tahun DESC");
+
+// --- FILTERS KHUSUS UNTUK MASING-MASING CARD ---
+// Bulanan (prefix: m_)
+$m_dapil    = isset($_GET['m_dapil']) ? trim($_GET['m_dapil']) : '';
+$m_kategori = isset($_GET['m_kategori']) ? trim($_GET['m_kategori']) : ''; // dibawah / diatas / ''
+$m_kenal    = isset($_GET['m_kenal']) ? trim($_GET['m_kenal']) : '';
+$m_bulan    = isset($_GET['m_bulan']) ? trim($_GET['m_bulan']) : '';
+$m_tahun    = isset($_GET['m_tahun']) ? trim($_GET['m_tahun']) : '';
+
+// Tahunan (prefix: y_)
+$y_dapil    = isset($_GET['y_dapil']) ? trim($_GET['y_dapil']) : '';
+$y_kategori = isset($_GET['y_kategori']) ? trim($_GET['y_kategori']) : '';
+$y_kenal    = isset($_GET['y_kenal']) ? trim($_GET['y_kenal']) : '';
+$y_tahun    = isset($_GET['y_tahun']) ? trim($_GET['y_tahun']) : '';
+
+// helper: build WHERE clause based on provided filter array
+function build_where_clause($conn, $filters) {
+    $conds = [];
+    // dapil
+    if (!empty($filters['dapil'])) {
+        $safe = mysqli_real_escape_string($conn, $filters['dapil']);
+        $conds[] = "dapil = '$safe'";
     }
+    // kenal
+    if ($filters['kenal'] !== '' && $filters['kenal'] !== null) {
+        $safe = mysqli_real_escape_string($conn, $filters['kenal']);
+        $conds[] = "kenal = '$safe'";
+    }
+    // kategori (per orang) -> gunakan NULLIF untuk hindari division by zero
+    if (!empty($filters['kategori'])) {
+        $umr = intval($filters['umr']);
+        if ($filters['kategori'] === 'dibawah') {
+            $conds[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) < $umr )";
+        } elseif ($filters['kategori'] === 'diatas') {
+            $conds[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) >= $umr )";
+        }
+    }
+    // bulan & tahun
+    if (!empty($filters['bulan'])) {
+        $mb = intval($filters['bulan']);
+        $conds[] = "MONTH(created_at) = $mb";
+    }
+    if (!empty($filters['tahun'])) {
+        $yt = intval($filters['tahun']);
+        $conds[] = "YEAR(created_at) = $yt";
+    }
+
+    if (count($conds) > 0) return "WHERE " . implode(" AND ", $conds);
+    return "";
 }
 
-// Jika tetap tidak ketemu, paksa logout
-if (!$admin) {
-    header("Location: ../user/login.php");
-    exit();
-}
+// --- QUERY UNTUK CARD BULANAN ---
+$filters_month = [
+    'dapil' => $m_dapil,
+    'kategori' => $m_kategori,
+    'kenal' => $m_kenal,
+    'bulan' => $m_bulan,
+    'tahun' => $m_tahun,
+    'umr' => UMR_PERSON
+];
+$where_month = build_where_clause($conn, $filters_month);
+$sql_month = "SELECT * FROM keluarga $where_month ORDER BY created_at DESC";
+$res_month = $conn->query($sql_month);
 
-// Tentukan nama & foto admin (sama seperti dashboard pertama)
-$adminName = !empty($admin['nama_lengkap'])
-    ? $admin['nama_lengkap']
-    : (!empty($admin['username']) ? $admin['username'] : 'Admin');
+// --- QUERY UNTUK CARD TAHUNAN ---
+$filters_year = [
+    'dapil' => $y_dapil,
+    'kategori' => $y_kategori,
+    'kenal' => $y_kenal,
+    'bulan' => '', // tidak pakai bulan di yearly
+    'tahun' => $y_tahun,
+    'umr' => UMR_PERSON
+];
+$where_year = build_where_clause($conn, $filters_year);
+$sql_year = "SELECT * FROM keluarga $where_year ORDER BY created_at DESC";
+$res_year = $conn->query($sql_year);
 
-$adminPhoto = !empty($admin['foto'])
-    ? '../uploads/' . $admin['foto']
-    : '../assets/image/admin_photo.jpg';
+// Untuk opsi dapil: gunakan yang kamu punya, contoh berikut tetap statis — ubah jika mau ambil dari DB.
+$dapil_options = [
+    '' => 'Semua Dapil',
+    'Kota Surabaya 1' => 'Kota Surabaya 1',
+    'Kota Surabaya 2' => 'Kota Surabaya 2',
+    'Kota Surabaya 3' => 'Kota Surabaya 3',
+    'Kota Surabaya 4' => 'Kota Surabaya 4'
+];
 
-// ================== LOGIKA DATA KELUARGA ================== //
+// Untuk opsi kenal
+$kenal_options = [
+    '' => 'Semua',
+    'Ya' => 'Ya',
+    'Tidak pernah' => 'Tidak pernah',
+    'Tidak' => 'Tidak'
+];
 
-$umr = 4000000;
-
-// Ambil filter dari GET
-$search      = isset($_GET['search']) ? trim($_GET['search']) : '';
-$status_umr  = isset($_GET['status_umr']) ? $_GET['status_umr'] : ''; // '', Dibawah, Diatas
-$dapil       = isset($_GET['dapil']) ? $_GET['dapil'] : '';
-$kenal       = isset($_GET['kenal']) ? $_GET['kenal'] : '';
-
-// Bangun query dengan kondisi dinamis
-$conditions = [];
-
-if ($search !== '') {
-    $safe = mysqli_real_escape_string($conn, $search);
-    $conditions[] = "(nama_lengkap LIKE '%$safe%' 
-                  OR nik LIKE '%$safe%' 
-                  OR no_wa LIKE '%$safe%')";
-}
-
-if ($dapil !== '') {
-    $safeDapil = mysqli_real_escape_string($conn, $dapil);
-    $conditions[] = "dapil = '$safeDapil'";
-}
-
-if ($kenal === 'Ya' || $kenal === 'Tidak') {
-    $safeKenal = mysqli_real_escape_string($conn, $kenal);
-    $conditions[] = "kenal = '$safeKenal'";
-}
-
-if ($status_umr === 'Dibawah') {
-    $conditions[] = "total_penghasilan < $umr";
-} elseif ($status_umr === 'Diatas') {
-    $conditions[] = "total_penghasilan >= $umr";
-}
-
-$query = "SELECT * FROM keluarga";
-
-if (!empty($conditions)) {
-    $query .= " WHERE " . implode(" AND ", $conditions);
-}
-
-$query .= " ORDER BY created_at DESC";
-
-$result = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Keluarga - PSI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Laporan - PSI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #ffffff;
-      color: #333;
-      line-height: 1.6;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* === HEADER (SAMA DENGAN CODE PERTAMA) === */
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 12px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      flex: 0 0 auto;
-    }
-
-    header .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    header img {
-      height: 40px;
-    }
-
-    /* === LAYOUT: SIDEBAR + CONTENT === */
-    .layout {
-      flex: 1 1 auto;
-      display: flex;
-      min-height: 0; /* penting supaya area scroll jalan */
-    }
-
-    /* === SIDEBAR (SAMA DENGAN DASHBOARD PERTAMA) === */
-    .sidebar {
-      width: 260px;
-      flex: 0 0 260px;
-      padding: 30px 20px;
-      background: linear-gradient(to bottom, #d9d9d9, #8c8c8c);
-      border-right: 1px solid #ccc;
-      overflow-y: auto;
-    }
-
-    .admin-profile {
-      text-align: center;
-      margin-bottom: 30px;
-      position: relative;
-    }
-
-    .admin-photo {
-      width: 70px;
-      height: 70px;
-      background: #bbb;
-      border-radius: 50%;
-      margin: 0 auto 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .admin-photo:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
-    }
-
-    .admin-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .admin-name {
-      color: #000;
-      font-weight: 600;
-      font-size: 15px;
-      padding: 10px 15px;
-      background: #cfcfcf;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .admin-name:hover {
-      background: #ff4b4b;
-      color: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
-    }
-
-    .sidebar nav a {
-      display: block;
-      padding: 12px 16px;
-      margin: 8px 0;
-      text-decoration: none;
-      color: #000;
-      background: #b5b5b5;
-      border-radius: 10px;
-      transition: all 0.3s;
-      font-weight: 500;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .sidebar nav a:hover,
-    .sidebar nav a.active {
-      background: #ff4b4b;
-      color: #fff;
-      transform: translateX(5px);
-      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
-    }
-
-    /* === CONTENT WRAPPER: PAGE HEADER + SCROLL AREA + FOOTER === */
-    .content {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      background: #f9f9f9;
-      padding: 25px 30px;
-      min-width: 0;
-      min-height: 0;
-    }
-
-    .page-header {
-      flex: 0 0 auto;
-      margin-bottom: 15px;
-    }
-
-    .page-header h2 {
-      color: #000;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 5px;
-    }
-
-    .page-header p {
-      color: #666;
-      font-size: 14px;
-    }
-
-    /* AREA YANG BISA DI-SCROLL (HANYA DATA) */
-    .content-scroll {
-      flex: 1 1 auto;
-      overflow-y: auto;
-      padding-right: 5px;
-      min-height: 0;
-    }
-
-    /* === CARD, FILTER, TABEL === */
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .btn-tambah {
-      background: #d32f2f;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 14px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.3s;
-    }
-
-    .btn-tambah:hover {
-      background: #b71c1c;
-    }
-
-    .filters {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .filters input,
-    .filters select {
-      padding: 7px 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 13px;
-      background: #f5f5f5;
-    }
-
-    .table-container {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 1200px;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    th {
-      background: #f2f2f2;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    tr:nth-child(even) {
-      background: #fafafa;
-    }
-
-    .dibawah {
-      color: red;
-      font-weight: 600;
-    }
-
-    .diatas {
-      color: #333;
-      font-weight: 600;
-    }
-
-    .aksi button {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-right: 4px;
-      font-size: 13px;
-      transition: 0.3s;
-    }
-
-    .aksi .edit {
-      background: #2196F3;
-      color: #fff;
-    }
-
-    .aksi .hapus {
-      background: #f44336;
-      color: #fff;
-    }
-
-    .aksi button:hover {
-      opacity: 0.8;
-    }
-
-    /* === FOOTER (TETAP DI BAWAH, TIDAK SCROLL) === */
-    footer {
-      flex: 0 0 auto;
-      margin-top: 5px;
-      padding: 15px 5%;
-      text-align: center;
-      background: linear-gradient(to right, #ffffff, #000000);
-      font-size: 14px;
-      color: #fff;
-      border-top: 1px solid #ccc;
-    }
-
-    footer img {
-      height: 20px;
-      vertical-align: middle;
-      margin: 0 5px;
-      filter: brightness(0) invert(1);
-    }
-
-    /* SCROLLBAR */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    @media (max-width: 1024px) {
-      .content {
-        padding: 20px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 220px;
-        flex: 0 0 220px;
-      }
-    }
+    /* ---- style mengikuti halaman Data Keluarga (opsi C) ---- */
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Poppins',sans-serif;background:#f5f6f8;color:#222}
+    header{background:linear-gradient(90deg,#fff,#000);padding:12px 30px;display:flex;align-items:center;justify-content:space-between}
+    header img{height:40px}
+    .layout{display:flex;min-height:calc(100vh - 84px)}
+    .sidebar{width:260px;padding:24px;background:linear-gradient(#d9d9d9,#8c8c8c);border-right:1px solid #ccc}
+    .admin-profile{text-align:center;margin-bottom:22px}
+    .admin-photo{width:72px;height:72px;border-radius:50%;overflow:hidden;margin:0 auto 8px}
+    .admin-photo img{width:100%;height:100%;object-fit:cover}
+    .content{flex:1;padding:22px;overflow:auto}
+    .page-header h2{font-size:22px;margin-bottom:6px}
+    .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+    .card-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .filters select{padding:8px;border:1px solid #ddd;border-radius:8px;background:#fbfbfb}
+    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .btn-primary{background:#ff4b4b;color:#fff}
+    .btn-muted{background:#f1f1f1;color:#333;border:1px solid #e6e6e6}
+    .table-container{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:1200px}
+    th,td{padding:10px;border:1px solid #e6e6e6;font-size:13px;white-space:nowrap}
+    thead th{background:#f7fafc;font-weight:600}
+    tbody tr:nth-child(even){background:#fcfcfd}
+    tbody tr:hover{background:#f3f6fb}
+    .dibawah{color:#d32f2f;font-weight:600}
+    .diatas{color:#2e7d32;font-weight:600}
+    footer{padding:12px 5%;text-align:center;background:linear-gradient(90deg,#fff,#000);color:#fff;margin-top:12px}
+    @media (max-width:900px){.layout{flex-direction:column}.sidebar{width:100%}}
   </style>
 </head>
 <body>
-  <!-- HEADER -->
   <header>
-    <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI Logo">
+    <div><img src="../assets/image/logo.png" alt="PSI Logo"></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="text-align:right;color:#fff;font-weight:600"><?php echo e($adminName); ?></div>
+      <div style="width:44px;height:44px;border-radius:8px;overflow:hidden"><img src="<?php echo e($adminPhoto); ?>" alt="admin"></div>
     </div>
   </header>
 
   <div class="layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="admin-profile">
-        <div class="admin-photo" onclick="window.location.href='profil_admin.php'">
-          <img 
-            src="<?php echo e($adminPhoto); ?>" 
-            alt="Admin Photo"
-            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23bbb\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23666\'%3E👤%3C/text%3E%3C/svg%3E';"
-          >
-        </div>
-        <div class="admin-name" onclick="window.location.href='profil_admin.php'">
-          <?php echo e($adminName); ?>
-        </div>
+        <div class="admin-photo"><img src="<?php echo e($adminPhoto); ?>" alt="foto admin"></div>
+        <div style="font-weight:600;color:#111"><?php echo e($adminName); ?></div>
       </div>
       <nav>
-        <a href="dashboardadmin.php">Dashboard</a>
-        <a href="datakeluarga.php" class="active">Data Keluarga</a>
-        <a href="#">Hasil Verifikasi</a>
-        <a href="#">Laporan</a>
-        <a href="logout.php">Logout</a>
+        <a href="dashboardadmin.php" style="display:block;padding:10px;background:#b5b5b5;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#000;text-align:center">Dashboard</a>
+        <a href="datakeluarga.php" style="display:block;padding:10px;background:#b5b5b5;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#000;text-align:center">Data Keluarga</a>
+        <a href="laporan.php" style="display:block;padding:10px;background:#ff4b4b;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#fff;text-align:center">Laporan</a>
       </nav>
     </aside>
 
-    <!-- CONTENT -->
-    <div class="content">
+    <main class="content">
       <div class="page-header">
-        <h2>Data Keluarga</h2>
-        <p>Kelola data keluarga yang telah terdaftar dalam sistem.</p>
+        <h2>Laporan</h2>
+        <p style="color:#666;margin-top:6px">Pilih filter pada setiap card, lalu lihat preview data. Gunakan tombol download untuk ekspor PDF/Excel.</p>
       </div>
 
-      <div class="content-scroll">
-        <div class="card">
-          <div class="card-header">
-            <button class="btn-tambah" onclick="window.location.href='tambahdata.php'">+ Tambah Data</button>
-
-            <form method="GET" class="filters">
-              <input
-                type="text"
-                name="search"
-                placeholder="Cari Pengguna, NIK, No HP"
-                value="<?php echo e($search); ?>"
-              >
-
-              <select name="dapil" onchange="this.form.submit()">
-                <option value="">Semua Dapil</option>
-                <option value="Kota Surabaya 1" <?php echo $dapil === 'Kota Surabaya 1' ? 'selected' : ''; ?>>Kota Surabaya 1</option>
-                <option value="Kota Surabaya 2" <?php echo $dapil === 'Kota Surabaya 2' ? 'selected' : ''; ?>>Kota Surabaya 2</option>
-                <option value="Kota Surabaya 3" <?php echo $dapil === 'Kota Surabaya 3' ? 'selected' : ''; ?>>Kota Surabaya 3</option>
-                <option value="Kota Surabaya 4" <?php echo $dapil === 'Kota Surabaya 4' ? 'selected' : ''; ?>>Kota Surabaya 4</option>
-              </select>
-
-              <select name="status_umr" onchange="this.form.submit()">
-                <option value=""  <?php echo $status_umr === '' ? 'selected' : ''; ?>>Semua Status</option>
-                <option value="Dibawah" <?php echo $status_umr === 'Dibawah' ? 'selected' : ''; ?>>Dibawah UMR</option>
-                <option value="Diatas"  <?php echo $status_umr === 'Diatas'  ? 'selected' : ''; ?>>Diatas UMR</option>
-              </select>
-
-              <select name="kenal" onchange="this.form.submit()">
-                <option value=""      <?php echo $kenal === '' ? 'selected' : ''; ?>>Sumber Kenal</option>
-                <option value="Ya"    <?php echo $kenal === 'Ya' ? 'selected' : ''; ?>>Ya</option>
-                <option value="Tidak pernah" <?php echo $kenal === 'Tidak pernah' ? 'selected' : ''; ?>>Tidak</option>
-              </select>
-
-              <button type="submit" style="display:none;"></button>
-            </form>
+      <!-- CARD: LAPORAN BULANAN -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 style="margin:0 0 4px 0">Laporan Bulanan</h3>
+            <div style="color:#666;font-size:13px">Filter: Dapil, Kategori (UMR per orang), Sumber Kenal, Bulan, Tahun</div>
           </div>
 
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama Lengkap</th>
-                  <th>NIK</th>
-                  <th>No WA</th>
-                  <th>Alamat Lengkap</th>
-                  <th>Dapil</th>
-                  <th>Kecamatan</th>
-                  <th>Jumlah Anggota</th>
-                  <th>Jumlah Bekerja</th>
-                  <th>Total Penghasilan</th>
-                  <th>Kenal</th>
-                  <th>Sumber</th>
-                  <th>Kategori</th>
-                  <th>Created At</th>
-                  <th>Updated At</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php if (mysqli_num_rows($result) > 0): ?>
-                  <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                    <?php
-                      $kategori = $row['total_penghasilan'] < $umr
-                        ? "<span class='dibawah'>Dibawah UMR</span>"
-                        : "<span class='diatas'>Diatas UMR</span>";
-                    ?>
-                    <tr>
-                      <td><?php echo e($row['nama_lengkap']); ?></td>
-                      <td><?php echo e($row['nik']); ?></td>
-                      <td><?php echo e($row['no_wa']); ?></td>
-                      <td><?php echo e($row['alamat']); ?></td>
-                      <td><?php echo e($row['dapil']); ?></td>
-                      <td><?php echo e($row['kecamatan']); ?></td>
-                      <td><?php echo e($row['jumlah_anggota']); ?></td>
-                      <td><?php echo e($row['jumlah_bekerja']); ?></td>
-                      <td><?php echo e($row['total_penghasilan']); ?></td>
-                      <td><?php echo e($row['kenal']); ?></td>
-                      <td><?php echo e($row['sumber']); ?></td>
-                      <td><?php echo $kategori; ?></td>
-                      <td><?php echo e($row['created_at']); ?></td>
-                      <td><?php echo e($row['updated_at']); ?></td>
-                      <td class="aksi">
-                        <button class="edit" onclick="window.location.href='editdata.php?id=<?php echo $row['id']; ?>'">Edit</button>
-                        <button class="hapus" onclick="if(confirm('Yakin hapus data ini?')) window.location.href='hapusdata.php?id=<?php echo $row['id']; ?>'">Hapus</button>
-                      </td>
-                    </tr>
-                  <?php endwhile; ?>
-                <?php else: ?>
-                  <tr>
-                    <td colspan="15" style="text-align:center;">Tidak ada data ditemukan.</td>
-                  </tr>
-                <?php endif; ?>
-              </tbody>
-            </table>
+          <div>
+            <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select name="m_dapil">
+                <?php foreach($dapil_options as $k=>$v): ?>
+                  <option value="<?php echo e($k); ?>" <?php echo ($m_dapil===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                <?php endforeach; ?>
+              </select>
+
+              <select name="m_kategori">
+                <option value="">Semua</option>
+                <option value="dibawah" <?php echo ($m_kategori==='dibawah'?'selected':''); ?>>Di bawah UMR</option>
+                <option value="diatas"  <?php echo ($m_kategori==='diatas'?'selected':''); ?>>Di atas UMR</option>
+              </select>
+
+              <select name="m_kenal">
+                <?php foreach($kenal_options as $k=>$v): ?>
+                  <option value="<?php echo e($k); ?>" <?php echo ($m_kenal===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                <?php endforeach; ?>
+              </select>
+
+              <select name="m_bulan">
+                <option value="">Semua Bulan</option>
+                <?php 
+                  // reset pointer and iterate unique months
+                  mysqli_data_seek($bulanQ, 0);
+                  while ($b = $bulanQ->fetch_assoc()):
+                ?>
+                  <option value="<?php echo e($b['bulan']); ?>" <?php echo ($m_bulan===$b['bulan'] ? 'selected':''); ?>>
+                    <?php echo e(date("F", mktime(0,0,0,$b['bulan'],1))); ?>
+                  </option>
+                <?php endwhile; ?>
+              </select>
+
+              <select name="m_tahun">
+                <option value="">Semua Tahun</option>
+                <?php 
+                  mysqli_data_seek($tahunQ, 0);
+                  while ($t = $tahunQ->fetch_assoc()):
+                ?>
+                  <option value="<?php echo e($t['tahun']); ?>" <?php echo ($m_tahun===$t['tahun'] ? 'selected':'' ); ?>><?php echo e($t['tahun']); ?></option>
+                <?php endwhile; ?>
+              </select>
+
+              <button type="submit" class="btn btn-muted">Terapkan</button>
+
+              <!-- Export links (sesuaikan nama file export jika diperlukan) -->
+              <a class="btn btn-primary" href="export_bulanan_pdf.php?<?php echo http_build_query([
+                  'dapil'=>$m_dapil,'kategori'=>$m_kategori,'kenal'=>$m_kenal,'bulan'=>$m_bulan,'tahun'=>$m_tahun
+                ]); ?>" target="_blank">Download PDF</a>
+
+              <a class="btn btn-primary" href="export_bulanan_excel.php?<?php echo http_build_query([
+                  'dapil'=>$m_dapil,'kategori'=>$m_kategori,'kenal'=>$m_kenal,'bulan'=>$m_bulan,'tahun'=>$m_tahun
+                ]); ?>" target="_blank">Download Excel</a>
+            </form>
           </div>
         </div>
 
-        <!-- FOOTER -->
-        <footer>
-          <img src="../assets/image/logodprd.png" alt="DPRD Logo">
-          <img src="../assets/image/psiputih.png" alt="PSI Logo">
-          Hak cipta © 2025 - Partai Solidaritas Indonesia
-        </footer>
+        <div class="table-container" style="margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama Lengkap</th>
+                <th>NIK</th>
+                <th>No WA</th>
+                <th>Alamat Lengkap</th>
+                <th>Dapil</th>
+                <th>Kecamatan</th>
+                <th>Jumlah Anggota</th>
+                <th>Jumlah Bekerja</th>
+                <th>Total Penghasilan</th>
+                <th>Rata-rata/Orang</th>
+                <th>Kenal</th>
+                <th>Sumber</th>
+                <th>Kategori</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if ($res_month && $res_month->num_rows > 0): ?>
+                <?php while ($row = $res_month->fetch_assoc()): 
+                  $anggota = (int)$row['jumlah_anggota'];
+                  $penghasilan = (float)$row['total_penghasilan'];
+                  $per_orang = $anggota > 0 ? ($penghasilan / $anggota) : 0;
+                  $kategori_label = ($per_orang < UMR_PERSON) ? "<span class='dibawah'>Dibawah UMR</span>" : "<span class='diatas'>Diatas UMR</span>";
+                ?>
+                  <tr>
+                    <td><?php echo e($row['nama_lengkap']); ?></td>
+                    <td><?php echo e($row['nik']); ?></td>
+                    <td><?php echo e($row['no_wa']); ?></td>
+                    <td><?php echo e($row['alamat']); ?></td>
+                    <td><?php echo e($row['dapil']); ?></td>
+                    <td><?php echo e($row['kecamatan']); ?></td>
+                    <td><?php echo e($row['jumlah_anggota']); ?></td>
+                    <td><?php echo e($row['jumlah_bekerja']); ?></td>
+                    <td><?php echo e(number_format($penghasilan,0,',','.')); ?></td>
+                    <td><?php echo e(number_format($per_orang,0,',','.')); ?></td>
+                    <td><?php echo e($row['kenal']); ?></td>
+                    <td><?php echo e($row['sumber']); ?></td>
+                    <td><?php echo $kategori_label; ?></td>
+                    <td><?php echo e($row['created_at']); ?></td>
+                    <td><?php echo e($row['updated_at']); ?></td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else: ?>
+                <tr><td colspan="15" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <!-- CARD: LAPORAN TAHUNAN -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 style="margin:0 0 4px 0">Laporan Tahunan</h3>
+            <div style="color:#666;font-size:13px">Filter: Dapil, Kategori (UMR per orang), Sumber Kenal, Tahun</div>
+          </div>
+
+          <div>
+            <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select name="y_dapil">
+                <?php foreach($dapil_options as $k=>$v): ?>
+                  <option value="<?php echo e($k); ?>" <?php echo ($y_dapil===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                <?php endforeach; ?>
+              </select>
+
+              <select name="y_kategori">
+                <option value="">Semua</option>
+                <option value="dibawah" <?php echo ($y_kategori==='dibawah'?'selected':''); ?>>Di bawah UMR</option>
+                <option value="diatas"  <?php echo ($y_kategori==='diatas'?'selected':''); ?>>Di atas UMR</option>
+              </select>
+
+              <select name="y_kenal">
+                <?php foreach($kenal_options as $k=>$v): ?>
+                  <option value="<?php echo e($k); ?>" <?php echo ($y_kenal===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                <?php endforeach; ?>
+              </select>
+
+              <select name="y_tahun">
+                <option value="">Semua Tahun</option>
+                <?php 
+                  // reset pointer and iterate years
+                  mysqli_data_seek($tahunQ, 0);
+                  while ($t = $tahunQ->fetch_assoc()):
+                ?>
+                  <option value="<?php echo e($t['tahun']); ?>" <?php echo ($y_tahun===$t['tahun'] ? 'selected' : ''); ?>><?php echo e($t['tahun']); ?></option>
+                <?php endwhile; ?>
+              </select>
+
+              <button type="submit" class="btn btn-muted">Terapkan</button>
+
+              <a class="btn btn-primary" href="export_tahunan_pdf.php?<?php echo http_build_query([
+                  'dapil'=>$y_dapil,'kategori'=>$y_kategori,'kenal'=>$y_kenal,'tahun'=>$y_tahun
+                ]); ?>" target="_blank">Download PDF</a>
+
+              <a class="btn btn-primary" href="export_tahunan_excel.php?<?php echo http_build_query([
+                  'dapil'=>$y_dapil,'kategori'=>$y_kategori,'kenal'=>$y_kenal,'tahun'=>$y_tahun
+                ]); ?>" target="_blank">Download Excel</a>
+            </form>
+          </div>
+        </div>
+
+        <div class="table-container" style="margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama Lengkap</th>
+                <th>NIK</th>
+                <th>No WA</th>
+                <th>Alamat Lengkap</th>
+                <th>Dapil</th>
+                <th>Kecamatan</th>
+                <th>Jumlah Anggota</th>
+                <th>Jumlah Bekerja</th>
+                <th>Total Penghasilan</th>
+                <th>Rata-rata/Orang</th>
+                <th>Kenal</th>
+                <th>Sumber</th>
+                <th>Kategori</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if ($res_year && $res_year->num_rows > 0): ?>
+                <?php while ($row = $res_year->fetch_assoc()): 
+                  $anggota = (int)$row['jumlah_anggota'];
+                  $penghasilan = (float)$row['total_penghasilan'];
+                  $per_orang = $anggota > 0 ? ($penghasilan / $anggota) : 0;
+                  $kategori_label = ($per_orang < UMR_PERSON) ? "<span class='dibawah'>Dibawah UMR</span>" : "<span class='diatas'>Diatas UMR</span>";
+                ?>
+                  <tr>
+                    <td><?php echo e($row['nama_lengkap']); ?></td>
+                    <td><?php echo e($row['nik']); ?></td>
+                    <td><?php echo e($row['no_wa']); ?></td>
+                    <td><?php echo e($row['alamat']); ?></td>
+                    <td><?php echo e($row['dapil']); ?></td>
+                    <td><?php echo e($row['kecamatan']); ?></td>
+                    <td><?php echo e($row['jumlah_anggota']); ?></td>
+                    <td><?php echo e($row['jumlah_bekerja']); ?></td>
+                    <td><?php echo e(number_format($penghasilan,0,',','.')); ?></td>
+                    <td><?php echo e(number_format($per_orang,0,',','.')); ?></td>
+                    <td><?php echo e($row['kenal']); ?></td>
+                    <td><?php echo e($row['sumber']); ?></td>
+                    <td><?php echo $kategori_label; ?></td>
+                    <td><?php echo e($row['created_at']); ?></td>
+                    <td><?php echo e($row['updated_at']); ?></td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else: ?>
+                <tr><td colspan="15" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer>
+        <img src="../assets/image/logodprd.png" alt="DPRD Logo" style="height:20px;margin-right:8px;filter:brightness(0) invert(1)">
+        <img src="../assets/image/psiputih.png" alt="PSI Logo" style="height:20px;filter:brightness(0) invert(1)">
+        &nbsp; Hak cipta © <?php echo date('Y') ?> - Partai Solidaritas Indonesia
+      </footer>
+
+    </main>
   </div>
 </body>
 </html>
