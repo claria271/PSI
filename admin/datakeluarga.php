@@ -244,14 +244,10 @@ $kenal_options = [
                 <?php endwhile; ?>
               </select>
 
-              <select name="m_tahun">
-                <option value="">Semua Tahun</option>
-                <?php 
-                  mysqli_data_seek($tahunQ, 0);
-                  while ($t = $tahunQ->fetch_assoc()):
-                ?>
-                  <option value="<?php echo e($t['tahun']); ?>" <?php echo ($m_tahun===$t['tahun'] ? 'selected':'' ); ?>><?php echo e($t['tahun']); ?></option>
-                <?php endwhile; ?>
+              <select name="kenal" onchange="this.form.submit()">
+                <option value=""      <?php echo $kenal === '' ? 'selected' : ''; ?>>Sumber Kenal</option>
+                <option value="Ya"    <?php echo $kenal === 'Ya' ? 'selected' : ''; ?>>Ya</option>
+                <option value="Tidak pernah" <?php echo $kenal === 'Tidak pernah' ? 'selected' : ''; ?>>Tidak</option>
               </select>
 
               <button type="submit" class="btn btn-muted">Terapkan</button>
