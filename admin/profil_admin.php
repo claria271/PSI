@@ -15,7 +15,7 @@ function e($str) {
     return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
 
-// Ambil data admin berdasarkan session (email dulu, kalau gak ada pakai username)
+// Ambil data admin berdasarkan email di session
 $admin = null;
 
 if (!empty($_SESSION['alamat_email'])) {
@@ -23,46 +23,31 @@ if (!empty($_SESSION['alamat_email'])) {
     $stmt->bind_param('s', $_SESSION['alamat_email']);
     $stmt->execute();
     $res = $stmt->get_result();
-    if ($res->num_rows > 0) $admin = $res->fetch_assoc();
-}
-
-if (!$admin && !empty($_SESSION['username'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE username = ? LIMIT 1");
-    $stmt->bind_param('s', $_SESSION['username']);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res->num_rows > 0) $admin = $res->fetch_assoc();
+    if ($res->num_rows > 0) {
+        $admin = $res->fetch_assoc();
+    }
 }
 
 if (!$admin) {
+    // Kalau entah kenapa datanya tidak ketemu, paksa login ulang
     header("Location: ../user/login.php");
     exit();
 }
 
 $success = '';
-$error = '';
+$error   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $nama_lengkap   = trim($_POST['nama_lengkap'] ?? '');
-        $username_baru  = trim($_POST['username'] ?? '');
+        $alamat_lengkap = trim($_POST['alamat_lengkap'] ?? '');
+        $nomor_telepon  = trim($_POST['nomor_telepon'] ?? '');
         $email_baru     = trim($_POST['alamat_email'] ?? '');
         $password_baru  = $_POST['password_baru'] ?? '';
         $password_konf  = $_POST['password_konfirmasi'] ?? '';
 
-        if ($nama_lengkap === '' || $username_baru === '' || $email_baru === '') {
-            throw new Exception("Nama lengkap, username, dan email wajib diisi.");
-        }
-
-        // Cek username sudah dipakai user lain atau tidak
-        if ($username_baru !== $admin['username']) {
-            $stmt = $conn->prepare("SELECT id FROM login WHERE username = ? AND id != ? LIMIT 1");
-            $stmt->bind_param('si', $username_baru, $admin['id']);
-            $stmt->execute();
-            $cek = $stmt->get_result();
-            if ($cek->num_rows > 0) {
-                throw new Exception("Username sudah digunakan pengguna lain.");
-            }
+        if ($nama_lengkap === '' || $email_baru === '') {
+            throw new Exception("Nama lengkap dan email wajib diisi.");
         }
 
         // Cek email sudah dipakai user lain atau tidak
@@ -76,22 +61,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Siapkan nilai password
-        $password_final = $admin['password']; // default pakai yang lama
+        // Siapkan nilai password (tetap lama jika tidak diubah)
+        $password_final = $admin['password'];
         if ($password_baru !== '' || $password_konf !== '') {
             if ($password_baru !== $password_konf) {
                 throw new Exception("Password baru dan konfirmasi tidak sama.");
             }
-            // Kalau di DB kamu sudah pakai hash, pakai ini:
+            // Password sudah dalam bentuk hash bcrypt
             $password_final = password_hash($password_baru, PASSWORD_BCRYPT);
-            // Kalau belum pakai hash (plain text), ganti ke: $password_final = $password_baru;
         }
 
         // Foto profil (opsional)
         $foto_final = $admin['foto'] ?? null;
 
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-            $tmp_name = $_FILES['foto']['tmp_name'];
+            $tmp_name  = $_FILES['foto']['tmp_name'];
             $orig_name = basename($_FILES['foto']['name']);
 
             $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
@@ -101,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Format foto tidak valid. Gunakan JPG, PNG, GIF, atau WEBP.");
             }
 
-            $new_name = 'admin_' . $admin['id'] . '_' . time() . '.' . $ext;
+            $new_name   = 'admin_' . $admin['id'] . '_' . time() . '.' . $ext;
             $upload_dir = realpath(__DIR__ . '/../uploads');
 
             if (!$upload_dir) {
@@ -118,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Gagal mengupload foto.");
             }
 
-            // Hapus foto lama jika ada dan bukan kosong
+            // Hapus foto lama jika ada
             if (!empty($admin['foto'])) {
                 $old = rtrim($upload_dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $admin['foto'];
                 if (is_file($old)) {
@@ -129,16 +113,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $foto_final = $new_name;
         }
 
-        // Update data admin
+        // Update data admin (TANPA kolom username)
         $stmt = $conn->prepare("
             UPDATE login 
-            SET nama_lengkap = ?, username = ?, alamat_email = ?, password = ?, foto = ?
+            SET nama_lengkap = ?, alamat_lengkap = ?, nomor_telepon = ?, 
+                alamat_email = ?, password = ?, foto = ?
             WHERE id = ?
         ");
         $stmt->bind_param(
-            'sssssi',
+            'ssssssi',
             $nama_lengkap,
-            $username_baru,
+            $alamat_lengkap,
+            $nomor_telepon,
             $email_baru,
             $password_final,
             $foto_final,
@@ -146,16 +132,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         $stmt->execute();
 
-        // Update session biar sinkron
-        $_SESSION['username']      = $username_baru;
-        $_SESSION['alamat_email']  = $email_baru;
+        // Update session email supaya tetap sinkron
+        $_SESSION['alamat_email'] = $email_baru;
 
-        // Refresh data admin
-        $admin['nama_lengkap']  = $nama_lengkap;
-        $admin['username']      = $username_baru;
-        $admin['alamat_email']  = $email_baru;
-        $admin['password']      = $password_final;
-        $admin['foto']          = $foto_final;
+        // Refresh data admin di array $admin
+        $admin['nama_lengkap']   = $nama_lengkap;
+        $admin['alamat_lengkap'] = $alamat_lengkap;
+        $admin['nomor_telepon']  = $nomor_telepon;
+        $admin['alamat_email']   = $email_baru;
+        $admin['password']       = $password_final;
+        $admin['foto']           = $foto_final;
 
         $success = "Profil berhasil diperbarui.";
     } catch (Exception $e) {
@@ -163,9 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$adminName = !empty($admin['nama_lengkap'])
-    ? $admin['nama_lengkap']
-    : (!empty($admin['username']) ? $admin['username'] : 'Admin');
+$adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : 'Admin';
 
 $adminPhoto = !empty($admin['foto'])
     ? '../uploads/' . $admin['foto']
@@ -365,8 +349,13 @@ $adminPhoto = !empty($admin['foto'])
     </div>
 
     <div class="form-group">
-      <label>Username</label>
-      <input type="text" name="username" value="<?php echo e($admin['username'] ?? ''); ?>" required>
+      <label>Alamat Lengkap</label>
+      <input type="text" name="alamat_lengkap" value="<?php echo e($admin['alamat_lengkap'] ?? ''); ?>">
+    </div>
+
+    <div class="form-group">
+      <label>Nomor Telepon</label>
+      <input type="text" name="nomor_telepon" value="<?php echo e($admin['nomor_telepon'] ?? ''); ?>">
     </div>
 
     <div class="form-group">
