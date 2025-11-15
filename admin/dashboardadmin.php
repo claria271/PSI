@@ -426,6 +426,10 @@ $adminPhoto = !empty($admin['foto'])
       <nav>
         <a href="#" class="active">Dashboard</a>
         <a href="datakeluarga.php">Data Keluarga</a>
+
+        <!-- 🔥 Tombol/Menu Tambah Admin -->
+        <a href="tambah_admin.php">➕ Tambah Admin</a>
+
         <a href="#">Hasil Verifikasi</a>
         <a href="#">Laporan</a>
         <a href="logout.php">Logout</a>
