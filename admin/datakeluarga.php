@@ -77,7 +77,12 @@ if ($dapil !== '') {
     $conditions[] = "dapil = '$safeDapil'";
 }
 
-if ($kenal === 'Ya' || $kenal === 'Tidak') {
+/*
+ * PERBAIKAN DI SINI:
+ * sebelumnya: if ($kenal === 'Ya' || $kenal === 'Tidak') {...}
+ * sekarang: semua value yang tidak kosong akan difilter (Ya / Tidak Pernah)
+ */
+if ($kenal !== '') {
     $safeKenal = mysqli_real_escape_string($conn, $kenal);
     $conditions[] = "kenal = '$safeKenal'";
 }
@@ -500,11 +505,7 @@ $result = mysqli_query($conn, $query);
               <select name="kenal" onchange="this.form.submit()">
                 <option value=""      <?php echo $kenal === '' ? 'selected' : ''; ?>>Sumber Kenal</option>
                 <option value="Ya"    <?php echo $kenal === 'Ya' ? 'selected' : ''; ?>>Ya</option>
-<<<<<<< HEAD
-                <option value="Tidak Pernah" <?php echo $kenal === 'Tidak Pernah' ? 'selected' : ''; ?>>Tidak Pernah</option>
-=======
-                <option value="Tidak pernah" <?php echo $kenal === 'Tidak pernah' ? 'selected' : ''; ?>>Tidak</option>
->>>>>>> 9762b38ecca90161a45d9487bf9ffce4f1464c7c
+                <option value="Tidak" <?php echo $kenal === 'Tidak' ? 'selected' : ''; ?>>Tidak</option>
               </select>
 
               <button type="submit" style="display:none;"></button>

@@ -66,7 +66,7 @@ try {
     }
 
     // Kenal & sumber
-    $allowedKenal  = ['Ya','Tidak Pernah'];
+    $allowedKenal  = ['Ya','Tidak'];
     $allowedSumber = ['Kegiatan PSI Surabaya','Dari teman atau relasi','Lainnya'];
     if ($kenal !== null && !in_array($kenal, $allowedKenal, true)) $kenal = null;
     if ($kenal !== 'Ya') { $sumber = null; }

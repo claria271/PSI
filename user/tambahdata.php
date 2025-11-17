@@ -369,7 +369,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
       <div class="radio-group">
         <label><input type="radio" name="kenal" value="Ya"> Ya</label>
-        <label><input type="radio" name="kenal" value="Tidak Pernah"> Tidak Pernah</label>
+        <label><input type="radio" name="kenal" value="Tidak"> Tidak</label>
       </div>
       <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
       <div class="radio-group">
