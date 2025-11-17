@@ -494,6 +494,7 @@ $result = mysqli_query($conn, $query);
                 <option value="Kota Surabaya 2" <?php echo $dapil === 'Kota Surabaya 2' ? 'selected' : ''; ?>>Kota Surabaya 2</option>
                 <option value="Kota Surabaya 3" <?php echo $dapil === 'Kota Surabaya 3' ? 'selected' : ''; ?>>Kota Surabaya 3</option>
                 <option value="Kota Surabaya 4" <?php echo $dapil === 'Kota Surabaya 4' ? 'selected' : ''; ?>>Kota Surabaya 4</option>
+                <option value="Kota Surabaya 5" <?php echo $dapil === 'Kota Surabaya 5' ? 'selected' : ''; ?>>Kota Surabaya 5</option>
               </select>
 
               <select name="status_umr" onchange="this.form.submit()">

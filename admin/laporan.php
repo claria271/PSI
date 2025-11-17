@@ -124,7 +124,8 @@ $dapil_options = [
     'Kota Surabaya 1' => 'Kota Surabaya 1',
     'Kota Surabaya 2' => 'Kota Surabaya 2',
     'Kota Surabaya 3' => 'Kota Surabaya 3',
-    'Kota Surabaya 4' => 'Kota Surabaya 4'
+    'Kota Surabaya 4' => 'Kota Surabaya 4',
+    'Kota Surabaya 5' => 'Kota Surabaya 5'
 ];
 
 // Untuk opsi kenal
@@ -254,7 +255,10 @@ $kenal_options = [
                 <?php endwhile; ?>
               </select>
 
-              <button type="submit" class="btn btn-muted">Terapkan</button>
+              <button type="submit" class="btn btn-primary fw-bold px-4 py-2"
+        style="background:#0066ff; border:none; font-size:15px; box-shadow:0 3px 8px rgba(0,0,0,0.15);">
+    Terapkan Filter
+</button>
 
               <!-- Export links (sesuaikan nama file export jika diperlukan) -->
               <a class="btn btn-primary" href="export_bulanan_pdf.php?<?php echo http_build_query([
@@ -333,13 +337,10 @@ $kenal_options = [
 
           <div>
             <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <select name="dapil" class="form-select">
-                  <option value="">Semua Dapil</option>
-                  <option value="1" <?= ($dapil == '1' ? 'selected' : '') ?>>Dapil 1</option>
-                  <option value="2" <?= ($dapil == '2' ? 'selected' : '') ?>>Dapil 2</option>
-                  <option value="3" <?= ($dapil == '3' ? 'selected' : '') ?>>Dapil 3</option>
-                  <option value="4" <?= ($dapil == '4' ? 'selected' : '') ?>>Dapil 4</option>
-                  <option value="5" <?= ($dapil == '5' ? 'selected' : '') ?>>Dapil 5</option>
+               <select name="m_dapil">
+                <?php foreach($dapil_options as $k=>$v): ?>
+                  <option value="<?php echo e($k); ?>" <?php echo ($m_dapil===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                <?php endforeach; ?>
               </select>
 
 
