@@ -431,7 +431,7 @@ $adminPhoto = !empty($admin['foto'])
         <a href="tambah_admin.php">➕ Tambah Admin</a>
 
         <a href="#">Hasil Verifikasi</a>
-        <a href="#">Laporan</a>
+        <a href="laporan.php">Laporan</a>
         <a href="logout.php">Logout</a>
       </nav>
     </aside>
