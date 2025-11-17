@@ -500,7 +500,7 @@ $result = mysqli_query($conn, $query);
               <select name="kenal" onchange="this.form.submit()">
                 <option value=""      <?php echo $kenal === '' ? 'selected' : ''; ?>>Sumber Kenal</option>
                 <option value="Ya"    <?php echo $kenal === 'Ya' ? 'selected' : ''; ?>>Ya</option>
-                <option value="Tidak" <?php echo $kenal === 'Tidak' ? 'selected' : ''; ?>>Tidak</option>
+                <option value="Tidak Pernah" <?php echo $kenal === 'Tidak Pernah' ? 'selected' : ''; ?>>Tidak Pernah</option>
               </select>
 
               <button type="submit" style="display:none;"></button>
