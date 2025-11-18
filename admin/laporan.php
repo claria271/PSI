@@ -148,11 +148,119 @@ $kenal_options = [
     /* ---- style mengikuti halaman Data Keluarga (opsi C) ---- */
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Poppins',sans-serif;background:#f5f6f8;color:#222}
-    header{background:linear-gradient(90deg,#fff,#000);padding:12px 30px;display:flex;align-items:center;justify-content:space-between}
-    header img{height:40px}
+      /* === HEADER === */
+    header {
+      background: linear-gradient(to right, #ffffff, #000000);
+      padding: 12px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header img {
+      height: 40px;
+    }
+
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      color: #fff;
+      transition: 0.3s;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: #ff4b4b;
+    }
+
     .layout{display:flex;min-height:calc(100vh - 84px)}
-    .sidebar{width:260px;padding:24px;background:linear-gradient(#d9d9d9,#8c8c8c);border-right:1px solid #ccc}
-    .admin-profile{text-align:center;margin-bottom:22px}
+    /* === SIDEBAR === */
+    .sidebar {
+      width: 260px;
+      padding: 30px 20px;
+      background: linear-gradient(to bottom, #d9d9d9, #8c8c8c);
+      border-right: 1px solid #ccc;
+    }
+
+    .admin-profile {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .admin-photo {
+      width: 70px;
+      height: 70px;
+      background: #bbb;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .admin-photo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
+    }
+
+    .admin-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .admin-name {
+      color: #000;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 10px 15px;
+      background: #cfcfcf;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .admin-name:hover {
+      background: #ff4b4b;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
+    }
+
+    .sidebar nav a {
+      display: block;
+      padding: 12px 16px;
+      margin: 8px 0;
+      text-decoration: none;
+      color: #000;
+      background: #b5b5b5;
+      border-radius: 10px;
+      transition: all 0.3s;
+      font-weight: 500;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      background: #ff4b4b;
+      color: #fff;
+      transform: translateX(5px);
+      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
+    }
     .admin-photo{width:72px;height:72px;border-radius:50%;overflow:hidden;margin:0 auto 8px}
     .admin-photo img{width:100%;height:100%;object-fit:cover}
     .content{flex:1;padding:22px;overflow:auto}
@@ -178,23 +286,35 @@ $kenal_options = [
 </head>
 <body>
   <header>
-    <div><img src="../assets/image/logo.png" alt="PSI Logo"></div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="text-align:right;color:#fff;font-weight:600"><?php echo e($adminName); ?></div>
-      <div style="width:44px;height:44px;border-radius:8px;overflow:hidden"><img src="<?php echo e($adminPhoto); ?>" alt="admin"></div>
+    <div class="logo">
+      <img src="../assets/image/logo.png" alt="PSI Logo">
     </div>
   </header>
 
   <div class="layout">
     <aside class="sidebar">
       <div class="admin-profile">
-        <div class="admin-photo"><img src="<?php echo e($adminPhoto); ?>" alt="foto admin"></div>
-        <div style="font-weight:600;color:#111"><?php echo e($adminName); ?></div>
+        <div class="admin-photo" onclick="window.location.href='profil_admin.php'">
+          <img 
+            src="<?php echo e($adminPhoto); ?>" 
+            alt="Admin Photo"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23bbb\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23666\'%3E👤%3C/text%3E%3C/svg%3E';"
+          >
+        </div>
+        <div class="admin-name" onclick="window.location.href='profil_admin.php'">
+          <?php echo e($adminName); ?>
+        </div>
       </div>
       <nav>
-        <a href="dashboardadmin.php" style="display:block;padding:10px;background:#b5b5b5;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#000;text-align:center">Dashboard</a>
-        <a href="datakeluarga.php" style="display:block;padding:10px;background:#b5b5b5;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#000;text-align:center">Data Keluarga</a>
-        <a href="laporan.php" style="display:block;padding:10px;background:#ff4b4b;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#fff;text-align:center">Laporan</a>
+        <a href="dashboardadmin.php">Dashboard</a>
+        <a href="datakeluarga.php">Data Keluarga</a>
+
+        <!-- 🔥 Tombol/Menu Tambah Admin -->
+        <a href="tambah_admin.php">➕ Tambah Admin</a>
+
+        <a href="verifikasi.php">Hasil Verifikasi</a>
+        <a href="laporan.php" class="active">Laporan</a>
+        <a href="../user/logout.php">Logout</a>
       </nav>
     </aside>
 

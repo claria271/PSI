@@ -16,9 +16,8 @@ function e($str) {
     return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
 
-// Ambil data admin berdasarkan session (bisa dari email atau username)
+// Ambil data admin
 $admin = null;
-
 if (!empty($_SESSION['alamat_email'])) {
     $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? LIMIT 1");
     $stmt->bind_param('s', $_SESSION['alamat_email']);
@@ -37,13 +36,11 @@ if (!empty($_SESSION['alamat_email'])) {
     }
 }
 
-// Jika tetap tidak ketemu, paksa logout
 if (!$admin) {
     header("Location: ../login.php");
     exit();
 }
 
-// Tentukan nama & foto admin
 $adminName = !empty($admin['nama_lengkap'])
     ? $admin['nama_lengkap']
     : (!empty($admin['username']) ? $admin['username'] : 'Admin');
@@ -52,64 +49,43 @@ $adminPhoto = !empty($admin['foto'])
     ? '../uploads/' . $admin['foto']
     : '../assets/image/admin_photo.jpg';
 
-// ================== LOGIKA DATA KELUARGA ================== //
-
-// UMR per orang (Surabaya 2025) - SAMA DENGAN LAPORAN.PHP
+// UMR per orang
 define('UMR_PERSON', 4725479);
 
-// Ambil filter dari GET
-$search      = isset($_GET['search']) ? trim($_GET['search']) : '';
-$status_umr  = isset($_GET['status_umr']) ? $_GET['status_umr'] : ''; // '', Dibawah, Diatas
-$dapil       = isset($_GET['dapil']) ? $_GET['dapil'] : '';
-$kenal       = isset($_GET['kenal']) ? $_GET['kenal'] : '';
+// Ambil filter
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$dapil = isset($_GET['dapil']) ? $_GET['dapil'] : '';
 
-// Bangun query dengan kondisi dinamis
+// Query data verifikasi
 $conditions = [];
-
 if ($search !== '') {
     $safe = mysqli_real_escape_string($conn, $search);
-    $conditions[] = "(nama_lengkap LIKE '%$safe%' 
-                  OR nik LIKE '%$safe%' 
-                  OR no_wa LIKE '%$safe%')";
+    $conditions[] = "(nama_lengkap LIKE '%$safe%' OR nik LIKE '%$safe%' OR no_wa LIKE '%$safe%')";
 }
-
 if ($dapil !== '') {
     $safeDapil = mysqli_real_escape_string($conn, $dapil);
     $conditions[] = "dapil = '$safeDapil'";
 }
 
-if ($kenal !== '') {
-    $safeKenal = mysqli_real_escape_string($conn, $kenal);
-    $conditions[] = "kenal = '$safeKenal'";
-}
-
-// Filter UMR berdasarkan UMR PER ORANG (bukan total keluarga)
-if ($status_umr === 'Dibawah') {
-    $umr = UMR_PERSON;
-    $conditions[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) < $umr )";
-} elseif ($status_umr === 'Diatas') {
-    $umr = UMR_PERSON;
-    $conditions[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) >= $umr )";
-}
-
-$query = "SELECT * FROM keluarga";
-
+$query = "SELECT * FROM verifikasi";
 if (!empty($conditions)) {
     $query .= " WHERE " . implode(" AND ", $conditions);
 }
-
-$query .= " ORDER BY created_at DESC";
+$query .= " ORDER BY verified_at DESC";
 
 $result = mysqli_query($conn, $query);
+
+// Hitung total data terverifikasi
+$total_query = "SELECT COUNT(*) as total FROM verifikasi";
+$total_result = mysqli_query($conn, $total_query);
+$total_data = mysqli_fetch_assoc($total_result)['total'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Keluarga - PSI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <title>Data Verifikasi - PSI</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
@@ -164,15 +140,12 @@ $result = mysqli_query($conn, $query);
       color: #ff4b4b;
     }
 
-
-    /* === LAYOUT: SIDEBAR + CONTENT === */
     .layout {
       flex: 1 1 auto;
       display: flex;
       min-height: 0;
     }
 
-    /* === SIDEBAR === */
     .sidebar {
       width: 260px;
       flex: 0 0 260px;
@@ -185,7 +158,6 @@ $result = mysqli_query($conn, $query);
     .admin-profile {
       text-align: center;
       margin-bottom: 30px;
-      position: relative;
     }
 
     .admin-photo {
@@ -198,11 +170,6 @@ $result = mysqli_query($conn, $query);
       overflow: hidden;
       cursor: pointer;
       transition: all 0.3s;
-    }
-
-    .admin-photo:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
     }
 
     .admin-photo img {
@@ -220,13 +187,6 @@ $result = mysqli_query($conn, $query);
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s;
-    }
-
-    .admin-name:hover {
-      background: #ff4b4b;
-      color: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
     }
 
     .sidebar nav a {
@@ -251,7 +211,6 @@ $result = mysqli_query($conn, $query);
       box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
     }
 
-    /* === CONTENT WRAPPER === */
     .content {
       flex: 1 1 auto;
       display: flex;
@@ -279,6 +238,17 @@ $result = mysqli_query($conn, $query);
       font-size: 14px;
     }
 
+    .stats-badge {
+      display: inline-block;
+      background: #4CAF50;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+
     .content-scroll {
       flex: 1 1 auto;
       overflow-y: auto;
@@ -286,7 +256,6 @@ $result = mysqli_query($conn, $query);
       min-height: 0;
     }
 
-    /* === CARD, FILTER, TABEL === */
     .card {
       background: #fff;
       border-radius: 12px;
@@ -302,21 +271,6 @@ $result = mysqli_query($conn, $query);
       margin-bottom: 15px;
       flex-wrap: wrap;
       gap: 10px;
-    }
-
-    .btn-tambah {
-      background: #d32f2f;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 14px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.3s;
-    }
-
-    .btn-tambah:hover {
-      background: #b71c1c;
     }
 
     .filters {
@@ -343,7 +297,7 @@ $result = mysqli_query($conn, $query);
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1300px;
+      min-width: 1200px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -357,7 +311,8 @@ $result = mysqli_query($conn, $query);
     }
 
     th {
-      background: #f2f2f2;
+      background: #4CAF50;
+      color: white;
       font-weight: 600;
       position: sticky;
       top: 0;
@@ -365,49 +320,18 @@ $result = mysqli_query($conn, $query);
     }
 
     tr:nth-child(even) {
-      background: #fafafa;
+      background: #f0f8f0;
     }
 
-    .dibawah {
-      color: red;
-      font-weight: 600;
-    }
-
-    .diatas {
-      color: #2e7d32;
-      font-weight: 600;
-    }
-
-    .aksi button {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-right: 4px;
-      font-size: 13px;
-      transition: 0.3s;
-    }
-
-    .aksi .edit {
-      background: #2196F3;
-      color: #fff;
-    }
-
-    .aksi .verifikasi {
+    .badge-verified {
       background: #4CAF50;
-      color: #fff;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
     }
 
-    .aksi .hapus {
-      background: #f44336;
-      color: #fff;
-    }
-
-    .aksi button:hover {
-      opacity: 0.8;
-    }
-
-    /* === FOOTER === */
     footer {
       flex: 0 0 auto;
       margin-top: 5px;
@@ -426,7 +350,6 @@ $result = mysqli_query($conn, $query);
       filter: brightness(0) invert(1);
     }
 
-    /* SCROLLBAR */
     ::-webkit-scrollbar {
       width: 8px;
     }
@@ -437,26 +360,9 @@ $result = mysqli_query($conn, $query);
       background: #888;
       border-radius: 4px;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    @media (max-width: 1024px) {
-      .content {
-        padding: 20px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 220px;
-        flex: 0 0 220px;
-      }
-    }
   </style>
 </head>
 <body>
-  <!-- HEADER -->
   <header>
     <div class="logo">
       <img src="../assets/image/logo.png" alt="PSI Logo">
@@ -464,7 +370,6 @@ $result = mysqli_query($conn, $query);
   </header>
 
   <div class="layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="admin-profile">
         <div class="admin-photo" onclick="window.location.href='profil_admin.php'">
@@ -480,35 +385,34 @@ $result = mysqli_query($conn, $query);
       </div>
       <nav>
         <a href="dashboardadmin.php">Dashboard</a>
-        <a href="datakeluarga.php" class="active">Data Keluarga</a>
+        <a href="datakeluarga.php">Data Keluarga</a>
 
         <!-- 🔥 Tombol/Menu Tambah Admin -->
         <a href="tambah_admin.php">➕ Tambah Admin</a>
 
-        <a href="verifikasi.php">Hasil Verifikasi</a>
+        <a href="verifikasi.php" class="active">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
         <a href="../user/logout.php">Logout</a>
       </nav>
     </aside>
 
-
-    <!-- CONTENT -->
     <div class="content">
       <div class="page-header">
-        <h2>Data Keluarga</h2>
-        <p>Kelola data keluarga yang telah terdaftar dalam sistem. UMR dihitung per orang: Rp <?php echo number_format(UMR_PERSON, 0, ',', '.'); ?></p>
+        <h2>Data Terverifikasi</h2>
+        <p>Daftar data keluarga yang telah diverifikasi oleh admin</p>
+        <span class="stats-badge">Total: <?php echo $total_data; ?> Data</span>
       </div>
 
       <div class="content-scroll">
         <div class="card">
           <div class="card-header">
-            <button class="btn-tambah" onclick="window.location.href='tambahdata.php'">+ Tambah Data</button>
-
+            <h3 style="color: #4CAF50; font-size: 18px;">📋 Data Verifikasi</h3>
+            
             <form method="GET" class="filters">
               <input
                 type="text"
                 name="search"
-                placeholder="Cari Pengguna, NIK, No HP"
+                placeholder="Cari Nama, NIK, No HP"
                 value="<?php echo e($search); ?>"
               >
 
@@ -521,19 +425,6 @@ $result = mysqli_query($conn, $query);
                 <option value="Kota Surabaya 5" <?php echo $dapil === 'Kota Surabaya 5' ? 'selected' : ''; ?>>Kota Surabaya 5</option>
               </select>
 
-              <select name="status_umr" onchange="this.form.submit()">
-                <option value=""  <?php echo $status_umr === '' ? 'selected' : ''; ?>>Semua Status</option>
-                <option value="Dibawah" <?php echo $status_umr === 'Dibawah' ? 'selected' : ''; ?>>Dibawah UMR</option>
-                <option value="Diatas"  <?php echo $status_umr === 'Diatas'  ? 'selected' : ''; ?>>Diatas UMR</option>
-              </select>
-
-              <select name="kenal" onchange="this.form.submit()">
-                <option value=""      <?php echo $kenal === '' ? 'selected' : ''; ?>>Sumber Kenal</option>
-                <option value="Ya"    <?php echo $kenal === 'Ya' ? 'selected' : ''; ?>>Ya</option>
-                <option value="Tidak" <?php echo $kenal === 'Tidak' ? 'selected' : ''; ?>>Tidak</option>
-                <option value="Tidak pernah" <?php echo $kenal === 'Tidak pernah' ? 'selected' : ''; ?>>Tidak pernah</option>
-              </select>
-
               <button type="submit" style="display:none;"></button>
             </form>
           </div>
@@ -542,38 +433,28 @@ $result = mysqli_query($conn, $query);
             <table>
               <thead>
                 <tr>
+                  <th>No</th>
                   <th>Nama Lengkap</th>
                   <th>NIK</th>
                   <th>No WA</th>
-                  <th>Alamat Lengkap</th>
+                  <th>Alamat</th>
                   <th>Dapil</th>
                   <th>Kecamatan</th>
                   <th>Jumlah Anggota</th>
-                  <th>Jumlah Bekerja</th>
                   <th>Total Penghasilan</th>
-                  <th>Rata-rata/Orang</th>
                   <th>Kenal</th>
                   <th>Sumber</th>
-                  <th>Kategori</th>
-                  <th>Created At</th>
-                  <th>Updated At</th>
-                  <th>Aksi</th>
+                  <th>Status</th>
+                  <th>Diverifikasi Oleh</th>
+                  <th>Tanggal Verifikasi</th>
                 </tr>
               </thead>
               <tbody>
                 <?php if (mysqli_num_rows($result) > 0): ?>
+                  <?php $no = 1; ?>
                   <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                    <?php
-                      $anggota = (int)$row['jumlah_anggota'];
-                      $penghasilan = (float)$row['total_penghasilan'];
-                      $per_orang = $anggota > 0 ? ($penghasilan / $anggota) : 0;
-                      
-                      // Kategori berdasarkan UMR per orang
-                      $kategori = ($per_orang < UMR_PERSON)
-                        ? "<span class='dibawah'>Dibawah UMR</span>"
-                        : "<span class='diatas'>Diatas UMR</span>";
-                    ?>
                     <tr>
+                      <td><?php echo $no++; ?></td>
                       <td><?php echo e($row['nama_lengkap']); ?></td>
                       <td><?php echo e($row['nik']); ?></td>
                       <td><?php echo e($row['no_wa']); ?></td>
@@ -581,24 +462,19 @@ $result = mysqli_query($conn, $query);
                       <td><?php echo e($row['dapil']); ?></td>
                       <td><?php echo e($row['kecamatan']); ?></td>
                       <td><?php echo e($row['jumlah_anggota']); ?></td>
-                      <td><?php echo e($row['jumlah_bekerja']); ?></td>
-                      <td><?php echo e(number_format($penghasilan, 0, ',', '.')); ?></td>
-                      <td><?php echo e(number_format($per_orang, 0, ',', '.')); ?></td>
+                      <td><?php echo e(number_format($row['total_penghasilan'], 0, ',', '.')); ?></td>
                       <td><?php echo e($row['kenal']); ?></td>
                       <td><?php echo e($row['sumber']); ?></td>
-                      <td><?php echo $kategori; ?></td>
-                      <td><?php echo e($row['created_at']); ?></td>
-                      <td><?php echo e($row['updated_at']); ?></td>
-                      <td class="aksi">
-                        <button class="edit" onclick="window.location.href='editdata.php?id=<?php echo $row['id']; ?>'">Edit</button>
-                        <button class="verifikasi" onclick="verifikasiData(<?php echo $row['id']; ?>, '<?php echo addslashes($row['nama_lengkap']); ?>')">Verifikasi</button>
-                        <button class="hapus" onclick="if(confirm('Yakin hapus data ini?')) window.location.href='hapusdata.php?id=<?php echo $row['id']; ?>'">Hapus</button>
-                      </td>
+                      <td><span class="badge-verified"><?php echo e($row['status_verifikasi']); ?></span></td>
+                      <td><?php echo e($row['verified_by']); ?></td>
+                      <td><?php echo e(date('d/m/Y H:i', strtotime($row['verified_at']))); ?></td>
                     </tr>
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="16" style="text-align:center;">Tidak ada data ditemukan.</td>
+                    <td colspan="14" style="text-align:center; padding: 30px;">
+                      Belum ada data yang diverifikasi.
+                    </td>
                   </tr>
                 <?php endif; ?>
               </tbody>
@@ -606,7 +482,6 @@ $result = mysqli_query($conn, $query);
           </div>
         </div>
 
-        <!-- FOOTER -->
         <footer>
           <img src="../assets/image/logodprd.png" alt="DPRD Logo">
           <img src="../assets/image/psiputih.png" alt="PSI Logo">
@@ -615,16 +490,5 @@ $result = mysqli_query($conn, $query);
       </div>
     </div>
   </div>
-
-  <!-- JAVASCRIPT UNTUK VERIFIKASI -->
-  <script>
-    function verifikasiData(id, nama) {
-      // Pop-up konfirmasi pertama
-      if (confirm('Apakah Anda yakin ingin memverifikasi data atas nama:\n\n' + nama + '?')) {
-        // Redirect ke proses verifikasi
-        window.location.href = 'proses_verifikasi.php?id=' + id;
-      }
-    }
-  </script>
 </body>
 </html>

@@ -122,9 +122,11 @@ $adminPhoto = !empty($admin['foto'])
     /* === SIDEBAR === */
     .sidebar {
       width: 260px;
+      flex: 0 0 260px;
       padding: 30px 20px;
       background: linear-gradient(to bottom, #d9d9d9, #8c8c8c);
       border-right: 1px solid #ccc;
+      overflow-y: auto;
     }
 
     .admin-profile {
@@ -430,9 +432,9 @@ $adminPhoto = !empty($admin['foto'])
         <!-- 🔥 Tombol/Menu Tambah Admin -->
         <a href="tambah_admin.php">➕ Tambah Admin</a>
 
-        <a href="#">Hasil Verifikasi</a>
+        <a href="verifikasi.php">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
-        <a href="logout.php">Logout</a>
+        <a href="../user/logout.php">Logout</a>
       </nav>
     </aside>
 

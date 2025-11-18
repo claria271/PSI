@@ -12,10 +12,10 @@ if (!isset($_SESSION['role']) && isset($_SESSION['alamat_email'])) {
 /* Guard akses: pastikan role user */
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
     // Jika file login kamu ada di folder /PSI/user/login.php (sesuai screenshot), biarkan seperti ini:
-    header("Location: login.php");
+    //header("Location: login.php");
 
     // Kalau ternyata login ada di root (/PSI/login.php), pakai:
-    // header("Location: ../login.php");
+     header("Location: ../login.php");
     exit();
 }
 ?>
@@ -352,37 +352,32 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       <small>*Jumlah anggota termasuk kepala keluarga</small>
       <label>Jumlah Orang yang Bekerja</label>
       <select name="jumlah_bekerja">
-        <option>1</option><option>2</option><option>3</option>
+        <option>1</option><option>2</option><option>3</option><option> > 3 </option>
       </select>
       <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
-      <select name="total_penghasilan">
-        <option>< Rp 1.000.000</option>
-        <option>Rp 1.000.000 - Rp 3.000.000</option>
-        <option>Rp 3.000.000 - Rp 5.000.000</option>
-        <option>> Rp 5.000.000</option>
-      </select>
+      <input type="number" name="total_penghasilan" placeholder="1000000">
     </div>
 
     <!-- Slide 4 -->
     <div class="container slide">
-      <div class="section-title">Informasi</div>
-      <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-      <div class="radio-group">
-        <label><input type="radio" name="kenal" value="Ya"> Ya</label>
-        <label><input type="radio" name="kenal" value="Tidak"> Tidak</label>
-      </div>
-      <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-      <div class="radio-group">
-        <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
-        <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
-        <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
-      </div>
+        <div class="section-title">Informasi</div>
+          <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+          <div class="radio-group">
+            <label><input type="radio" name="kenal" value="Ya"> Ya</label>
+            <label><input type="radio" name="kenal" value="Tidak"> Tidak</label>
+          </div>
+          <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+          <div class="radio-group">
+            <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
+            <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
+            <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
+          </div>
 
-      <div class="btn-container">
-        <button type="submit">Simpan Data</button>
-        <button type="reset" class="btn-reset">Kosongkan Form</button>
-      </div>
-    </div>
+          <div class="btn-container">
+            <button type="submit">Simpan Data</button>
+            <button type="reset" class="btn-reset">Kosongkan Form</button>
+          </div>
+        </div>
 
     <!-- Tombol Navigasi -->
     <div class="nav-slide">
