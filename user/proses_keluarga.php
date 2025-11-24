@@ -54,16 +54,23 @@ try {
     $jumlah_bekerja = ($jumlah_bekerja !== null && $jumlah_bekerja !== '') ? (int)$jumlah_bekerja : null;
     if ($jumlah_bekerja !== null && !in_array($jumlah_bekerja, [1,2,3], true)) $jumlah_bekerja = null;
 
-    // Whitelist penghasilan
-    $allowedPenghasilan = [
-        '< Rp 1.000.000',
-        'Rp 1.000.000 - Rp 3.000.000',
-        'Rp 3.000.000 - Rp 5.000.000',
-        '> Rp 5.000.000',
-    ];
-    if ($total_penghasilan !== null && $total_penghasilan !== '' && !in_array($total_penghasilan, $allowedPenghasilan, true)) {
-        $total_penghasilan = null;
+  if ($total_penghasilan !== null && $total_penghasilan !== '') {
+    $total_penghasilan = (int)$total_penghasilan;
+    
+    // Jika 0 atau negatif, redirect dengan error
+    if ($total_penghasilan <= 0) {
+        header('Location: tambahdata.php?status=failed&error=penghasilan_invalid');
+        exit;
     }
+} else {
+    // Jika kosong, bisa set null atau wajib diisi (tergantung kebutuhan)
+    // Opsi 1: Set null (opsional)
+    $total_penghasilan = null;
+    
+    // Opsi 2: Wajib diisi (uncomment baris di bawah)
+    // header('Location: tambahdata.php?status=failed&error=penghasilan_required');
+    // exit;
+}
 
     // Kenal & sumber
     $allowedKenal  = ['Ya','Tidak'];

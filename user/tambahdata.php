@@ -355,7 +355,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
         <option>1</option><option>2</option><option>3</option><option> > 3 </option>
       </select>
       <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
-      <input type="number" name="total_penghasilan" placeholder="1000000">
+      <input 
+        type="number" 
+        name="total_penghasilan" 
+        placeholder="1000000" 
+        min="1"
+        required
+        oninvalid="this.setCustomValidity('Penghasilan harus lebih dari 0')"
+        oninput="this.setCustomValidity('')"
+      >
+      <small>*Minimal Rp 1 (wajib diisi)</small>
     </div>
 
     <!-- Slide 4 -->
@@ -453,23 +462,78 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
 
     prevBtn.style.display = 'none';
 
-    // === SweetAlert ===
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('status') === 'success') {
-      Swal.fire({
-        title: 'Berhasil!',
-        text: 'Data keluarga berhasil disimpan 🎉',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      }).then(() => window.location.href = 'dashboard.php');
-    } else if (params.get('status') === 'failed') {
-      Swal.fire({
-        title: 'Gagal!',
-        text: 'Terjadi kesalahan saat menyimpan data 😥',
-        icon: 'error'
-      });
-    }
+    // Tambahkan di bagian SweetAlert handling (sekitar baris 273)
+
+// === SweetAlert dengan Error Spesifik ===
+const params = new URLSearchParams(window.location.search);
+if (params.get('status') === 'success') {
+  Swal.fire({
+    title: 'Berhasil!',
+    text: 'Data keluarga berhasil disimpan 🎉',
+    icon: 'success',
+    timer: 2000,
+    showConfirmButton: false
+  }).then(() => window.location.href = 'dashboard.php');
+} 
+else if (params.get('status') === 'failed') {
+  const errorType = params.get('error');
+  let errorMsg = 'Terjadi kesalahan saat menyimpan data 😥';
+  
+  // Pesan error spesifik
+  if (errorType === 'penghasilan_invalid') {
+    errorMsg = 'Total penghasilan harus lebih dari 0!';
+  } else if (errorType === 'penghasilan_required') {
+    errorMsg = 'Total penghasilan wajib diisi!';
+  } else if (errorType === 'nik') {
+    errorMsg = 'Format NIK tidak valid!';
+  } else if (errorType === 'no_wa') {
+    errorMsg = 'Format nomor WhatsApp tidak valid!';
+  }
+  
+  Swal.fire({
+    title: 'Gagal!',
+    text: errorMsg,
+    icon: 'error',
+    confirmButtonColor: '#ff4b4b'
+  });
+}
+  
+  // Cek jika penghasilan 0 atau negatif
+  if (penghasilanValue <= 0 || isNaN(penghasilanValue)) {
+    e.preventDefault(); // Batalkan submit
+    
+    Swal.fire({
+      title: 'Perhatian!',
+      text: 'Total penghasilan harus lebih dari 0',
+      icon: 'warning',
+      confirmButtonColor: '#ff4b4b'
+    });
+    
+    // Fokus ke input penghasilan
+    penghasilanInput.focus();
+    
+    // Scroll ke slide penghasilan (slide ke-3, index 2)
+    showSlide(2, 'left');
+    
+    return false;
+  }
+});
+
+// Tambahkan juga validasi real-time saat user mengetik
+document.querySelector('input[name="total_penghasilan"]').addEventListener('input', function() {
+  const value = parseFloat(this.value);
+  
+  if (value < 0) {
+    this.value = 0;
+  }
+  
+  // Tampilkan peringatan jika 0
+  if (value === 0) {
+    this.style.borderColor = '#ff4b4b';
+  } else {
+    this.style.borderColor = '#ccc';
+  }
+});
   </script>
 
   <footer>
