@@ -128,6 +128,20 @@ if (empty($pieChartLabels)) {
     $pieChartData = [0, 0, 0, 0, 0];
 }
 
+// 7. DATA UPDATE TERBARU - 10 data terakhir yang diupdate
+$queryUpdates = "SELECT nama_lengkap, nik, alamat, dapil, updated_at 
+                 FROM keluarga 
+                 ORDER BY updated_at DESC 
+                 LIMIT 10";
+$resultUpdates = mysqli_query($conn, $queryUpdates);
+
+// 8. DATA TAMBAH TERBARU - 10 data terakhir yang ditambahkan
+$queryAdded = "SELECT nama_lengkap, nik, alamat, dapil, created_at 
+               FROM keluarga 
+               ORDER BY created_at DESC 
+               LIMIT 10";
+$resultAdded = mysqli_query($conn, $queryAdded);
+
 // Generate label bulan untuk chart
 $lineChartLabels = [];
 for ($i = 11; $i >= 0; $i--) {
@@ -434,6 +448,138 @@ for ($i = 3; $i >= 0; $i--) {
       height: 180px;
     }
 
+    /* === ACTIVITY CARDS === */
+    .activity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .activity-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: all 0.3s;
+      max-height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .activity-icon {
+      width: 35px;
+      height: 35px;
+      background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(255, 100, 100, 0.15));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .activity-header h3 {
+      color: #000;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    .activity-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .activity-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border-left: 3px solid #ff0000;
+      transition: all 0.2s;
+    }
+
+    .activity-item:hover {
+      background: #f5f5f5;
+      transform: translateX(3px);
+    }
+
+    .activity-item.added {
+      border-left-color: #4CAF50;
+    }
+
+    .activity-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 5px;
+    }
+
+    .activity-name {
+      font-weight: 600;
+      color: #000;
+      font-size: 13px;
+    }
+
+    .activity-time {
+      font-size: 11px;
+      color: #999;
+      white-space: nowrap;
+    }
+
+    .activity-details {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .activity-details .nik {
+      color: #ff0000;
+      font-weight: 500;
+    }
+
+    .activity-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(255, 0, 0, 0.1);
+      color: #ff0000;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .no-activity {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      font-size: 13px;
+    }
+
+    .no-activity .icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+      opacity: 0.3;
+    }
+
     /* === FOOTER === */
     footer {
       margin-top: 20px;
@@ -475,6 +621,10 @@ for ($i = 3; $i >= 0; $i--) {
       .charts-grid {
         grid-template-columns: 1fr;
       }
+      
+      .activity-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 768px) {
@@ -483,6 +633,10 @@ for ($i = 3; $i >= 0; $i--) {
       }
       
       .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .activity-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -578,6 +732,103 @@ for ($i = 3; $i >= 0; $i--) {
             <div class="chart-container-small">
               <canvas id="chartPie"></canvas>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY CARDS -->
+      <div class="activity-grid">
+        <!-- DATA UPDATE TERBARU -->
+        <div class="activity-card">
+          <div class="activity-header">
+            <div class="activity-icon">🔄</div>
+            <h3>Data Terupdate</h3>
+          </div>
+          <div class="activity-list">
+            <?php if (mysqli_num_rows($resultUpdates) > 0): ?>
+              <?php while ($update = mysqli_fetch_assoc($resultUpdates)): ?>
+                <?php
+                  $timeAgo = '';
+                  $timestamp = strtotime($update['updated_at']);
+                  $diff = time() - $timestamp;
+                  
+                  if ($diff < 60) {
+                    $timeAgo = 'Baru saja';
+                  } elseif ($diff < 3600) {
+                    $timeAgo = floor($diff / 60) . ' menit lalu';
+                  } elseif ($diff < 86400) {
+                    $timeAgo = floor($diff / 3600) . ' jam lalu';
+                  } else {
+                    $timeAgo = floor($diff / 86400) . ' hari lalu';
+                  }
+                ?>
+                <div class="activity-item">
+                  <div class="activity-item-header">
+                    <div class="activity-name"><?php echo e($update['nama_lengkap']); ?></div>
+                    <div class="activity-time"><?php echo $timeAgo; ?></div>
+                  </div>
+                  <div class="activity-details">
+                    NIK: <span class="nik"><?php echo e($update['nik']); ?></span><br>
+                    <?php echo e(substr($update['alamat'], 0, 50)); ?><?php echo strlen($update['alamat']) > 50 ? '...' : ''; ?>
+                    <?php if (!empty($update['dapil'])): ?>
+                      <div class="activity-badge"><?php echo e($update['dapil']); ?></div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endwhile; ?>
+            <?php else: ?>
+              <div class="no-activity">
+                <div class="icon">📝</div>
+                Belum ada update data
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <!-- DATA TAMBAH TERBARU -->
+        <div class="activity-card">
+          <div class="activity-header">
+            <div class="activity-icon">➕</div>
+            <h3>Data Ditambahkan</h3>
+          </div>
+          <div class="activity-list">
+            <?php if (mysqli_num_rows($resultAdded) > 0): ?>
+              <?php while ($added = mysqli_fetch_assoc($resultAdded)): ?>
+                <?php
+                  $timeAgo = '';
+                  $timestamp = strtotime($added['created_at']);
+                  $diff = time() - $timestamp;
+                  
+                  if ($diff < 60) {
+                    $timeAgo = 'Baru saja';
+                  } elseif ($diff < 3600) {
+                    $timeAgo = floor($diff / 60) . ' menit lalu';
+                  } elseif ($diff < 86400) {
+                    $timeAgo = floor($diff / 3600) . ' jam lalu';
+                  } else {
+                    $timeAgo = floor($diff / 86400) . ' hari lalu';
+                  }
+                ?>
+                <div class="activity-item added">
+                  <div class="activity-item-header">
+                    <div class="activity-name"><?php echo e($added['nama_lengkap']); ?></div>
+                    <div class="activity-time"><?php echo $timeAgo; ?></div>
+                  </div>
+                  <div class="activity-details">
+                    NIK: <span class="nik"><?php echo e($added['nik']); ?></span><br>
+                    <?php echo e(substr($added['alamat'], 0, 50)); ?><?php echo strlen($added['alamat']) > 50 ? '...' : ''; ?>
+                    <?php if (!empty($added['dapil'])): ?>
+                      <div class="activity-badge"><?php echo e($added['dapil']); ?></div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endwhile; ?>
+            <?php else: ?>
+              <div class="no-activity">
+                <div class="icon">📋</div>
+                Belum ada data ditambahkan
+              </div>
+            <?php endif; ?>
           </div>
         </div>
       </div>
