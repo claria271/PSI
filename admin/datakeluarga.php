@@ -463,7 +463,7 @@ $result = mysqli_query($conn, $query);
         <a href="dashboardadmin.php">Dashboard</a>
         <a href="datakeluarga.php" class="active">Data Keluarga</a>
         <a href="#">Hasil Verifikasi</a>
-        <a href="#">Laporan</a>
+        <a href="laporan.php">Laporan</a>
         <a href="logout.php">Logout</a>
       </nav>
     </aside>

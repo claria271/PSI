@@ -432,7 +432,7 @@ $adminPhoto = !empty($admin['foto'])
 
         <a href="#">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
-        <a href="logout.php">Logout</a>
+        <a href="logoutadmin.php">Logout</a>
       </nav>
     </aside>
 

@@ -1,5 +1,5 @@
 <?php
-// laporan.php (final versi)
+// laporan.php (final versi, 2 card: bulanan & tahunan)
 session_start();
 include '../koneksi/config.php';
 
@@ -12,8 +12,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
 
-// helper escape
-function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+// helper escape (CUMA ADA 1 KALI DI SINI)
+function e($s) {
+    return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+}
 
 // Ambil data admin
 $admin = null;
@@ -30,9 +32,13 @@ if (!empty($_SESSION['alamat_email'])) {
     $res = $stmt->get_result();
     if ($res->num_rows > 0) $admin = $res->fetch_assoc();
 }
-if (!$admin) { header("Location: ../user/login.php"); exit(); }
 
-$adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : (!empty($admin['username']) ? $admin['username'] : 'Admin');
+if (!$admin) {
+    header("Location: ../user/login.php");
+    exit();
+}
+
+$adminName  = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : (!empty($admin['username']) ? $admin['username'] : 'Admin');
 $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/admin_photo.jpg';
 
 // UMR per orang (Surabaya 2025)
@@ -44,21 +50,22 @@ $tahunQ = $conn->query("SELECT DISTINCT YEAR(created_at) AS tahun FROM keluarga 
 
 // --- FILTERS KHUSUS UNTUK MASING-MASING CARD ---
 // Bulanan (prefix: m_)
-$m_dapil    = isset($_GET['m_dapil']) ? trim($_GET['m_dapil']) : '';
+$m_dapil    = isset($_GET['m_dapil'])    ? trim($_GET['m_dapil'])    : '';
 $m_kategori = isset($_GET['m_kategori']) ? trim($_GET['m_kategori']) : ''; // dibawah / diatas / ''
-$m_kenal    = isset($_GET['m_kenal']) ? trim($_GET['m_kenal']) : '';
-$m_bulan    = isset($_GET['m_bulan']) ? trim($_GET['m_bulan']) : '';
-$m_tahun    = isset($_GET['m_tahun']) ? trim($_GET['m_tahun']) : '';
+$m_kenal    = isset($_GET['m_kenal'])    ? trim($_GET['m_kenal'])    : '';
+$m_bulan    = isset($_GET['m_bulan'])    ? trim($_GET['m_bulan'])    : '';
+$m_tahun    = isset($_GET['m_tahun'])    ? trim($_GET['m_tahun'])    : '';
 
 // Tahunan (prefix: y_)
-$y_dapil    = isset($_GET['y_dapil']) ? trim($_GET['y_dapil']) : '';
+$y_dapil    = isset($_GET['y_dapil'])    ? trim($_GET['y_dapil'])    : '';
 $y_kategori = isset($_GET['y_kategori']) ? trim($_GET['y_kategori']) : '';
-$y_kenal    = isset($_GET['y_kenal']) ? trim($_GET['y_kenal']) : '';
-$y_tahun    = isset($_GET['y_tahun']) ? trim($_GET['y_tahun']) : '';
+$y_kenal    = isset($_GET['y_kenal'])    ? trim($_GET['y_kenal'])    : '';
+$y_tahun    = isset($_GET['y_tahun'])    ? trim($_GET['y_tahun'])    : '';
 
 // helper: build WHERE clause based on provided filter array
 function build_where_clause($conn, $filters) {
     $conds = [];
+
     // dapil
     if (!empty($filters['dapil'])) {
         $safe = mysqli_real_escape_string($conn, $filters['dapil']);
@@ -69,7 +76,7 @@ function build_where_clause($conn, $filters) {
         $safe = mysqli_real_escape_string($conn, $filters['kenal']);
         $conds[] = "kenal = '$safe'";
     }
-    // kategori (per orang) -> gunakan NULLIF untuk hindari division by zero
+    // kategori (per orang)
     if (!empty($filters['kategori'])) {
         $umr = intval($filters['umr']);
         if ($filters['kategori'] === 'dibawah') {
@@ -94,33 +101,33 @@ function build_where_clause($conn, $filters) {
 
 // --- QUERY UNTUK CARD BULANAN ---
 $filters_month = [
-    'dapil' => $m_dapil,
+    'dapil'    => $m_dapil,
     'kategori' => $m_kategori,
-    'kenal' => $m_kenal,
-    'bulan' => $m_bulan,
-    'tahun' => $m_tahun,
-    'umr' => UMR_PERSON
+    'kenal'    => $m_kenal,
+    'bulan'    => $m_bulan,
+    'tahun'    => $m_tahun,
+    'umr'      => UMR_PERSON
 ];
 $where_month = build_where_clause($conn, $filters_month);
-$sql_month = "SELECT * FROM keluarga $where_month ORDER BY created_at DESC";
-$res_month = $conn->query($sql_month);
+$sql_month   = "SELECT * FROM keluarga $where_month ORDER BY created_at DESC";
+$res_month   = $conn->query($sql_month);
 
 // --- QUERY UNTUK CARD TAHUNAN ---
 $filters_year = [
-    'dapil' => $y_dapil,
+    'dapil'    => $y_dapil,
     'kategori' => $y_kategori,
-    'kenal' => $y_kenal,
-    'bulan' => '', // tidak pakai bulan di yearly
-    'tahun' => $y_tahun,
-    'umr' => UMR_PERSON
+    'kenal'    => $y_kenal,
+    'bulan'    => '', // tidak pakai bulan di yearly
+    'tahun'    => $y_tahun,
+    'umr'      => UMR_PERSON
 ];
 $where_year = build_where_clause($conn, $filters_year);
-$sql_year = "SELECT * FROM keluarga $where_year ORDER BY created_at DESC";
-$res_year = $conn->query($sql_year);
+$sql_year   = "SELECT * FROM keluarga $where_year ORDER BY created_at DESC";
+$res_year   = $conn->query($sql_year);
 
-// Untuk opsi dapil: gunakan yang kamu punya, contoh berikut tetap statis — ubah jika mau ambil dari DB.
+// Untuk opsi dapil
 $dapil_options = [
-    '' => 'Semua Dapil',
+    ''                => 'Semua Dapil',
     'Kota Surabaya 1' => 'Kota Surabaya 1',
     'Kota Surabaya 2' => 'Kota Surabaya 2',
     'Kota Surabaya 3' => 'Kota Surabaya 3',
@@ -129,10 +136,10 @@ $dapil_options = [
 
 // Untuk opsi kenal
 $kenal_options = [
-    '' => 'Semua',
-    'Ya' => 'Ya',
+    ''             => 'Semua',
+    'Ya'           => 'Ya',
     'Tidak pernah' => 'Tidak pernah',
-    'Tidak' => 'Tidak'
+    'Tidak'        => 'Tidak'
 ];
 
 ?>
@@ -144,7 +151,6 @@ $kenal_options = [
   <title>Laporan - PSI</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ---- style mengikuti halaman Data Keluarga (opsi C) ---- */
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Poppins',sans-serif;background:#f5f6f8;color:#222}
     header{background:linear-gradient(90deg,#fff,#000);padding:12px 30px;display:flex;align-items:center;justify-content:space-between}
@@ -180,7 +186,9 @@ $kenal_options = [
     <div><img src="../assets/image/logo.png" alt="PSI Logo"></div>
     <div style="display:flex;align-items:center;gap:12px">
       <div style="text-align:right;color:#fff;font-weight:600"><?php echo e($adminName); ?></div>
-      <div style="width:44px;height:44px;border-radius:8px;overflow:hidden"><img src="<?php echo e($adminPhoto); ?>" alt="admin"></div>
+      <div style="width:44px;height:44px;border-radius:8px;overflow:hidden">
+        <img src="<?php echo e($adminPhoto); ?>" alt="admin">
+      </div>
     </div>
   </header>
 
@@ -200,7 +208,9 @@ $kenal_options = [
     <main class="content">
       <div class="page-header">
         <h2>Laporan</h2>
-        <p style="color:#666;margin-top:6px">Pilih filter pada setiap card, lalu lihat preview data. Gunakan tombol download untuk ekspor PDF/Excel.</p>
+        <p style="color:#666;margin-top:6px">
+          Pilih filter pada setiap card, lalu lihat preview data. Gunakan tombol download untuk ekspor PDF/Excel.
+        </p>
       </div>
 
       <!-- CARD: LAPORAN BULANAN -->
@@ -215,31 +225,35 @@ $kenal_options = [
             <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <select name="m_dapil">
                 <?php foreach($dapil_options as $k=>$v): ?>
-                  <option value="<?php echo e($k); ?>" <?php echo ($m_dapil===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                  <option value="<?php echo e($k); ?>" <?php echo ($m_dapil === $k ? 'selected' : ''); ?>>
+                    <?php echo e($v); ?>
+                  </option>
                 <?php endforeach; ?>
               </select>
 
               <select name="m_kategori">
                 <option value="">Semua</option>
-                <option value="dibawah" <?php echo ($m_kategori==='dibawah'?'selected':''); ?>>Di bawah UMR</option>
-                <option value="diatas"  <?php echo ($m_kategori==='diatas'?'selected':''); ?>>Di atas UMR</option>
+                <option value="dibawah" <?php echo ($m_kategori === 'dibawah' ? 'selected' : ''); ?>>Di bawah UMR</option>
+                <option value="diatas"  <?php echo ($m_kategori === 'diatas'  ? 'selected' : ''); ?>>Di atas UMR</option>
               </select>
 
               <select name="m_kenal">
                 <?php foreach($kenal_options as $k=>$v): ?>
-                  <option value="<?php echo e($k); ?>" <?php echo ($m_kenal===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                  <option value="<?php echo e($k); ?>" <?php echo ($m_kenal === $k ? 'selected' : ''); ?>>
+                    <?php echo e($v); ?>
+                  </option>
                 <?php endforeach; ?>
               </select>
 
               <select name="m_bulan">
                 <option value="">Semua Bulan</option>
                 <?php 
-                  // reset pointer and iterate unique months
                   mysqli_data_seek($bulanQ, 0);
                   while ($b = $bulanQ->fetch_assoc()):
+                    $valBulan = $b['bulan'];
                 ?>
-                  <option value="<?php echo e($b['bulan']); ?>" <?php echo ($m_bulan===$b['bulan'] ? 'selected':''); ?>>
-                    <?php echo e(date("F", mktime(0,0,0,$b['bulan'],1))); ?>
+                  <option value="<?php echo e($valBulan); ?>" <?php echo ($m_bulan === (string)$valBulan ? 'selected' : ''); ?>>
+                    <?php echo e(date("F", mktime(0,0,0,$valBulan,1))); ?>
                   </option>
                 <?php endwhile; ?>
               </select>
@@ -249,21 +263,35 @@ $kenal_options = [
                 <?php 
                   mysqli_data_seek($tahunQ, 0);
                   while ($t = $tahunQ->fetch_assoc()):
+                    $valTahun = $t['tahun'];
                 ?>
-                  <option value="<?php echo e($t['tahun']); ?>" <?php echo ($m_tahun===$t['tahun'] ? 'selected':'' ); ?>><?php echo e($t['tahun']); ?></option>
+                  <option value="<?php echo e($valTahun); ?>" <?php echo ($m_tahun === (string)$valTahun ? 'selected' : ''); ?>>
+                    <?php echo e($valTahun); ?>
+                  </option>
                 <?php endwhile; ?>
               </select>
 
               <button type="submit" class="btn btn-muted">Terapkan</button>
 
-              <!-- Export links (sesuaikan nama file export jika diperlukan) -->
-              <a class="btn btn-primary" href="export_bulanan_pdf.php?<?php echo http_build_query([
-                  'dapil'=>$m_dapil,'kategori'=>$m_kategori,'kenal'=>$m_kenal,'bulan'=>$m_bulan,'tahun'=>$m_tahun
-                ]); ?>" target="_blank">Download PDF</a>
+              <a class="btn btn-primary" href="export_bulanan_pdf.php?<?php
+                  echo http_build_query([
+                      'dapil'    => $m_dapil,
+                      'kategori' => $m_kategori,
+                      'kenal'    => $m_kenal,
+                      'bulan'    => $m_bulan,
+                      'tahun'    => $m_tahun
+                  ]);
+              ?>" target="_blank">Download PDF</a>
 
-              <a class="btn btn-primary" href="export_bulanan_excel.php?<?php echo http_build_query([
-                  'dapil'=>$m_dapil,'kategori'=>$m_kategori,'kenal'=>$m_kenal,'bulan'=>$m_bulan,'tahun'=>$m_tahun
-                ]); ?>" target="_blank">Download Excel</a>
+              <a class="btn btn-primary" href="export_bulanan_excel.php?<?php
+                  echo http_build_query([
+                      'dapil'    => $m_dapil,
+                      'kategori' => $m_kategori,
+                      'kenal'    => $m_kenal,
+                      'bulan'    => $m_bulan,
+                      'tahun'    => $m_tahun
+                  ]);
+              ?>" target="_blank">Download Excel</a>
             </form>
           </div>
         </div>
@@ -291,11 +319,13 @@ $kenal_options = [
             </thead>
             <tbody>
               <?php if ($res_month && $res_month->num_rows > 0): ?>
-                <?php while ($row = $res_month->fetch_assoc()): 
-                  $anggota = (int)$row['jumlah_anggota'];
+                <?php while ($row = $res_month->fetch_assoc()):
+                  $anggota     = (int)$row['jumlah_anggota'];
                   $penghasilan = (float)$row['total_penghasilan'];
-                  $per_orang = $anggota > 0 ? ($penghasilan / $anggota) : 0;
-                  $kategori_label = ($per_orang < UMR_PERSON) ? "<span class='dibawah'>Dibawah UMR</span>" : "<span class='diatas'>Diatas UMR</span>";
+                  $per_orang   = $anggota > 0 ? ($penghasilan / $anggota) : 0;
+                  $kategori_label = ($per_orang < UMR_PERSON)
+                      ? "<span class='dibawah'>Dibawah UMR</span>"
+                      : "<span class='diatas'>Diatas UMR</span>";
                 ?>
                   <tr>
                     <td><?php echo e($row['nama_lengkap']); ?></td>
@@ -333,52 +363,64 @@ $kenal_options = [
 
           <div>
             <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <select name="dapil" class="form-select">
-                  <option value="">Semua Dapil</option>
-                  <option value="1" <?= ($dapil == '1' ? 'selected' : '') ?>>Dapil 1</option>
-                  <option value="2" <?= ($dapil == '2' ? 'selected' : '') ?>>Dapil 2</option>
-                  <option value="3" <?= ($dapil == '3' ? 'selected' : '') ?>>Dapil 3</option>
-                  <option value="4" <?= ($dapil == '4' ? 'selected' : '') ?>>Dapil 4</option>
-                  <option value="5" <?= ($dapil == '5' ? 'selected' : '') ?>>Dapil 5</option>
+              <select name="y_dapil">
+                <?php foreach($dapil_options as $k=>$v): ?>
+                  <option value="<?php echo e($k); ?>" <?php echo ($y_dapil === $k ? 'selected' : ''); ?>>
+                    <?php echo e($v); ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
-
 
               <select name="y_kategori">
                 <option value="">Semua</option>
-                <option value="dibawah" <?php echo ($y_kategori==='dibawah'?'selected':''); ?>>Di bawah UMR</option>
-                <option value="diatas"  <?php echo ($y_kategori==='diatas'?'selected':''); ?>>Di atas UMR</option>
+                <option value="dibawah" <?php echo ($y_kategori === 'dibawah' ? 'selected' : ''); ?>>Di bawah UMR</option>
+                <option value="diatas"  <?php echo ($y_kategori === 'diatas'  ? 'selected' : ''); ?>>Di atas UMR</option>
               </select>
 
               <select name="y_kenal">
                 <?php foreach($kenal_options as $k=>$v): ?>
-                  <option value="<?php echo e($k); ?>" <?php echo ($y_kenal===$k ? 'selected' : ''); ?>><?php echo e($v); ?></option>
+                  <option value="<?php echo e($k); ?>" <?php echo ($y_kenal === $k ? 'selected' : ''); ?>>
+                    <?php echo e($v); ?>
+                  </option>
                 <?php endforeach; ?>
               </select>
 
               <select name="y_tahun">
                 <option value="">Semua Tahun</option>
                 <?php 
-                  // reset pointer and iterate years
                   mysqli_data_seek($tahunQ, 0);
                   while ($t = $tahunQ->fetch_assoc()):
+                    $valTahun = $t['tahun'];
                 ?>
-                  <option value="<?php echo e($t['tahun']); ?>" <?php echo ($y_tahun===$t['tahun'] ? 'selected' : ''); ?>><?php echo e($t['tahun']); ?></option>
+                  <option value="<?php echo e($valTahun); ?>" <?php echo ($y_tahun === (string)$valTahun ? 'selected' : ''); ?>>
+                    <?php echo e($valTahun); ?>
+                  </option>
                 <?php endwhile; ?>
               </select>
 
-              
-<button type="submit" class="btn btn-primary fw-bold px-4 py-2"
-        style="background:#0066ff; border:none; font-size:15px; box-shadow:0 3px 8px rgba(0,0,0,0.15);">
-    Terapkan Filter
-</button>
+              <button type="submit"
+                      class="btn btn-primary"
+                      style="background:#0066ff; border:none; font-size:15px; box-shadow:0 3px 8px rgba(0,0,0,0.15);">
+                Terapkan Filter
+              </button>
 
-              <a class="btn btn-primary" href="export_tahunan_pdf.php?<?php echo http_build_query([
-                  'dapil'=>$y_dapil,'kategori'=>$y_kategori,'kenal'=>$y_kenal,'tahun'=>$y_tahun
-                ]); ?>" target="_blank">Download PDF</a>
+              <a class="btn btn-primary" href="export_tahunan_pdf.php?<?php
+                  echo http_build_query([
+                      'dapil'    => $y_dapil,
+                      'kategori' => $y_kategori,
+                      'kenal'    => $y_kenal,
+                      'tahun'    => $y_tahun
+                  ]);
+              ?>" target="_blank">Download PDF</a>
 
-              <a class="btn btn-primary" href="export_tahunan_excel.php?<?php echo http_build_query([
-                  'dapil'=>$y_dapil,'kategori'=>$y_kategori,'kenal'=>$y_kenal,'tahun'=>$y_tahun
-                ]); ?>" target="_blank">Download Excel</a>
+              <a class="btn btn-primary" href="export_tahunan_excel.php?<?php
+                  echo http_build_query([
+                      'dapil'    => $y_dapil,
+                      'kategori' => $y_kategori,
+                      'kenal'    => $y_kenal,
+                      'tahun'    => $y_tahun
+                  ]);
+              ?>" target="_blank">Download Excel</a>
             </form>
           </div>
         </div>
@@ -406,11 +448,13 @@ $kenal_options = [
             </thead>
             <tbody>
               <?php if ($res_year && $res_year->num_rows > 0): ?>
-                <?php while ($row = $res_year->fetch_assoc()): 
-                  $anggota = (int)$row['jumlah_anggota'];
+                <?php while ($row = $res_year->fetch_assoc()):
+                  $anggota     = (int)$row['jumlah_anggota'];
                   $penghasilan = (float)$row['total_penghasilan'];
-                  $per_orang = $anggota > 0 ? ($penghasilan / $anggota) : 0;
-                  $kategori_label = ($per_orang < UMR_PERSON) ? "<span class='dibawah'>Dibawah UMR</span>" : "<span class='diatas'>Diatas UMR</span>";
+                  $per_orang   = $anggota > 0 ? ($penghasilan / $anggota) : 0;
+                  $kategori_label = ($per_orang < UMR_PERSON)
+                      ? "<span class='dibawah'>Dibawah UMR</span>"
+                      : "<span class='diatas'>Diatas UMR</span>";
                 ?>
                   <tr>
                     <td><?php echo e($row['nama_lengkap']); ?></td>
@@ -439,9 +483,11 @@ $kenal_options = [
       </div>
 
       <footer>
-        <img src="../assets/image/logodprd.png" alt="DPRD Logo" style="height:20px;margin-right:8px;filter:brightness(0) invert(1)">
-        <img src="../assets/image/psiputih.png" alt="PSI Logo" style="height:20px;filter:brightness(0) invert(1)">
-        &nbsp; Hak cipta © <?php echo date('Y') ?> - Partai Solidaritas Indonesia
+        <img src="../assets/image/logodprd.png" alt="DPRD Logo"
+             style="height:20px;margin-right:8px;filter:brightness(0) invert(1)">
+        <img src="../assets/image/psiputih.png" alt="PSI Logo"
+             style="height:20px;filter:brightness(0) invert(1)">
+        &nbsp; Hak cipta © <?php echo date('Y'); ?> - Partai Solidaritas Indonesia
       </footer>
 
     </main>

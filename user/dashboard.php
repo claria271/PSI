@@ -5,7 +5,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>PSI - dashboard</title>
+  <title>PSI - Dashboard</title>
+
   <style>
     * {
       margin: 0;
@@ -15,94 +16,50 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      background: #e9e9e9;
-      color: #333;
+      background: #ffffff;
+      color: #000000;
       line-height: 1.6;
     }
 
-    /* === HEADER === */
+    /* HEADER */
     header {
-      background: linear-gradient(to right, #ffffff, #000000);
+      background: #000000;
       padding: 12px 40px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    header .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
     header img {
       height: 40px;
+      filter: brightness(0) invert(1);
     }
 
     nav a {
       margin: 0 15px;
       text-decoration: none;
       font-weight: bold;
-      color: #fff;
+      color: #ffffff;
       transition: 0.3s;
     }
 
-    nav a:hover {
-      color: #ff4b4b;
+    nav a:hover,
+    nav a.active {
+      color: #ff0000;
     }
 
-    /* === CONTAINER PALING ATAS (tidak diubah) === */
-    .top-content {
-      max-width: 90%;
-      margin: 20px auto;
-      padding: 20px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      background: #fff;
-      box-shadow: none;
-      border-radius: 8px;
-    }
-
-    .top-inner {
-      width: 40%;
-      text-align: left;
-    }
-
-    .top-content h1 {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .top-content img {
-      height: 160px;
-    }
-
-    .underline {
-      width: 100%;
-      height: 5px;
-      background: red;
-      margin-top: 10px;
-    }
-
-    /* === HERO SLIDER === */
+    /* HERO */
     .hero {
-      position: relative;
       width: 100%;
-      height: 450px;
+      height: 420px;
       overflow: hidden;
-      border-radius: 10px;
-      margin: 0 auto;
+      position: relative;
     }
 
     .hero-slide {
       position: absolute;
       width: 100%;
-      height: 100%;
+      height: 420px;
       top: 0;
       left: 0;
       opacity: 0;
@@ -115,248 +72,159 @@
       opacity: 1;
     }
 
-    .hero-content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #fff;
-      text-align: center;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 20px 40px;
-      border-radius: 12px;
-      animation: fadeIn 1s ease forwards;
+    /* TOP TITLE */
+    .top-content {
+      max-width: 90%;
+      margin: 25px auto;
     }
 
-    .hero-content h1 {
-      font-size: 32px;
-      margin-bottom: 10px;
+    .underline {
+      width: 100%;
+      height: 5px;
+      background: #ff0000;
+      margin-top: 8px;
     }
 
-    .hero-content p {
-      margin-bottom: 20px;
-    }
-
-    .btn {
-      text-decoration: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-
-    .btn-login {
-      background: #ff4b4b;
-      color: #fff;
-    }
-
-    .btn-register {
-      background: #fff;
-      color: #ff4b4b;
-      border: 2px solid #ff4b4b;
-    }
-
-    .btn-login:hover, .btn-register:hover {
-      transform: scale(1.05);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translate(-50%, -55%); }
-      to { opacity: 1; transform: translate(-50%, -50%); }
-    }
-
-    /* === SECTION UMUM === */
-    .section {
-      background: #fff;
+    /* === ROW OF TWO BOXES === */
+    .section-row {
       max-width: 90%;
       margin: 30px auto;
+      display: flex;
+      gap: 25px;
+    }
+
+    .section-box {
+      background: #ffffff;
+      border: 2px solid #000000;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 30px;
-      opacity: 0;
-      transform: translateY(40px);
-      animation: fadeUp 1s ease forwards;
+      padding: 25px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 25px; /* space between image & text */
     }
 
-    /* Animasi muncul */
-    @keyframes fadeUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* IMAGE ON LEFT */
+    .circle-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #d9d9d9;
+      flex-shrink: 0;
     }
 
-    .section:nth-of-type(2) { animation-delay: 0.3s; }
-    .section:nth-of-type(3) { animation-delay: 0.6s; }
-    .section:nth-of-type(4) { animation-delay: 0.9s; }
+    .section-box p {
+      text-align: justify;
+      margin: 0;
+    }
 
-    /* === FLEX LAYOUT === */
-    .flex {
+    /* BOTTOM BOX */
+    .bottom-box {
+      max-width: 90%;
+      margin: 40px auto;
+      background: #f2f2f2;
+      border-radius: 12px;
+      padding: 25px 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 30px;
-      flex-wrap: wrap;
+      gap: 20px;
+      border-left: 6px solid #ff0000;
     }
 
-    .flex .text {
+    .bottom-text {
       flex: 1;
-      min-width: 250px;
-    }
-
-    .text p {
       text-align: justify;
     }
 
-    /* === GANTI LINGKARAN JADI PERSEGI === */
-    .image-box {
-      width: 200px;
-      height: 200px;
-      border-radius: 10px;
-      background: #ccc;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+    .bottom-logo {
+      height: 28px;
       flex-shrink: 0;
-      background-size: cover;
-      background-position: center;
     }
 
-    /* === LEADER SECTION === */
-    .leader-section {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-top: 40px;
-    }
-
-    .leader-card {
-      background: #f0f0f0;
-      border-radius: 10px;
-      width: 28%;
-      text-align: center;
-      padding: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transition: transform 0.3s;
-    }
-
-    .leader-card:hover {
-      transform: scale(1.05);
-    }
-
-    .leader-card .photo {
-      width: 100%;
-      aspect-ratio: 1/1;
-      border-radius: 10px;
-      background: #ccc;
-      margin-bottom: 10px;
-    }
-
-    .leader-card h3 {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    /* === FOOTER === */
     footer {
       margin-top: 40px;
-      padding: 15px 5%;
+      padding: 15px;
+      background: #000000;
       text-align: center;
-      background: linear-gradient(to right, #ffffff, #000000);
-      font-size: 14px;
-      color: #fff;
-      border-top: 1px solid #ccc;
+      border-top: 2px solid #ff0000;
+      color: #ffffff;
     }
 
     footer img {
       height: 20px;
-      vertical-align: middle;
-      margin: 0 5px;
       filter: brightness(0) invert(1);
+      margin: 0 5px;
     }
+
+    /* RESPONSIVE */
+    @media(max-width: 768px) {
+      .section-row {
+        flex-direction: column;
+      }
+      .section-box {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
   </style>
 </head>
+
 <body>
+
   <header>
-    <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI Logo">
-    </div>
+    <img src="../assets/image/logo.png" alt="PSI Logo">
     <nav>
       <a href="dashboard.php" class="active">Dashboard</a>
       <a href="kontak.php">Kontak</a>
       <a href="profil.php">Profil</a>
     </nav>
   </header>
-  <!-- HERO SLIDER -->
+
+  <!-- HERO -->
   <section class="hero">
     <div class="hero-slide active" style="background-image: url('../assets/image/index.jpeg');"></div>
     <div class="hero-slide" style="background-image: url('../assets/image/index1.jpeg');"></div>
     <div class="hero-slide" style="background-image: url('../assets/image/index2.jpeg');"></div>
   </section>
-  <!-- CONTAINER PALING ATAS (tidak diubah) -->
+
   <div class="top-content">
-    <div class="top-inner">
-      <h1>
-        PSI Peduli - Hadir Untuk Melayani Masyarakat 
-        <img src="../assets/image/hati.png" alt="Hati">
-      </h1>
-      <div class="underline"></div>
-    </div>
+    <h1>PSI Peduli - Hadir Untuk Melayani Masyarakat</h1>
+    <div class="underline"></div>
   </div>
 
+  <!-- ✅ TWO BOXES SIDE BY SIDE WITH IMAGE LEFT -->
+  <div class="section-row">
 
-  <!-- SECTION 1 -->
-  <section class="section">
-    <div class="flex">
-      <div class="text">
-        <p>
-          Kita percaya, solidaritas bukan sekadar kata. Melalui program bantuan dana sosial,
-          PSI berupaya meringankan beban masyarakat yang membutuhkan, dengan proses yang terbuka,
-          cepat, dan tanpa diskriminasi.
-        </p>
-      </div>
-      <div class="image-box" style="background-image: url('../assets/image/psi1.jpg');"></div>
+    <div class="section-box">
+      <div class="circle-img"></div>
+      <p>
+        Kita percaya, solidaritas bukan sekadar kata. Melalui program bantuan dana sosial,
+        PSI berupaya meringankan beban masyarakat yang membutuhkan dengan proses terbuka,
+        cepat, dan tanpa diskriminasi.
+      </p>
     </div>
-  </section>
 
-  <!-- SECTION 2 -->
-  <section class="section">
-    <div class="flex">
-      <div class="image-box" style="background-image: url('../assets/image/psi2.jpg');"></div>
-      <div class="text">
-        <p>
-          Sebagai bagian dari komitmen untuk mendukung masyarakat, PSI menghadirkan program bantuan
-          sosial yang dikelola dengan prinsip keterbukaan, keadilan, dan akuntabilitas. Melalui sistem
-          pendataan yang terintegrasi, kami memastikan bahwa setiap bantuan dapat diterima tepat sasaran
-          dan bermanfaat bagi yang membutuhkan.
-        </p>
-      </div>
+    <div class="section-box">
+      <div class="circle-img"></div>
+      <p>
+        Sebagai bagian dari komitmen untuk mendukung masyarakat, PSI menghadirkan program bantuan sosial
+        yang dikelola dengan prinsip keterbukaan, keadilan, dan akuntabilitas. Melalui sistem pendataan
+        yang terintegrasi, kami memastikan bantuan tepat sasaran dan bermanfaat.
+      </p>
     </div>
-  </section>
 
-  <!-- SECTION 3 -->
-  <section class="section">
-    <p>
-      PSI meyakini bahwa solidaritas adalah kekuatan utama dalam membangun kehidupan yang lebih 
-      baik bagi masyarakat. Melalui program bantuan sosial, PSI berkomitmen untuk hadir dengan cara
-      yang terbuka, adil, dan akuntabel.
-    </p>
-  </section>
+  </div>
 
-  <section class="section">
-    <div class="leader-section">
-      <div class="leader-card">
-        <div class="photo"></div>
-        <h3>Ketua Fraksi PSI</h3>
-      </div>
-      <div class="leader-card">
-        <div class="photo"></div>
-        <h3>Wakil Ketua Fraksi PSI</h3>
-      </div>
-      <div class="leader-card">
-        <div class="photo"></div>
-        <h3>Fairuz Fraksi</h3>
-      </div>
+  <!-- BOTTOM BOX -->
+  <section class="bottom-box">
+    <div class="bottom-text">
+      PSI meyakini bahwa solidaritas adalah kekuatan utama dalam membangun kehidupan yang lebih baik
+      bagi masyarakat. Melalui program bantuan sosial, PSI berkomitmen untuk hadir dengan cara yang
+      terbuka, adil, dan tanpa diskriminasi.
     </div>
+    <img src="../assets/image/psiputih.png" class="bottom-logo" alt="PSI Logo">
   </section>
 
   <footer>
@@ -365,7 +233,6 @@
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
 
-  <!-- === SCRIPT UNTUK SLIDE OTOMATIS === -->
   <script>
     const slides = document.querySelectorAll('.hero-slide');
     let current = 0;
@@ -374,7 +241,8 @@
       slides[current].classList.remove('active');
       current = (current + 1) % slides.length;
       slides[current].classList.add('active');
-    }, 4000); // Ganti slide setiap 4 detik
+    }, 4000);
   </script>
+
 </body>
 </html>
