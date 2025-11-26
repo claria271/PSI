@@ -16,7 +16,7 @@ function e($str) {
     return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
 
-// Ambil data admin berdasarkan session (bisa dari email atau username)
+// Ambil data admin berdasarkan session
 $admin = null;
 
 if (!empty($_SESSION['alamat_email'])) {
@@ -37,21 +37,121 @@ if (!empty($_SESSION['alamat_email'])) {
     }
 }
 
-// Jika tetap tidak ketemu (misal session aneh), paksa logout
 if (!$admin) {
     header("Location: ../user/login.php");
     exit();
 }
 
-// Tentukan nama & foto admin
-// Sesuaikan nama kolom di tabelmu: misal 'nama_lengkap', 'username', 'foto'
 $adminName = !empty($admin['nama_lengkap'])
     ? $admin['nama_lengkap']
     : (!empty($admin['username']) ? $admin['username'] : 'Admin');
 
 $adminPhoto = !empty($admin['foto'])
-    ? '../uploads/' . $admin['foto']   // misal foto disimpan di folder uploads
+    ? '../uploads/' . $admin['foto']
     : '../assets/image/admin_photo.jpg';
+
+// ================== QUERY DATA UNTUK DASHBOARD ================== //
+
+// UMR per orang
+define('UMR_PERSON', 4725479);
+
+// 1. TOTAL KELUARGA
+$queryTotal = "SELECT COUNT(*) as total FROM keluarga";
+$resultTotal = mysqli_query($conn, $queryTotal);
+$totalKeluarga = mysqli_fetch_assoc($resultTotal)['total'];
+
+// 2. KELUARGA DIBAWAH UMR (rata-rata per orang < UMR)
+$queryDibawah = "SELECT COUNT(*) as total 
+                 FROM keluarga 
+                 WHERE (total_penghasilan / NULLIF(jumlah_anggota, 0)) < " . UMR_PERSON;
+$resultDibawah = mysqli_query($conn, $queryDibawah);
+$dibawahUMR = mysqli_fetch_assoc($resultDibawah)['total'];
+
+// 3. KELUARGA DIATAS UMR (rata-rata per orang >= UMR)
+$queryDiatas = "SELECT COUNT(*) as total 
+                FROM keluarga 
+                WHERE (total_penghasilan / NULLIF(jumlah_anggota, 0)) >= " . UMR_PERSON;
+$resultDiatas = mysqli_query($conn, $queryDiatas);
+$diatasUMR = mysqli_fetch_assoc($resultDiatas)['total'];
+
+// 4. DATA LINE CHART - Jumlah keluarga per bulan (12 bulan terakhir)
+$lineChartData = [];
+for ($i = 11; $i >= 0; $i--) {
+    $month = date('Y-m', strtotime("-$i months"));
+    $queryMonth = "SELECT COUNT(*) as total 
+                   FROM keluarga 
+                   WHERE DATE_FORMAT(created_at, '%Y-%m') = '$month'";
+    $resultMonth = mysqli_query($conn, $queryMonth);
+    $lineChartData[] = mysqli_fetch_assoc($resultMonth)['total'];
+}
+
+// 5. DATA BAR CHART - Dibawah vs Diatas UMR per bulan (4 bulan terakhir)
+$barChartDibawah = [];
+$barChartDiatas = [];
+for ($i = 3; $i >= 0; $i--) {
+    $month = date('Y-m', strtotime("-$i months"));
+    
+    // Dibawah UMR
+    $queryBarDibawah = "SELECT COUNT(*) as total 
+                        FROM keluarga 
+                        WHERE DATE_FORMAT(created_at, '%Y-%m') = '$month'
+                        AND (total_penghasilan / NULLIF(jumlah_anggota, 0)) < " . UMR_PERSON;
+    $resultBarDibawah = mysqli_query($conn, $queryBarDibawah);
+    $barChartDibawah[] = mysqli_fetch_assoc($resultBarDibawah)['total'];
+    
+    // Diatas UMR
+    $queryBarDiatas = "SELECT COUNT(*) as total 
+                       FROM keluarga 
+                       WHERE DATE_FORMAT(created_at, '%Y-%m') = '$month'
+                       AND (total_penghasilan / NULLIF(jumlah_anggota, 0)) >= " . UMR_PERSON;
+    $resultBarDiatas = mysqli_query($conn, $queryBarDiatas);
+    $barChartDiatas[] = mysqli_fetch_assoc($resultBarDiatas)['total'];
+}
+
+// 6. DATA PIE CHART - Jumlah keluarga per Dapil
+$pieChartData = [];
+$pieChartLabels = [];
+$queryPie = "SELECT dapil, COUNT(*) as total 
+             FROM keluarga 
+             WHERE dapil IS NOT NULL AND dapil != ''
+             GROUP BY dapil 
+             ORDER BY dapil";
+$resultPie = mysqli_query($conn, $queryPie);
+while ($row = mysqli_fetch_assoc($resultPie)) {
+    $pieChartLabels[] = $row['dapil'];
+    $pieChartData[] = $row['total'];
+}
+
+// Jika tidak ada data dapil, buat dummy
+if (empty($pieChartLabels)) {
+    $pieChartLabels = ['Dapil 1', 'Dapil 2', 'Dapil 3', 'Dapil 4', 'Dapil 5'];
+    $pieChartData = [0, 0, 0, 0, 0];
+}
+
+// 7. DATA UPDATE TERBARU - 10 data terakhir yang diupdate
+$queryUpdates = "SELECT nama_lengkap, nik, alamat, dapil, updated_at 
+                 FROM keluarga 
+                 ORDER BY updated_at DESC 
+                 LIMIT 10";
+$resultUpdates = mysqli_query($conn, $queryUpdates);
+
+// 8. DATA TAMBAH TERBARU - 10 data terakhir yang ditambahkan
+$queryAdded = "SELECT nama_lengkap, nik, alamat, dapil, created_at 
+               FROM keluarga 
+               ORDER BY created_at DESC 
+               LIMIT 10";
+$resultAdded = mysqli_query($conn, $queryAdded);
+
+// Generate label bulan untuk chart
+$lineChartLabels = [];
+for ($i = 11; $i >= 0; $i--) {
+    $lineChartLabels[] = date('M', strtotime("-$i months"));
+}
+
+$barChartLabels = [];
+for ($i = 3; $i >= 0; $i--) {
+    $barChartLabels[] = date('M', strtotime("-$i months"));
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -122,9 +222,11 @@ $adminPhoto = !empty($admin['foto'])
     /* === SIDEBAR === */
     .sidebar {
       width: 260px;
+      flex: 0 0 260px;
       padding: 30px 20px;
       background: linear-gradient(to bottom, #d9d9d9, #8c8c8c);
       border-right: 1px solid #ccc;
+      overflow-y: auto;
     }
 
     .admin-profile {
@@ -346,6 +448,138 @@ $adminPhoto = !empty($admin['foto'])
       height: 180px;
     }
 
+    /* === ACTIVITY CARDS === */
+    .activity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .activity-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: all 0.3s;
+      max-height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .activity-icon {
+      width: 35px;
+      height: 35px;
+      background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(255, 100, 100, 0.15));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .activity-header h3 {
+      color: #000;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    .activity-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .activity-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border-left: 3px solid #ff0000;
+      transition: all 0.2s;
+    }
+
+    .activity-item:hover {
+      background: #f5f5f5;
+      transform: translateX(3px);
+    }
+
+    .activity-item.added {
+      border-left-color: #4CAF50;
+    }
+
+    .activity-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 5px;
+    }
+
+    .activity-name {
+      font-weight: 600;
+      color: #000;
+      font-size: 13px;
+    }
+
+    .activity-time {
+      font-size: 11px;
+      color: #999;
+      white-space: nowrap;
+    }
+
+    .activity-details {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .activity-details .nik {
+      color: #ff0000;
+      font-weight: 500;
+    }
+
+    .activity-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(255, 0, 0, 0.1);
+      color: #ff0000;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .no-activity {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      font-size: 13px;
+    }
+
+    .no-activity .icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+      opacity: 0.3;
+    }
+
     /* === FOOTER === */
     footer {
       margin-top: 20px;
@@ -387,6 +621,10 @@ $adminPhoto = !empty($admin['foto'])
       .charts-grid {
         grid-template-columns: 1fr;
       }
+      
+      .activity-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 768px) {
@@ -395,6 +633,10 @@ $adminPhoto = !empty($admin['foto'])
       }
       
       .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .activity-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -426,13 +668,10 @@ $adminPhoto = !empty($admin['foto'])
       <nav>
         <a href="#" class="active">Dashboard</a>
         <a href="datakeluarga.php">Data Keluarga</a>
-
-        <!-- 🔥 Tombol/Menu Tambah Admin -->
         <a href="tambah_admin.php">➕ Tambah Admin</a>
-
-        <a href="#">Hasil Verifikasi</a>
+        <a href="verifikasi.php">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
-        <a href="logoutadmin.php">Logout</a>
+        <a href="logout.php">Logout</a>
       </nav>
     </aside>
 
@@ -449,8 +688,8 @@ $adminPhoto = !empty($admin['foto'])
           <div class="stat-icon">👨‍👩‍👧‍👦</div>
           <div class="stat-content">
             <div class="stat-label">Total Keluarga</div>
-            <div class="stat-value">3,782</div>
-            <div class="stat-change up">↑ 11.01%</div>
+            <div class="stat-value"><?php echo number_format($totalKeluarga, 0, ',', '.'); ?></div>
+            <div class="stat-change up">Real-time Data</div>
           </div>
         </div>
 
@@ -458,8 +697,8 @@ $adminPhoto = !empty($admin['foto'])
           <div class="stat-icon">📉</div>
           <div class="stat-content">
             <div class="stat-label">Dibawah UMR</div>
-            <div class="stat-value">1,234</div>
-            <div class="stat-change down">↓ 9.05%</div>
+            <div class="stat-value"><?php echo number_format($dibawahUMR, 0, ',', '.'); ?></div>
+            <div class="stat-change down"><?php echo $totalKeluarga > 0 ? round(($dibawahUMR/$totalKeluarga)*100, 1) : 0; ?>%</div>
           </div>
         </div>
 
@@ -467,8 +706,8 @@ $adminPhoto = !empty($admin['foto'])
           <div class="stat-icon">📈</div>
           <div class="stat-content">
             <div class="stat-label">Diatas UMR</div>
-            <div class="stat-value">2,548</div>
-            <div class="stat-change up">↑ 4.21%</div>
+            <div class="stat-value"><?php echo number_format($diatasUMR, 0, ',', '.'); ?></div>
+            <div class="stat-change up"><?php echo $totalKeluarga > 0 ? round(($diatasUMR/$totalKeluarga)*100, 1) : 0; ?>%</div>
           </div>
         </div>
       </div>
@@ -476,23 +715,120 @@ $adminPhoto = !empty($admin['foto'])
       <!-- CHARTS -->
       <div class="charts-grid">
         <div class="chart-box">
-          <h3>Jumlah Data Keluarga</h3>
+          <h3>Jumlah Data Keluarga (12 Bulan Terakhir)</h3>
           <div class="chart-container">
             <canvas id="chartLine"></canvas>
           </div>
         </div>
         <div class="chart-small-grid">
           <div class="chart-box">
-            <h3>Status</h3>
+            <h3>Status UMR (4 Bulan Terakhir)</h3>
             <div class="chart-container-small">
               <canvas id="chartBar"></canvas>
             </div>
           </div>
           <div class="chart-box">
-            <h3>Data Daerah</h3>
+            <h3>Data Per Dapil</h3>
             <div class="chart-container-small">
               <canvas id="chartPie"></canvas>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY CARDS -->
+      <div class="activity-grid">
+        <!-- DATA UPDATE TERBARU -->
+        <div class="activity-card">
+          <div class="activity-header">
+            <div class="activity-icon">🔄</div>
+            <h3>Data Terupdate</h3>
+          </div>
+          <div class="activity-list">
+            <?php if (mysqli_num_rows($resultUpdates) > 0): ?>
+              <?php while ($update = mysqli_fetch_assoc($resultUpdates)): ?>
+                <?php
+                  $timeAgo = '';
+                  $timestamp = strtotime($update['updated_at']);
+                  $diff = time() - $timestamp;
+                  
+                  if ($diff < 60) {
+                    $timeAgo = 'Baru saja';
+                  } elseif ($diff < 3600) {
+                    $timeAgo = floor($diff / 60) . ' menit lalu';
+                  } elseif ($diff < 86400) {
+                    $timeAgo = floor($diff / 3600) . ' jam lalu';
+                  } else {
+                    $timeAgo = floor($diff / 86400) . ' hari lalu';
+                  }
+                ?>
+                <div class="activity-item">
+                  <div class="activity-item-header">
+                    <div class="activity-name"><?php echo e($update['nama_lengkap']); ?></div>
+                    <div class="activity-time"><?php echo $timeAgo; ?></div>
+                  </div>
+                  <div class="activity-details">
+                    NIK: <span class="nik"><?php echo e($update['nik']); ?></span><br>
+                    <?php echo e(substr($update['alamat'], 0, 50)); ?><?php echo strlen($update['alamat']) > 50 ? '...' : ''; ?>
+                    <?php if (!empty($update['dapil'])): ?>
+                      <div class="activity-badge"><?php echo e($update['dapil']); ?></div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endwhile; ?>
+            <?php else: ?>
+              <div class="no-activity">
+                <div class="icon">📝</div>
+                Belum ada update data
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <!-- DATA TAMBAH TERBARU -->
+        <div class="activity-card">
+          <div class="activity-header">
+            <div class="activity-icon">➕</div>
+            <h3>Data Ditambahkan</h3>
+          </div>
+          <div class="activity-list">
+            <?php if (mysqli_num_rows($resultAdded) > 0): ?>
+              <?php while ($added = mysqli_fetch_assoc($resultAdded)): ?>
+                <?php
+                  $timeAgo = '';
+                  $timestamp = strtotime($added['created_at']);
+                  $diff = time() - $timestamp;
+                  
+                  if ($diff < 60) {
+                    $timeAgo = 'Baru saja';
+                  } elseif ($diff < 3600) {
+                    $timeAgo = floor($diff / 60) . ' menit lalu';
+                  } elseif ($diff < 86400) {
+                    $timeAgo = floor($diff / 3600) . ' jam lalu';
+                  } else {
+                    $timeAgo = floor($diff / 86400) . ' hari lalu';
+                  }
+                ?>
+                <div class="activity-item added">
+                  <div class="activity-item-header">
+                    <div class="activity-name"><?php echo e($added['nama_lengkap']); ?></div>
+                    <div class="activity-time"><?php echo $timeAgo; ?></div>
+                  </div>
+                  <div class="activity-details">
+                    NIK: <span class="nik"><?php echo e($added['nik']); ?></span><br>
+                    <?php echo e(substr($added['alamat'], 0, 50)); ?><?php echo strlen($added['alamat']) > 50 ? '...' : ''; ?>
+                    <?php if (!empty($added['dapil'])): ?>
+                      <div class="activity-badge"><?php echo e($added['dapil']); ?></div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endwhile; ?>
+            <?php else: ?>
+              <div class="no-activity">
+                <div class="icon">📋</div>
+                Belum ada data ditambahkan
+              </div>
+            <?php endif; ?>
           </div>
         </div>
       </div>
@@ -510,15 +846,26 @@ $adminPhoto = !empty($admin['foto'])
     Chart.defaults.color = '#666';
     Chart.defaults.borderColor = '#e5e5e5';
 
-    // Line Chart
+    // Line Chart - Data dari PHP
     const ctx1 = document.getElementById('chartLine');
+    const lineData = <?php echo json_encode($lineChartData); ?>;
+    const maxLineValue = Math.max(...lineData, 10); // minimal 10
+    
+    // Tentukan step size otomatis berdasarkan nilai maksimal
+    let lineStepSize = 5;
+    if (maxLineValue > 100) {
+      lineStepSize = Math.ceil(maxLineValue / 20 / 5) * 5; // kelipatan 5
+    } else if (maxLineValue > 50) {
+      lineStepSize = 10;
+    }
+    
     new Chart(ctx1, {
       type: 'line',
       data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+        labels: <?php echo json_encode($lineChartLabels); ?>,
         datasets: [{
           label: 'Jumlah Keluarga',
-          data: [80, 150, 130, 160, 120, 200, 180, 170, 110, 90, 150, 210],
+          data: lineData,
           borderColor: '#ff0000',
           backgroundColor: 'rgba(255, 0, 0, 0.05)',
           fill: true,
@@ -554,7 +901,11 @@ $adminPhoto = !empty($admin['foto'])
             },
             ticks: { 
               color: '#666',
-              font: { size: 11 }
+              font: { size: 11 },
+              stepSize: lineStepSize,
+              callback: function(value) {
+                return Number.isInteger(value) ? value : null;
+              }
             }
           },
           x: {
@@ -571,24 +922,36 @@ $adminPhoto = !empty($admin['foto'])
       }
     });
 
-    // Bar Chart
+    // Bar Chart - Data dari PHP
     const ctx2 = document.getElementById('chartBar');
+    const barDataDibawah = <?php echo json_encode($barChartDibawah); ?>;
+    const barDataDiatas = <?php echo json_encode($barChartDiatas); ?>;
+    const maxBarValue = Math.max(...barDataDibawah, ...barDataDiatas, 10); // minimal 10
+    
+    // Tentukan step size otomatis berdasarkan nilai maksimal
+    let barStepSize = 5;
+    if (maxBarValue > 100) {
+      barStepSize = Math.ceil(maxBarValue / 15 / 5) * 5; // kelipatan 5
+    } else if (maxBarValue > 50) {
+      barStepSize = 10;
+    }
+    
     new Chart(ctx2, {
       type: 'bar',
       data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+        labels: <?php echo json_encode($barChartLabels); ?>,
         datasets: [
           {
             label: 'Dibawah UMR',
-            data: [80, 100, 90, 95],
-            backgroundColor: '#008000',
+            data: barDataDibawah,
+            backgroundColor: '#ff0000',
             borderRadius: 6,
             borderSkipped: false
           },
           {
             label: 'Diatas UMR',
-            data: [120, 150, 140, 130],
-            backgroundColor: '#ff0000',
+            data: barDataDiatas,
+            backgroundColor: '#008000',
             borderRadius: 6,
             borderSkipped: false
           }
@@ -618,7 +981,11 @@ $adminPhoto = !empty($admin['foto'])
             },
             ticks: { 
               color: '#666',
-              font: { size: 10 }
+              font: { size: 10 },
+              stepSize: barStepSize,
+              callback: function(value) {
+                return Number.isInteger(value) ? value : null;
+              }
             }
           },
           x: {
@@ -635,14 +1002,14 @@ $adminPhoto = !empty($admin['foto'])
       }
     });
 
-    // Pie Chart
+    // Pie Chart - Data dari PHP
     const ctx3 = document.getElementById('chartPie');
     new Chart(ctx3, {
       type: 'doughnut',
       data: {
-        labels: ['Dapil 1', 'Dapil 2', 'Dapil 3', 'Dapil 4', 'Dapil 5'],
+        labels: <?php echo json_encode($pieChartLabels); ?>,
         datasets: [{
-          data: [20, 25, 15, 25, 15],
+          data: <?php echo json_encode($pieChartData); ?>,
           backgroundColor: [
             '#f44336',
             '#2196f3',
@@ -673,7 +1040,17 @@ $adminPhoto = !empty($admin['foto'])
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
             padding: 8,
             cornerRadius: 6,
-            bodyFont: { size: 11 }
+            bodyFont: { size: 11 },
+            callbacks: {
+              label: function(context) {
+                let label = context.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                label += context.parsed + ' keluarga';
+                return label;
+              }
+            }
           }
         },
         cutout: '60%'
