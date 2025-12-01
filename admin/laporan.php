@@ -487,13 +487,12 @@ $kenal_options = [
 
           <div>
             <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <select name="dapil" class="form-select">
-                  <option value="">Semua Dapil</option>
-                  <option value="1" <?= ($dapil == '1' ? 'selected' : '') ?>>Dapil 1</option>
-                  <option value="2" <?= ($dapil == '2' ? 'selected' : '') ?>>Dapil 2</option>
-                  <option value="3" <?= ($dapil == '3' ? 'selected' : '') ?>>Dapil 3</option>
-                  <option value="4" <?= ($dapil == '4' ? 'selected' : '') ?>>Dapil 4</option>
-                  <option value="5" <?= ($dapil == '5' ? 'selected' : '') ?>>Dapil 5</option>
+              <select name="m_dapil">
+                <?php foreach($dapil_options as $k=>$v): ?>
+                  <option value="<?php echo e($k); ?>" <?php echo ($m_dapil === $k ? 'selected' : ''); ?>>
+                    <?php echo e($v); ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
 
               <select name="y_kategori">
