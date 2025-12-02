@@ -397,7 +397,7 @@ $kenal_options = [
     Terapkan Filter
 </button>
 
-              <a class="btn btn-primary" href="export_bulanan_pdf.php?<?php
+              <a class="btn btn-primary" href="export_bulanan.php?<?php
                   echo http_build_query([
                       'dapil'    => $m_dapil,
                       'kategori' => $m_kategori,

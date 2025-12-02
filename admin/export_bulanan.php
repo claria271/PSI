@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once '../koneksi/config.php';
+
+// autoload composer (dompdf)
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dompdf\Dompdf;
@@ -18,10 +20,11 @@ $conn->set_charset("utf8mb4");
 // ==== KONSTANTA UMR PER ORANG ====
 define('UMR_PERSON', 4725479);
 
-// ==== AMBIL FILTER GET (KHUSUS TAHUNAN) ====
+// ==== AMBIL FILTER GET (SAMA DENGAN laporan.php) ====
 $dapil    = isset($_GET['dapil'])    ? trim($_GET['dapil'])    : '';
 $kategori = isset($_GET['kategori']) ? trim($_GET['kategori']) : '';
 $kenal    = isset($_GET['kenal'])    ? trim($_GET['kenal'])    : '';
+$bulan    = isset($_GET['bulan'])    ? trim($_GET['bulan'])    : '';
 $tahun    = isset($_GET['tahun'])    ? trim($_GET['tahun'])    : '';
 
 
@@ -30,26 +33,26 @@ $tahun    = isset($_GET['tahun'])    ? trim($_GET['tahun'])    : '';
 // =======================
 $where = [];
 
-// Dapil
 if ($dapil !== '') {
     $safe = $conn->real_escape_string($dapil);
     $where[] = "dapil = '$safe'";
 }
 
-// Kenal
 if ($kenal !== '') {
     $safe = $conn->real_escape_string($kenal);
     $where[] = "kenal = '$safe'";
 }
 
-// Kategori UMR per orang
 if ($kategori === 'dibawah') {
     $where[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) < " . UMR_PERSON . " )";
 } elseif ($kategori === 'diatas') {
     $where[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) >= " . UMR_PERSON . " )";
 }
 
-// Tahun
+if ($bulan !== '') {
+    $where[] = "MONTH(created_at) = " . intval($bulan);
+}
+
 if ($tahun !== '') {
     $where[] = "YEAR(created_at) = " . intval($tahun);
 }
@@ -69,12 +72,6 @@ $res = $conn->query($sql);
 // =======================
 //  TEMPLATE HTML PDF
 // =======================
-$judul = 'LAPORAN DATA KELUARGA - TAHUNAN';
-$subJudul = 'Dibuat pada: ' . date('d-m-Y H:i');
-if ($tahun !== '') {
-    $subJudul .= ' | Tahun: ' . $tahun;
-}
-
 $html = "
 <style>
 body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
@@ -82,11 +79,11 @@ table { width: 100%; border-collapse: collapse; margin-top:10px; }
 th, td { border: 1px solid #555; padding: 6px; font-size: 11px; }
 th { background: #eee; }
 h2 { text-align:center; margin-bottom: 4px; }
-.small { font-size: 11px; text-align:center; }
+.small { font-size: 11px; }
 </style>
 
-<h2>$judul</h2>
-<div class='small'>$subJudul</div>
+<h2>LAPORAN DATA KELUARGA - BULANAN</h2>
+<div class='small'>Dibuat pada: " . date('d-m-Y H:i') . "</div>
 <br>
 
 <table>
@@ -158,9 +155,9 @@ $options->set('isRemoteEnabled', true);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'landscape'); // supaya tabel lebar muat
+$dompdf->setPaper('A4', 'landscape'); // tabel lebar jadi landscape
 $dompdf->render();
 
 // STREAM KE BROWSER
-$dompdf->stream("laporan_tahunan.pdf", ["Attachment" => true]);
+$dompdf->stream("laporan_bulanan.pdf", ["Attachment" => true]);
 exit;
