@@ -2,6 +2,10 @@
 session_start();
 include '../koneksi/config.php';
 
+// NOTE: Pastikan di database kolom `kenal` sudah cukup panjang:
+// Contoh:
+// ALTER TABLE keluarga MODIFY kenal VARCHAR(20);
+
 // Pastikan hanya admin yang bisa akses
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
   header("Location: ../user/login.php");
@@ -10,7 +14,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
 // Ambil data berdasarkan ID
 if (isset($_GET['id'])) {
-  $id = $_GET['id'];
+  $id = (int)$_GET['id'];
+
   $stmt = $conn->prepare("SELECT * FROM keluarga WHERE id = ?");
   $stmt->bind_param("i", $id);
   $stmt->execute();
@@ -21,30 +26,59 @@ if (isset($_GET['id'])) {
     echo "<script>alert('Data tidak ditemukan');window.location='datakeluarga.php';</script>";
     exit;
   }
+} else {
+  // Jika tidak ada id di URL, kembalikan ke daftar
+  header("Location: datakeluarga.php");
+  exit;
 }
 
 // Proses update data
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $id = $_POST['id'];
-  $nama_lengkap = $_POST['nama_lengkap'];
-  $nik = $_POST['nik'];
-  $no_wa = $_POST['no_wa'];
-  $alamat = $_POST['alamat'];
-  $dapil = $_POST['dapil'];
-  $kecamatan = $_POST['kecamatan'];
-  $jumlah_anggota = $_POST['jumlah_anggota'];
-  $jumlah_bekerja = $_POST['jumlah_bekerja'];
-  $total_penghasilan = $_POST['total_penghasilan'];
-  $kenal = $_POST['kenal'];
-  $sumber = $_POST['sumber'];
+  $id                = (int)$_POST['id'];
+  $nama_lengkap      = $_POST['nama_lengkap'];
+  $nik               = $_POST['nik'];
+  $no_wa             = $_POST['no_wa'];
+  $alamat            = $_POST['alamat'];
+  $dapil             = $_POST['dapil'];
+  $kecamatan         = $_POST['kecamatan'];
+  $jumlah_anggota    = (int)$_POST['jumlah_anggota'];
+  $jumlah_bekerja    = (int)$_POST['jumlah_bekerja'];
+  $total_penghasilan = (int)$_POST['total_penghasilan'];
+  $kenal             = $_POST['kenal'];   // Ya / Tidak / Tidak pernah
+  $sumber            = $_POST['sumber'];
 
   $query = "UPDATE keluarga SET 
-              nama_lengkap=?, nik=?, no_wa=?, alamat=?, dapil=?, kecamatan=?, 
-              jumlah_anggota=?, jumlah_bekerja=?, total_penghasilan=?, 
-              kenal=?, sumber=?, updated_at=NOW() 
-            WHERE id=?";
+              nama_lengkap = ?, 
+              nik = ?, 
+              no_wa = ?, 
+              alamat = ?, 
+              dapil = ?, 
+              kecamatan = ?, 
+              jumlah_anggota = ?, 
+              jumlah_bekerja = ?, 
+              total_penghasilan = ?, 
+              kenal = ?, 
+              sumber = ?, 
+              updated_at = NOW() 
+            WHERE id = ?";
+
   $stmt = $conn->prepare($query);
-  $stmt->bind_param("ssssssiiissi", $nama_lengkap, $nik, $no_wa, $alamat, $dapil, $kecamatan, $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, $kenal, $sumber, $id);
+  // ssssssiiissi = 6 string, 3 integer, 2 string, 1 integer (total 12)
+  $stmt->bind_param(
+    "ssssssiiissi",
+    $nama_lengkap,
+    $nik,
+    $no_wa,
+    $alamat,
+    $dapil,
+    $kecamatan,
+    $jumlah_anggota,
+    $jumlah_bekerja,
+    $total_penghasilan,
+    $kenal,
+    $sumber,
+    $id
+  );
 
   if ($stmt->execute()) {
     header("Location: editdata.php?id=$id&status=success");
@@ -63,20 +97,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-    body{background:#f4f4f4;color:#333;}
-    header{background:linear-gradient(to right,#ffffff,#000000);padding:12px 30px;display:flex;align-items:center;gap:10px;color:white;font-weight:600;}
-    header img{height:40px;}
-    .container{width:80%;max-width:800px;background:#fff;margin:40px auto;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:25px 30px;}
-    h2{text-align:center;margin-bottom:20px;color:#333;}
-    label{display:block;margin:8px 0 5px;font-weight:600;}
-    input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-size:14px;margin-bottom:15px;}
-    textarea{resize:none;height:80px;}
-    .btn{background:#ff4b4b;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-weight:600;cursor:pointer;transition:0.3s;}
-    .btn:hover{background:#d83c3c;}
-    .btn-back{background:#a0a0a0;margin-right:10px;}
-    footer{text-align:center;padding:15px;background:linear-gradient(to right,#ffffff,#000000);color:#fff;font-size:14px;}
-    footer img{height:20px;vertical-align:middle;margin:0 5px;filter:brightness(0) invert(1);}
+    * {
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
+    }
+    body {
+      background:#f4f4f4;
+      color:#333;
+    }
+    header {
+      background:linear-gradient(to right,#ffffff,#000000);
+      padding:12px 30px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:white;
+      font-weight:600;
+    }
+    header img {
+      height:40px;
+    }
+    .container {
+      width:80%;
+      max-width:800px;
+      background:#fff;
+      margin:40px auto;
+      border-radius:10px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+      padding:25px 30px;
+    }
+    h2 {
+      text-align:center;
+      margin-bottom:20px;
+      color:#333;
+    }
+    label {
+      display:block;
+      margin:8px 0 5px;
+      font-weight:600;
+    }
+    input,select,textarea {
+      width:100%;
+      padding:10px;
+      border:1px solid #ccc;
+      border-radius:6px;
+      font-size:14px;
+      margin-bottom:15px;
+    }
+    textarea {
+      resize:none;
+      height:80px;
+    }
+    .btn {
+      background:#ff4b4b;
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      padding:10px 20px;
+      font-weight:600;
+      cursor:pointer;
+      transition:0.3s;
+    }
+    .btn:hover {
+      background:#d83c3c;
+    }
+    .btn-back {
+      background:#a0a0a0;
+      margin-right:10px;
+    }
+    footer {
+      text-align:center;
+      padding:15px;
+      background:linear-gradient(to right,#ffffff,#000000);
+      color:#fff;
+      font-size:14px;
+    }
+    footer img {
+      height:20px;
+      vertical-align:middle;
+      margin:0 5px;
+      filter:brightness(0) invert(1);
+    }
   </style>
 </head>
 <body>
@@ -104,7 +207,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <label>Dapil</label>
       <select name="dapil" id="dapil" required>
-        <option value="<?= htmlspecialchars($data['dapil']) ?>"><?= htmlspecialchars($data['dapil']) ?></option>
+        <option value="<?= htmlspecialchars($data['dapil']) ?>">
+          <?= htmlspecialchars($data['dapil']) ?>
+        </option>
         <option value="Kota Surabaya 1">Kota Surabaya 1</option>
         <option value="Kota Surabaya 2">Kota Surabaya 2</option>
         <option value="Kota Surabaya 3">Kota Surabaya 3</option>
@@ -114,7 +219,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <label>Kecamatan</label>
       <select name="kecamatan" id="kecamatan">
-        <option value="<?= htmlspecialchars($data['kecamatan']) ?>"><?= htmlspecialchars($data['kecamatan']) ?></option>
+        <option value="<?= htmlspecialchars($data['kecamatan']) ?>">
+          <?= htmlspecialchars($data['kecamatan']) ?>
+        </option>
       </select>
 
       <label>Jumlah Anggota Keluarga</label>
@@ -128,17 +235,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <label>Apakah mengenal Josiah Michael?</label>
       <select name="kenal">
-        <option value="<?= htmlspecialchars($data['kenal']) ?>"><?= htmlspecialchars($data['kenal']) ?></option>
-        <option value="Ya">Ya</option>
-        <option value="Tidak">Tidak</option>
+        <option value="">-- Pilih --</option>
+        <option value="Ya" <?= $data['kenal'] === 'Ya' ? 'selected' : '' ?>>Ya</option>
+        <option value="Tidak" <?= $data['kenal'] === 'Tidak' ? 'selected' : '' ?>>Tidak</option>
+        <option value="Tidak pernah" <?= $data['kenal'] === 'Tidak pernah' ? 'selected' : '' ?>>Tidak pernah</option>
       </select>
 
       <label>Sumber Mengenal</label>
       <select name="sumber">
-        <option value="<?= htmlspecialchars($data['sumber']) ?>"><?= htmlspecialchars($data['sumber']) ?></option>
-        <option value="Kegiatan PSI Surabaya">Kegiatan PSI Surabaya</option>
-        <option value="Dari teman atau relasi">Dari teman atau relasi</option>
-        <option value="Lainnya">Lainnya</option>
+        <option value="">-- Pilih --</option>
+        <option value="Kegiatan PSI Surabaya" <?= $data['sumber'] === 'Kegiatan PSI Surabaya' ? 'selected' : '' ?>>
+          Kegiatan PSI Surabaya
+        </option>
+        <option value="Dari teman atau relasi" <?= $data['sumber'] === 'Dari teman atau relasi' ? 'selected' : '' ?>>
+          Dari teman atau relasi
+        </option>
+        <option value="Lainnya" <?= $data['sumber'] === 'Lainnya' ? 'selected' : '' ?>>
+          Lainnya
+        </option>
       </select>
 
       <div style="text-align:right;">

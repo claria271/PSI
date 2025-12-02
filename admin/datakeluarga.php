@@ -164,7 +164,6 @@ $result = mysqli_query($conn, $query);
       color: #ff4b4b;
     }
 
-
     /* === LAYOUT: SIDEBAR + CONTENT === */
     .layout {
       flex: 1 1 auto;
@@ -481,12 +480,12 @@ $result = mysqli_query($conn, $query);
       <nav>
         <a href="dashboardadmin.php">Dashboard</a>
         <a href="datakeluarga.php" class="active">Data Keluarga</a>
-        <a href="#">Hasil Verifikasi</a>
-        <a href="#">Laporan</a>
+        <a href="tambah_admin.php">➕ Tambah Admin</a>
+        <a href="verifikasi.php">Hasil Verifikasi</a>
+        <a href="laporan.php">Laporan</a>
         <a href="logout.php">Logout</a>
       </nav>
     </aside>
-
 
     <!-- CONTENT -->
     <div class="content">
