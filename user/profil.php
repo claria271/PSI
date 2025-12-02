@@ -77,17 +77,32 @@ $dapilNow = $keluarga['dapil'] ?? '';
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body { background: #fff; color: #222; }
 
+       /* === HEADER === */
     header {
-      background: linear-gradient(90deg, #aaa, #000);
-      color: white;
+      background: linear-gradient(to right, #ffffff, #000000);
+      padding: 12px 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 40px;
     }
-    header img { height: 40px; }
-    header nav a { color: white; margin-left: 20px; text-decoration: none; }
-    header nav a:hover { text-decoration: underline; }
+
+    header img {
+      height: 40px;
+    }
+
+    nav a {
+      margin-left: 20px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: #ff4b4b;
+    }
+
 
     .profile-section {
       background-color: #111;
