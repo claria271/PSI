@@ -21,32 +21,32 @@
       line-height: 1.6;
     }
 
-    /* HEADER */
+    /* === HEADER === */
     header {
-      background: #000000;
+      background: linear-gradient(to right, #ffffff, #000000);
       padding: 12px 40px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
 
     header img {
       height: 40px;
-      filter: brightness(0) invert(1);
     }
 
     nav a {
-      margin: 0 15px;
+      margin-left: 20px;
+      color: #fff;
       text-decoration: none;
-      font-weight: bold;
-      color: #ffffff;
+      font-weight: 600;
       transition: 0.3s;
     }
 
     nav a:hover,
     nav a.active {
-      color: #ff0000;
+      color: #ff4b4b;
     }
+
 
     /* HERO */
     .hero {

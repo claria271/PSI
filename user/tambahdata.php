@@ -83,6 +83,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       margin-top: 15px;
       margin-bottom: 5px;
     }
+    p {
+      text-align: center;
+      font-size: 16px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
 
     .container {
       width: 80%;
@@ -221,8 +227,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       background-color: #8b8b8b;
     }
 
+     /* === Footer === */
     footer {
-      margin-top: 0;
+      margin-top: 60px;
       padding: 15px 5%;
       text-align: center;
       background: linear-gradient(to right, #ffffff, #000000);
@@ -352,7 +359,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       <small>*Jumlah anggota termasuk kepala keluarga</small>
       <label>Jumlah Orang yang Bekerja</label>
       <select name="jumlah_bekerja">
-        <option>1</option><option>2</option><option>3</option><option> > 3 </option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>>5</option>
       </select>
       <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
       <input 
@@ -499,25 +506,25 @@ else if (params.get('status') === 'failed') {
 }
   
   // Cek jika penghasilan 0 atau negatif
-  if (penghasilanValue <= 0 || isNaN(penghasilanValue)) {
-    e.preventDefault(); // Batalkan submit
+  //if (penghasilanValue <= 0 || isNaN(penghasilanValue)) {
+   // e.preventDefault(); // Batalkan submit
     
-    Swal.fire({
-      title: 'Perhatian!',
-      text: 'Total penghasilan harus lebih dari 0',
-      icon: 'warning',
-      confirmButtonColor: '#ff4b4b'
-    });
+  //  Swal.fire({
+  //    title: 'Perhatian!',
+  //    text: 'Total penghasilan harus lebih dari 0',
+  //    icon: 'warning',
+  //    confirmButtonColor: '#ff4b4b'
+  //  });
     
     // Fokus ke input penghasilan
-    penghasilanInput.focus();
+  //  penghasilanInput.focus();
     
     // Scroll ke slide penghasilan (slide ke-3, index 2)
-    showSlide(2, 'left');
+   // showSlide(2, 'left');
     
-    return false;
-  }
-});
+  //  return false;
+ // }
+//});
 
 // Tambahkan juga validasi real-time saat user mengetik
 document.querySelector('input[name="total_penghasilan"]').addEventListener('input', function() {

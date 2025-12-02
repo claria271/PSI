@@ -225,7 +225,6 @@ session_start();
     </div>
     <nav>
       <!-- <a href="dashboard.php">Beranda</a> -->
-      <a href="kontak.php">Kontak</a>
       <?php if (isset($_SESSION['user_id'])): ?>
         <!-- Jika sudah login -->
         <a href="user/profil.php">Profil</a>
