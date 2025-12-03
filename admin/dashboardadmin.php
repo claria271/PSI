@@ -74,6 +74,10 @@ $queryDiatas = "SELECT COUNT(*) as total
 $resultDiatas = mysqli_query($conn, $queryDiatas);
 $diatasUMR = mysqli_fetch_assoc($resultDiatas)['total'];
 
+$queryVerifikasi = "SELECT COUNT(*) as total FROM verifikasi";
+$resultVerifikasi = mysqli_query($conn, $queryVerifikasi);
+$totalVerifikasi = mysqli_fetch_assoc($resultVerifikasi)['total'];
+
 // 4. DATA LINE CHART - Jumlah keluarga per bulan (12 bulan terakhir)
 $lineChartData = [];
 for ($i = 11; $i >= 0; $i--) {
@@ -321,9 +325,10 @@ for ($i = 3; $i >= 0; $i--) {
     }
 
     /* === STATS CARDS === */
+    /* === STATS CARDS === */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(4, 1fr); /* 4 kolom dengan lebar sama */
       gap: 20px;
       margin-bottom: 30px;
     }
@@ -633,8 +638,8 @@ for ($i = 3; $i >= 0; $i--) {
       }
       
       .stats-grid {
-        grid-template-columns: 1fr;
-      }
+    grid-template-columns: 1fr; /* 1 kolom di mobile */
+  }
       
       .activity-grid {
         grid-template-columns: 1fr;
@@ -708,6 +713,15 @@ for ($i = 3; $i >= 0; $i--) {
             <div class="stat-label">Diatas UMR</div>
             <div class="stat-value"><?php echo number_format($diatasUMR, 0, ',', '.'); ?></div>
             <div class="stat-change up"><?php echo $totalKeluarga > 0 ? round(($diatasUMR/$totalKeluarga)*100, 1) : 0; ?>%</div>
+          </div>
+        </div>
+              <!-- 🔥 TAMBAHAN BARU: STAT CARD VERIFIKASI -->
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <div class="stat-label">Terverifikasi</div>
+            <div class="stat-value"><?php echo number_format($totalVerifikasi, 0, ',', '.'); ?></div>
+            <div class="stat-change up"><?php echo $totalKeluarga > 0 ? round(($totalVerifikasi/$totalKeluarga)*100, 1) : 0; ?>%</div>
           </div>
         </div>
       </div>

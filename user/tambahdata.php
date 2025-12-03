@@ -181,7 +181,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 10px; 
       font-weight: 500;
       cursor: pointer;
       line-height: 18px;
