@@ -243,7 +243,7 @@ session_start();
   <!-- HERO -->
   <section class="hero">
     <div class="hero-content">
-      <h1>Selamat Datang di Website PSI</h1>
+      <h1>Selamat Datang di Website Fraksi PSI Kota Surabaya</h1>
       <p>Temukan makna, tumbuhkan karya</p>
       <div class="d-flex justify-content-center gap-3">
         <a href="login.php" class="btn btn-login">Login</a>
