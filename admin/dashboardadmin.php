@@ -671,7 +671,7 @@ for ($i = 3; $i >= 0; $i--) {
         <a href="tambah_admin.php">➕ Tambah Admin</a>
         <a href="verifikasi.php">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
-        <a href="logout.php">Logout</a>
+        <a href="logoutadmin.php">Logout</a>
       </nav>
     </aside>
 

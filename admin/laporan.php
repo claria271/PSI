@@ -322,7 +322,7 @@ $kenal_options = [
 
         <a href="verifikasi.php">Hasil Verifikasi</a>
         <a href="laporan.php" class="active">Laporan</a>
-        <a href="../user/logout.php">Logout</a>
+        <a href="../admin/logoutadmin.php">Logout</a>
       </nav>
     </aside>
 
