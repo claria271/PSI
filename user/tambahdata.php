@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 
 /*
@@ -15,7 +15,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
     //header("Location: login.php");
 
     // Kalau ternyata login ada di root (/PSI/login.php), pakai:
-     header("Location: ../login.php");
+    header("Location: ../login.php");
     exit();
 }
 ?>
@@ -102,7 +102,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       flex-shrink: 0;
       transition: transform 0.6s ease, opacity 0.4s ease;
     }
-
 
     .container1 {
       width: 80%;
@@ -228,7 +227,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       background-color: #8b8b8b;
     }
 
-     /* === Footer === */
+    /* === Footer === */
     footer {
       margin-top: 60px;
       padding: 15px 5%;
@@ -363,38 +362,37 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
         <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>>5</option>
       </select>
       <label>Total Jumlah Penghasilan Keluarga (Satu Keluarga)</label>
+      <!-- 🔹 DI SINI SUDAH DIUBAH JADI TEXT + NANTI DIFORMAT TITIK -->
       <input 
-        type="number" 
+        type="text"
+        id="total_penghasilan"
         name="total_penghasilan" 
-        placeholder="1000000" 
-        min="1"
+        placeholder="1.000.000" 
         required
-        oninvalid="this.setCustomValidity('Penghasilan harus lebih dari 0')"
-        oninput="this.setCustomValidity('')"
       >
       <small>*Minimal Rp 1 (wajib diisi)</small>
     </div>
 
     <!-- Slide 4 -->
     <div class="container slide">
-        <div class="section-title">Informasi</div>
-          <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-          <div class="radio-group">
-            <label><input type="radio" name="kenal" value="Ya"> Ya</label>
-            <label><input type="radio" name="kenal" value="Tidak"> Tidak</label>
-          </div>
-          <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-          <div class="radio-group">
-            <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
-            <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
-            <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
-          </div>
+      <div class="section-title">Informasi</div>
+      <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+      <div class="radio-group">
+        <label><input type="radio" name="kenal" value="Ya"> Ya</label>
+        <label><input type="radio" name="kenal" value="Tidak"> Tidak</label>
+      </div>
+      <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+      <div class="radio-group">
+        <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
+        <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
+        <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
+      </div>
 
-          <div class="btn-container">
-            <button type="submit">Simpan Data</button>
-            <button type="reset" class="btn-reset">Kosongkan Form</button>
-          </div>
-        </div>
+      <div class="btn-container">
+        <button type="submit">Simpan Data</button>
+        <button type="reset" class="btn-reset">Kosongkan Form</button>
+      </div>
+    </div>
 
     <!-- Tombol Navigasi -->
     <div class="nav-slide">
@@ -470,78 +468,70 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
 
     prevBtn.style.display = 'none';
 
-    // Tambahkan di bagian SweetAlert handling (sekitar baris 273)
+    // === SweetAlert dengan Error Spesifik ===
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('status') === 'success') {
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'Data keluarga berhasil disimpan 🎉',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => window.location.href = 'dashboard.php');
+    } 
+    else if (params.get('status') === 'failed') {
+      const errorType = params.get('error');
+      let errorMsg = 'Terjadi kesalahan saat menyimpan data 😥';
+      
+      // Pesan error spesifik
+      if (errorType === 'penghasilan_invalid') {
+        errorMsg = 'Total penghasilan harus lebih dari 0!';
+      } else if (errorType === 'penghasilan_required') {
+        errorMsg = 'Total penghasilan wajib diisi!';
+      } else if (errorType === 'nik') {
+        errorMsg = 'Format NIK tidak valid!';
+      } else if (errorType === 'no_wa') {
+        errorMsg = 'Format nomor WhatsApp tidak valid!';
+      }
+      
+      Swal.fire({
+        title: 'Gagal!',
+        text: errorMsg,
+        icon: 'error',
+        confirmButtonColor: '#ff4b4b'
+      });
+    }
 
-// === SweetAlert dengan Error Spesifik ===
-const params = new URLSearchParams(window.location.search);
-if (params.get('status') === 'success') {
-  Swal.fire({
-    title: 'Berhasil!',
-    text: 'Data keluarga berhasil disimpan 🎉',
-    icon: 'success',
-    timer: 2000,
-    showConfirmButton: false
-  }).then(() => window.location.href = 'dashboard.php');
-} 
-else if (params.get('status') === 'failed') {
-  const errorType = params.get('error');
-  let errorMsg = 'Terjadi kesalahan saat menyimpan data 😥';
-  
-  // Pesan error spesifik
-  if (errorType === 'penghasilan_invalid') {
-    errorMsg = 'Total penghasilan harus lebih dari 0!';
-  } else if (errorType === 'penghasilan_required') {
-    errorMsg = 'Total penghasilan wajib diisi!';
-  } else if (errorType === 'nik') {
-    errorMsg = 'Format NIK tidak valid!';
-  } else if (errorType === 'no_wa') {
-    errorMsg = 'Format nomor WhatsApp tidak valid!';
-  }
-  
-  Swal.fire({
-    title: 'Gagal!',
-    text: errorMsg,
-    icon: 'error',
-    confirmButtonColor: '#ff4b4b'
-  });
-}
-  
-  // Cek jika penghasilan 0 atau negatif
-  //if (penghasilanValue <= 0 || isNaN(penghasilanValue)) {
-   // e.preventDefault(); // Batalkan submit
-    
-  //  Swal.fire({
-  //    title: 'Perhatian!',
-  //    text: 'Total penghasilan harus lebih dari 0',
-  //    icon: 'warning',
-  //    confirmButtonColor: '#ff4b4b'
-  //  });
-    
-    // Fokus ke input penghasilan
-  //  penghasilanInput.focus();
-    
-    // Scroll ke slide penghasilan (slide ke-3, index 2)
-   // showSlide(2, 'left');
-    
-  //  return false;
- // }
-//});
+    // === FORMAT OTOMATIS TITIK RIBUAN UNTUK TOTAL PENGHASILAN ===
+    const penghasilanInput = document.getElementById('total_penghasilan');
 
-// Tambahkan juga validasi real-time saat user mengetik
-document.querySelector('input[name="total_penghasilan"]').addEventListener('input', function() {
-  const value = parseFloat(this.value);
-  
-  if (value < 0) {
-    this.value = 0;
-  }
-  
-  // Tampilkan peringatan jika 0
-  if (value === 0) {
-    this.style.borderColor = '#ff4b4b';
-  } else {
-    this.style.borderColor = '#ccc';
-  }
-});
+    penghasilanInput.addEventListener('input', function (e) {
+      // Ambil hanya angka
+      let value = this.value.replace(/\D/g, "");
+
+      // Kalau kosong
+      if (value === "") {
+        this.value = "";
+        this.style.borderColor = '#ff4b4b';
+        return;
+      }
+
+      // Hilangkan leading zero berlebihan
+      value = value.replace(/^0+/, '');
+      if (value === '') value = '0';
+
+      // Format ribuan dengan titik
+      this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+      // Validasi: kalau 0, kasih border merah
+      const numericVal = parseInt(value, 10) || 0;
+      if (numericVal <= 0) {
+        this.style.borderColor = '#ff4b4b';
+      } else {
+        this.style.borderColor = '#ccc';
+      }
+    });
+
   </script>
 
   <footer>
