@@ -12,23 +12,28 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
 
 // Helper aman untuk output HTML
+// Helper aman untuk output HTML
 function e($str) {
     return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
 
 // Ambil data admin
 $admin = null;
-if (!empty($_SESSION['alamat_email'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? LIMIT 1");
-    $stmt->bind_param('s', $_SESSION['alamat_email']);
+$adminName = 'Admin';
+$adminPhoto = '../assets/image/admin_photo.jpg';
+
+// Prioritas: ID > Email
+if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
+    $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
+    $stmt->bind_param('i', $_SESSION['id']);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($res->num_rows > 0) {
         $admin = $res->fetch_assoc();
     }
-} elseif (!empty($_SESSION['username'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE username = ? LIMIT 1");
-    $stmt->bind_param('s', $_SESSION['username']);
+} elseif (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
+    $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
+    $stmt->bind_param('s', $_SESSION['alamat_email']);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($res->num_rows > 0) {
@@ -36,8 +41,16 @@ if (!empty($_SESSION['alamat_email'])) {
     }
 }
 
+// Tentukan nama & foto admin
+if ($admin) {
+    $adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : 'Admin';
+    $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/admin_photo.jpg';
+}
+
+// Jika admin tidak ditemukan, redirect
 if (!$admin) {
-    header("Location: ../login.php");
+    session_destroy();
+    header("Location: ../user/login.php");
     exit();
 }
 
@@ -55,6 +68,7 @@ define('UMR_PERSON', 4725479);
 // Ambil filter
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $dapil = isset($_GET['dapil']) ? $_GET['dapil'] : '';
+$bantuan_filter = isset($_GET['bantuan']) ? $_GET['bantuan'] : '';
 
 // Query data verifikasi
 $conditions = [];
@@ -65,6 +79,10 @@ if ($search !== '') {
 if ($dapil !== '') {
     $safeDapil = mysqli_real_escape_string($conn, $dapil);
     $conditions[] = "dapil = '$safeDapil'";
+}
+if ($bantuan_filter !== '') {
+    $safeBantuan = mysqli_real_escape_string($conn, $bantuan_filter);
+    $conditions[] = "bantuan = '$safeBantuan'";
 }
 
 $query = "SELECT * FROM verifikasi";
@@ -79,6 +97,19 @@ $result = mysqli_query($conn, $query);
 $total_query = "SELECT COUNT(*) as total FROM verifikasi";
 $total_result = mysqli_query($conn, $total_query);
 $total_data = mysqli_fetch_assoc($total_result)['total'];
+
+// Ambil pesan dari session
+$successMessage = '';
+if (isset($_SESSION['success'])) {
+    $successMessage = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+
+$warningMessage = '';
+if (isset($_SESSION['warning'])) {
+    $warningMessage = $_SESSION['warning'];
+    unset($_SESSION['warning']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -249,6 +280,39 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
       margin-top: 5px;
     }
 
+    /* 🔥 ALERT MESSAGES */
+    .alert {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .content-scroll {
       flex: 1 1 auto;
       overflow-y: auto;
@@ -297,7 +361,7 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1200px;
+      min-width: 1400px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -330,6 +394,17 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
       border-radius: 12px;
       font-size: 12px;
       font-weight: 600;
+    }
+
+    /* 🔥 BADGE BANTUAN */
+    .badge-bantuan {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #2196F3;
+      color: white;
     }
 
     footer {
@@ -386,10 +461,7 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
       <nav>
         <a href="dashboardadmin.php">Dashboard</a>
         <a href="datakeluarga.php">Data Keluarga</a>
-
-        <!-- 🔥 Tombol/Menu Tambah Admin -->
         <a href="tambah_admin.php">➕ Tambah Admin</a>
-
         <a href="verifikasi.php" class="active">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
         <a href="../user/logout.php">Logout</a>
@@ -404,6 +476,19 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
       </div>
 
       <div class="content-scroll">
+        <!-- 🔥 TAMPILKAN ALERT MESSAGES -->
+        <?php if ($successMessage): ?>
+          <div class="alert alert-success">
+            <?php echo $successMessage; ?>
+          </div>
+        <?php endif; ?>
+
+        <?php if ($warningMessage): ?>
+          <div class="alert alert-warning">
+            <?php echo $warningMessage; ?>
+          </div>
+        <?php endif; ?>
+
         <div class="card">
           <div class="card-header">
             <h3 style="color: #4CAF50; font-size: 18px;">📋 Data Verifikasi</h3>
@@ -425,6 +510,17 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
                 <option value="Kota Surabaya 5" <?php echo $dapil === 'Kota Surabaya 5' ? 'selected' : ''; ?>>Kota Surabaya 5</option>
               </select>
 
+              <select name="bantuan" onchange="this.form.submit()">
+                <option value="">Semua Bantuan</option>
+                <option value="Bantuan Pendidikan" <?php echo $bantuan_filter === 'Bantuan Pendidikan' ? 'selected' : ''; ?>>Bantuan Pendidikan</option>
+                <option value="Alat Bantu Dengar" <?php echo $bantuan_filter === 'Alat Bantu Dengar' ? 'selected' : ''; ?>>Alat Bantu Dengar</option>
+                <option value="Kursi Roda" <?php echo $bantuan_filter === 'Kursi Roda' ? 'selected' : ''; ?>>Kursi Roda</option>
+                <option value="Kesehatan" <?php echo $bantuan_filter === 'Kesehatan' ? 'selected' : ''; ?>>Kesehatan</option>
+                <option value="Sembako" <?php echo $bantuan_filter === 'Sembako' ? 'selected' : ''; ?>>Sembako</option>
+                <option value="Uang Muka" <?php echo $bantuan_filter === 'Uang Muka' ? 'selected' : ''; ?>>Uang Muka</option>
+                <option value="Lainnya" <?php echo $bantuan_filter === 'Lainnya' ? 'selected' : ''; ?>>Lainnya</option>
+              </select>
+
               <button type="submit" style="display:none;"></button>
             </form>
           </div>
@@ -444,6 +540,7 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
                   <th>Total Penghasilan</th>
                   <th>Kenal</th>
                   <th>Sumber</th>
+                  <th>Bantuan</th>
                   <th>Status</th>
                   <th>Diverifikasi Oleh</th>
                   <th>Tanggal Verifikasi</th>
@@ -465,6 +562,7 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
                       <td><?php echo e(number_format($row['total_penghasilan'], 0, ',', '.')); ?></td>
                       <td><?php echo e($row['kenal']); ?></td>
                       <td><?php echo e($row['sumber']); ?></td>
+                      <td><span class="badge-bantuan"><?php echo e($row['bantuan']); ?></span></td>
                       <td><span class="badge-verified"><?php echo e($row['status_verifikasi']); ?></span></td>
                       <td><?php echo e($row['verified_by']); ?></td>
                       <td><?php echo e(date('d/m/Y H:i', strtotime($row['verified_at']))); ?></td>
@@ -472,7 +570,7 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="14" style="text-align:center; padding: 30px;">
+                    <td colspan="15" style="text-align:center; padding: 30px;">
                       Belum ada data yang diverifikasi.
                     </td>
                   </tr>
@@ -490,5 +588,19 @@ $total_data = mysqli_fetch_assoc($total_result)['total'];
       </div>
     </div>
   </div>
+
+  <script>
+    // 🔥 AUTO-HIDE ALERT SETELAH 5 DETIK
+    setTimeout(function() {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(function(alert) {
+        alert.style.transition = 'opacity 0.5s';
+        alert.style.opacity = '0';
+        setTimeout(function() {
+          alert.remove();
+        }, 500);
+      });
+    }, 5000);
+  </script>
 </body>
 </html>

@@ -8,11 +8,19 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// Ambil ID dari parameter
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+// Ambil ID dan bentuk bantuan dari parameter
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+$bentuk_bantuan = isset($_POST['bentuk_bantuan']) ? trim($_POST['bentuk_bantuan']) : '';
 
 if ($id <= 0) {
-    echo "<script>alert('ID tidak valid!'); window.location.href='datakeluarga.php';</script>";
+    $_SESSION['error'] = 'ID tidak valid!';
+    header("Location: datakeluarga.php");
+    exit();
+}
+
+if (empty($bentuk_bantuan)) {
+    $_SESSION['error'] = 'Bentuk bantuan harus dipilih!';
+    header("Location: datakeluarga.php");
     exit();
 }
 
@@ -27,7 +35,8 @@ try {
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
-        echo "<script>alert('Data tidak ditemukan!'); window.location.href='datakeluarga.php';</script>";
+        $_SESSION['error'] = 'Data tidak ditemukan!';
+        header("Location: datakeluarga.php");
         exit();
     }
     
@@ -40,24 +49,39 @@ try {
     $check_result = $stmt_check->get_result();
     
     if ($check_result->num_rows > 0) {
-        echo "<script>
-            alert('Data atas nama " . addslashes($data['nama_lengkap']) . " sudah pernah diverifikasi sebelumnya!');
-            window.location.href='verifikasi.php';
-        </script>";
+        $_SESSION['warning'] = 'Data atas nama "' . $data['nama_lengkap'] . '" sudah pernah diverifikasi sebelumnya!';
+        header("Location: datakeluarga.php");
         exit();
     }
     
-    // Tentukan siapa yang memverifikasi
-    $verified_by = '';
-    if (!empty($_SESSION['alamat_email'])) {
-        $verified_by = $_SESSION['alamat_email'];
-    } elseif (!empty($_SESSION['username'])) {
-        $verified_by = $_SESSION['username'];
-    } else {
-        $verified_by = 'Admin';
-    }
+    // Tentukan siapa yang memverifikasi (ambil nama lengkap admin)
+// Tentukan siapa yang memverifikasi
+$verified_by = 'Admin';
+
+// Prioritas: ID > Email
+if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
+    $stmt_admin = $conn->prepare("SELECT nama_lengkap FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
+    $stmt_admin->bind_param('i', $_SESSION['id']);
+    $stmt_admin->execute();
+    $admin_result = $stmt_admin->get_result();
     
-    // Insert data ke tabel verifikasi
+    if ($admin_result->num_rows > 0) {
+        $admin_data = $admin_result->fetch_assoc();
+        $verified_by = !empty($admin_data['nama_lengkap']) ? $admin_data['nama_lengkap'] : 'Admin';
+    }
+} elseif (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
+    $stmt_admin = $conn->prepare("SELECT nama_lengkap FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
+    $stmt_admin->bind_param('s', $_SESSION['alamat_email']);
+    $stmt_admin->execute();
+    $admin_result = $stmt_admin->get_result();
+    
+    if ($admin_result->num_rows > 0) {
+        $admin_data = $admin_result->fetch_assoc();
+        $verified_by = !empty($admin_data['nama_lengkap']) ? $admin_data['nama_lengkap'] : 'Admin';
+    }
+}
+    
+    // Insert data ke tabel verifikasi (DENGAN KOLOM BANTUAN)
     $stmt_insert = $conn->prepare("
         INSERT INTO verifikasi (
             keluarga_id,
@@ -72,14 +96,15 @@ try {
             total_penghasilan,
             kenal,
             sumber,
+            bantuan,
             status_verifikasi,
             verified_at,
             verified_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Terverifikasi', NOW(), ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Terverifikasi', NOW(), ?)
     ");
     
     $stmt_insert->bind_param(
-        'issssssiiisss',
+        'issssssiisssss',
         $data['id'],
         $data['nama_lengkap'],
         $data['nik'],
@@ -92,29 +117,29 @@ try {
         $data['total_penghasilan'],
         $data['kenal'],
         $data['sumber'],
+        $bentuk_bantuan,
         $verified_by
     );
     
     if ($stmt_insert->execute()) {
-        // Update status di tabel keluarga (tambahkan kolom status_verifikasi jika belum ada)
+        // Update timestamp di tabel keluarga
         $stmt_update = $conn->prepare("UPDATE keluarga SET updated_at = NOW() WHERE id = ?");
         $stmt_update->bind_param('i', $id);
         $stmt_update->execute();
         
-        // Pop-up sukses dan redirect ke halaman verifikasi
-        echo "<script>
-            alert('✓ Data telah berhasil disimpan di halaman verifikasi!\\n\\nNama: " . addslashes($data['nama_lengkap']) . "\\nNIK: " . addslashes($data['nik']) . "');
-            window.location.href='verifikasi.php';
-        </script>";
+        // Set success message dengan informasi detail + bantuan
+        $_SESSION['success'] = '✓ Data berhasil diverifikasi oleh ' . $verified_by . '! Data atas nama "' . $data['nama_lengkap'] . '" (NIK: ' . $data['nik'] . ') telah disimpan dengan bantuan: ' . $bentuk_bantuan;
+        
+        // Redirect ke halaman data keluarga untuk melihat highlight hijau
+        header("Location: datakeluarga.php");
+        exit();
     } else {
-        throw new Exception('Gagal menyimpan data verifikasi');
+        throw new Exception('Gagal menyimpan data verifikasi ke database');
     }
     
 } catch (Exception $e) {
-    echo "<script>
-        alert('Terjadi kesalahan: " . addslashes($e->getMessage()) . "');
-        window.location.href='datakeluarga.php';
-    </script>";
+    $_SESSION['error'] = 'Terjadi kesalahan: ' . $e->getMessage();
+    header("Location: datakeluarga.php");
     exit();
 }
 ?>
