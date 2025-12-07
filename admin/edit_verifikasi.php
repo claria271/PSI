@@ -72,8 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE id = ?
         ");
         
+        // ✅ DIPERBAIKI: Tambahkan 'i' untuk $id (13 tipe untuk 13 variabel)
         $stmt_update->bind_param(
-            'ssssssiidssi',
+            'ssssssiidsssi',  // 13 karakter: s,s,s,s,s,s,i,i,d,s,s,s,i
             $nama_lengkap,
             $nik,
             $no_wa,
