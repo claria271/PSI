@@ -12,7 +12,6 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
 
 // Helper aman untuk output HTML
-// Helper aman untuk output HTML
 function e($str) {
     return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
@@ -22,17 +21,17 @@ $admin = null;
 $adminName = 'Admin';
 $adminPhoto = '../assets/image/admin_photo.jpg';
 
-// Prioritas: ID > Email
-if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
+// Cek session yang tersedia
+if (isset($_SESSION['id'])) {
+    $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? LIMIT 1");
     $stmt->bind_param('i', $_SESSION['id']);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($res->num_rows > 0) {
         $admin = $res->fetch_assoc();
     }
-} elseif (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
+} elseif (!empty($_SESSION['alamat_email'])) {
+    $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? LIMIT 1");
     $stmt->bind_param('s', $_SESSION['alamat_email']);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -46,21 +45,6 @@ if ($admin) {
     $adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : 'Admin';
     $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/admin_photo.jpg';
 }
-
-// Jika admin tidak ditemukan, redirect
-if (!$admin) {
-    session_destroy();
-    header("Location: ../user/login.php");
-    exit();
-}
-
-$adminName = !empty($admin['nama_lengkap'])
-    ? $admin['nama_lengkap']
-    : (!empty($admin['username']) ? $admin['username'] : 'Admin');
-
-$adminPhoto = !empty($admin['foto'])
-    ? '../uploads/' . $admin['foto']
-    : '../assets/image/admin_photo.jpg';
 
 // UMR per orang
 define('UMR_PERSON', 4725479);
@@ -361,7 +345,7 @@ if (isset($_SESSION['warning'])) {
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1400px;
+      min-width: 1500px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -405,6 +389,44 @@ if (isset($_SESSION['warning'])) {
       font-weight: 600;
       background: #2196F3;
       color: white;
+    }
+
+    /* 🔥 STYLING UNTUK TOMBOL AKSI */
+    .aksi {
+      white-space: nowrap;
+    }
+
+    .aksi button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .aksi .edit {
+      background: #2196F3;
+      color: #fff;
+    }
+
+    .aksi .edit:hover {
+      background: #1976D2;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(33, 150, 243, 0.3);
+    }
+
+    .aksi .hapus {
+      background: #f44336;
+      color: #fff;
+    }
+
+    .aksi .hapus:hover {
+      background: #d32f2f;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(244, 67, 54, 0.3);
     }
 
     footer {
@@ -544,6 +566,7 @@ if (isset($_SESSION['warning'])) {
                   <th>Status</th>
                   <th>Diverifikasi Oleh</th>
                   <th>Tanggal Verifikasi</th>
+                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -566,11 +589,15 @@ if (isset($_SESSION['warning'])) {
                       <td><span class="badge-verified"><?php echo e($row['status_verifikasi']); ?></span></td>
                       <td><?php echo e($row['verified_by']); ?></td>
                       <td><?php echo e(date('d/m/Y H:i', strtotime($row['verified_at']))); ?></td>
+                      <td class="aksi">
+                        <button class="edit" onclick="window.location.href='edit_verifikasi.php?id=<?php echo $row['id']; ?>'">Edit</button>
+                        <button class="hapus" onclick="hapusVerifikasi(<?php echo $row['id']; ?>, '<?php echo addslashes($row['nama_lengkap']); ?>')">Hapus</button>
+                      </td>
                     </tr>
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="15" style="text-align:center; padding: 30px;">
+                    <td colspan="16" style="text-align:center; padding: 30px;">
                       Belum ada data yang diverifikasi.
                     </td>
                   </tr>
@@ -590,6 +617,13 @@ if (isset($_SESSION['warning'])) {
   </div>
 
   <script>
+    // 🔥 FUNGSI HAPUS VERIFIKASI
+    function hapusVerifikasi(id, nama) {
+      if (confirm('Apakah Anda yakin ingin menghapus data verifikasi atas nama:\n\n' + nama + '?\n\n⚠️ Data akan dihapus dari tabel verifikasi, namun tetap ada di tabel keluarga.')) {
+        window.location.href = 'hapus_verifikasi.php?id=' + id;
+      }
+    }
+
     // 🔥 AUTO-HIDE ALERT SETELAH 5 DETIK
     setTimeout(function() {
       const alerts = document.querySelectorAll('.alert');
