@@ -66,6 +66,12 @@ if ($hasUserIdCol && isset($_SESSION['user_id'])) {
 // Dapil options untuk select
 $dapilOptions = ['Kota Surabaya 1','Kota Surabaya 2','Kota Surabaya 3','Kota Surabaya 4','Kota Surabaya 5'];
 $dapilNow = $keluarga['dapil'] ?? '';
+
+// Ekstrak nomor WA untuk display (hapus +62)
+$noWaDisplay = '';
+if (!empty($keluarga['no_wa'])) {
+  $noWaDisplay = preg_replace('/^\+62/', '', $keluarga['no_wa']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -167,7 +173,45 @@ $dapilNow = $keluarga['dapil'] ?? '';
       width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px;
       background: rgba(255,255,255,0.9); color: #111;
     }
+    input.error {
+      border-color: #ff4b4b !important;
+      box-shadow: 0 0 5px rgba(255, 75, 75, 0.3);
+    }
     textarea { resize: none; height: 70px; }
+    
+    /* Phone input styling */
+    .phone-input-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      margin-bottom: 15px;
+    }
+    .phone-prefix {
+      width: 80px;
+      background: #e0e0e0;
+      cursor: not-allowed;
+      text-align: center;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .phone-input {
+      flex: 1;
+      margin-bottom: 0 !important;
+    }
+    .phone-status {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-top: -10px;
+      margin-bottom: 15px;
+      transition: color 0.3s ease;
+    }
+    
     .btn-save {
       width: 100%; padding: 12px; background: #e60000; color: #fff; border: none; border-radius: 8px;
       cursor: pointer; font-weight: 600; transition: 0.3s;
@@ -263,7 +307,7 @@ $dapilNow = $keluarga['dapil'] ?? '';
 
   <!-- Form Edit / Tambah (selalu tampil dengan prefill) -->
   <div class="form-container" id="formEdit">
-    <form action="update_data.php" method="POST">
+    <form action="update_data.php" method="POST" id="profilForm">
       <?php if (!empty($keluarga['id'])): ?>
         <input type="hidden" name="id" value="<?= (int)$keluarga['id'] ?>">
       <?php endif; ?>
@@ -275,7 +319,20 @@ $dapilNow = $keluarga['dapil'] ?? '';
       <input type="text" name="nik" value="<?= fv($keluarga, 'nik') ?>">
 
       <label>No WhatsApp</label>
-      <input type="text" name="no_wa" value="<?= fv($keluarga, 'no_wa') ?>">
+      <div class="phone-input-wrapper">
+        <div class="phone-prefix">+62</div>
+        <input 
+          type="text" 
+          id="no_wa_input"
+          name="no_wa_display" 
+          class="phone-input"
+          placeholder="8123456789" 
+          maxlength="13"
+          value="<?= htmlspecialchars($noWaDisplay) ?>"
+        >
+      </div>
+      <input type="hidden" name="no_wa" id="no_wa_hidden">
+      <small class="phone-status" id="phone_status">Masukkan nomor tanpa 0 di depan</small>
 
       <label>Alamat Lengkap</label>
       <textarea name="alamat"><?= fv($keluarga, 'alamat') ?></textarea>
@@ -306,5 +363,91 @@ $dapilNow = $keluarga['dapil'] ?? '';
     <img src="../assets/image/psiputih.png" alt="PSI Logo" style="height:20px; vertical-align:middle; margin-left:5px; filter:brightness(0) invert(1);">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
+
+  <script>
+    const phoneInput = document.getElementById('no_wa_input');
+    const phoneHidden = document.getElementById('no_wa_hidden');
+    const phoneStatus = document.getElementById('phone_status');
+    const profilForm = document.getElementById('profilForm');
+
+    // Format nomor telepon otomatis
+    phoneInput.addEventListener('input', function(e) {
+      // Ambil hanya angka
+      let value = this.value.replace(/\D/g, "");
+      
+      // Hilangkan leading zero jika ada
+      if (value.startsWith('0')) {
+        value = value.substring(1);
+      }
+
+      // Hilangkan 62 di depan jika user ketik manual
+      if (value.startsWith('62')) {
+        value = value.substring(2);
+      }
+
+      // Update display
+      this.value = value;
+
+      // Update hidden input dengan format lengkap
+      if (value.length > 0) {
+        const fullNumber = '+62' + value;
+        phoneHidden.value = fullNumber;
+        
+        // Validasi minimal panjang (minimal 10 digit setelah 62)
+        if (value.length >= 10) {
+          this.style.borderColor = '#22c55e';
+          phoneStatus.style.color = '#22c55e';
+          phoneStatus.textContent = '✓ Nomor valid: ' + fullNumber;
+        } else {
+          this.style.borderColor = '#ff4b4b';
+          phoneStatus.style.color = '#ff4b4b';
+          phoneStatus.textContent = 'Minimal 10 digit diperlukan';
+        }
+      } else {
+        phoneHidden.value = '';
+        this.style.borderColor = '#ccc';
+        phoneStatus.style.color = '#666';
+        phoneStatus.textContent = 'Masukkan nomor tanpa 0 di depan';
+      }
+    });
+
+    // Validasi saat blur
+    phoneInput.addEventListener('blur', function() {
+      const value = this.value.replace(/\D/g, "");
+      
+      if (value !== '' && value.length < 10) {
+        this.style.borderColor = '#ff4b4b';
+        phoneStatus.style.color = '#ff4b4b';
+        phoneStatus.textContent = '✗ Nomor terlalu pendek (minimal 10 digit)';
+      }
+    });
+
+    // Auto focus
+    phoneInput.addEventListener('focus', function() {
+      if (this.value === '') {
+        phoneStatus.style.color = '#666';
+        phoneStatus.textContent = 'Contoh: 812XXXXXXXX (tanpa 0)';
+      }
+    });
+
+    // Set initial value jika ada
+    if (phoneInput.value !== '') {
+      phoneInput.dispatchEvent(new Event('input'));
+    }
+
+    // Validasi sebelum submit
+    profilForm.addEventListener('submit', function(e) {
+      const phoneValue = phoneInput.value.replace(/\D/g, "");
+      
+      if (phoneValue !== '' && phoneValue.length < 10) {
+        e.preventDefault();
+        phoneInput.style.borderColor = '#ff4b4b';
+        phoneInput.focus();
+        
+        alert('Nomor WhatsApp tidak valid. Minimal 10 digit setelah +62');
+        return false;
+      }
+    });
+  </script>
 </body>
 </html>

@@ -3,7 +3,7 @@ session_start();
 
 /*
  * Kalau user baru saja selesai register, biasanya sudah ada alamat_email di session,
- * tapi role belum diset. Kita set default role=‘user’ supaya guard tidak melempar ke login.
+ * tapi role belum diset. Kita set default role='user' supaya guard tidak melempar ke login.
  */
 if (!isset($_SESSION['role']) && isset($_SESSION['alamat_email'])) {
     $_SESSION['role'] = 'user';
@@ -140,6 +140,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       background-color: rgba(255, 255, 255, 0.9);
       color: #000;
       font-weight: 500;
+    }
+    form input.error {
+      border-color: #ff4b4b !important;
+      box-shadow: 0 0 5px rgba(255, 75, 75, 0.3);
     }
 
     form textarea {
@@ -292,6 +296,45 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       transform: scale(1.05);
     }
 
+    /* Pastikan semua input memiliki tinggi yang sama */
+    form input[type="text"],
+    form input[readonly] {
+      height: 44px;
+      font-size: 14px;
+    }
+
+    /* Style untuk status message */
+    #wa_status {
+      display: block;
+      transition: color 0.3s ease;
+      font-weight: 500;
+    }
+
+    /* Input focus effect */
+    #no_wa_input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+      border-color: #22c55e;
+    }
+
+    #no_wa_input:focus + #wa_status_container #wa_status {
+      color: #22c55e;
+    }
+
+    /* 🔹 Style untuk section sumber yang bisa muncul/hilang */
+    #sumber_section {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: all 0.4s ease-in-out;
+    }
+
+    #sumber_section.show {
+      max-height: 300px;
+      opacity: 1;
+      margin-top: 20px;
+    }
+
   </style>
 </head>
 <body>
@@ -321,8 +364,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       <label>NIK (Nomor Induk Kependudukan)</label>
       <input type="text" name="nik" placeholder="10050983728200938">
       <small>*opsional</small>
-      <label>No WhatsApp</label>
-      <input type="text" name="no_wa" placeholder="082264780939">
+      <label>No WhatsApp </label>
+      <div style="display: flex; gap: 10px; align-items: stretch; margin-bottom: 10px;">
+        <input 
+          type="text" 
+          value="+62" 
+          readonly 
+          style="width: 80px; background: #e0e0e0; cursor: not-allowed; text-align: center; font-weight: bold; padding: 12px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 0;">
+        <input 
+          type="text" 
+          id="no_wa_input"
+          name="no_wa_display" 
+          placeholder="8123456789" 
+          maxlength="13"
+          required
+          style="flex: 1; margin-bottom: 0; padding: 12px; border-radius: 8px; border: 1px solid #ccc;">
+      </div>
+
+      <!-- Hidden input untuk submit ke server -->
+      <input type="hidden" name="no_wa" id="no_wa_hidden">
+
       <label>Alamat Lengkap</label>
       <textarea name="alamat" placeholder="Ketintang Madya No.12"></textarea>
     </div>
@@ -378,15 +439,22 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       <div class="section-title">Informasi</div>
       <p><b>Apakah Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
       <div class="radio-group">
-        <label><input type="radio" name="kenal" value="Ya"> Ya</label>
-        <label><input type="radio" name="kenal" value="Tidak"> Tidak</label>
+        <label><input type="radio" name="kenal" value="Ya" id="kenal_ya"> Ya</label>
+        <label><input type="radio" name="kenal" value="Tidak" id="kenal_tidak"> Tidak</label>
       </div>
-      <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
-      <div class="radio-group">
-        <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
-        <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
-        <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
+
+      <!-- 🔹 Section sumber yang muncul/hilang -->
+      <div id="sumber_section">
+        <p><b>Jika Ya, dari mana Anda mengenal Ketua Fraksi PSI Surabaya Josiah Michael?</b></p>
+        <div class="radio-group">
+          <label><input type="radio" name="sumber" value="Kegiatan PSI Surabaya"> Kegiatan PSI Surabaya</label>
+          <label><input type="radio" name="sumber" value="Dari teman atau relasi"> Dari teman atau relasi</label>
+          <label><input type="radio" name="sumber" value="Lainnya"> Lainnya</label>
+        </div>
       </div>
+
+      <!-- Hidden input untuk auto-set sumber = "Tidak Kenal" jika pilih Tidak -->
+      <input type="hidden" name="sumber_auto" id="sumber_auto" value="">
 
       <div class="btn-container">
         <button type="submit">Simpan Data</button>
@@ -454,11 +522,57 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
 
     nextBtn.addEventListener('click', () => {
       if (index < slides.length - 1) {
+        // Validasi slide sebelum pindah
+        if (!validateCurrentSlide()) {
+          return; // Jangan pindah jika validasi gagal
+        }
         showSlide(index + 1, 'right');
       } else {
         document.getElementById('multiForm').submit();
       }
     });
+
+    // Fungsi validasi per slide
+    function validateCurrentSlide() {
+      const currentSlide = slides[index];
+      const inputs = currentSlide.querySelectorAll('input[required], select[required], textarea[required]');
+      
+      for (let input of inputs) {
+        if (!input.value || input.value.trim() === '') {
+          input.style.borderColor = '#ff4b4b';
+          input.focus();
+          
+          Swal.fire({
+            title: 'Perhatian!',
+            text: 'Mohon lengkapi semua field yang wajib diisi',
+            icon: 'warning',
+            confirmButtonColor: '#ff4b4b'
+          });
+          
+          return false;
+        }
+      }
+      
+      // Validasi khusus untuk WhatsApp di slide 1
+      if (index === 0) {
+        const waValue = noWaInput.value.replace(/\D/g, "");
+        if (waValue.length < 10) {
+          noWaInput.style.borderColor = '#ff4b4b';
+          noWaInput.focus();
+          
+          Swal.fire({
+            title: 'Perhatian!',
+            text: 'Nomor WhatsApp minimal 10 digit',
+            icon: 'warning',
+            confirmButtonColor: '#ff4b4b'
+          });
+          
+          return false;
+        }
+      }
+      
+      return true;
+    }
 
     prevBtn.addEventListener('click', () => {
       if (index > 0) {
@@ -481,9 +595,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
     } 
     else if (params.get('status') === 'failed') {
       const errorType = params.get('error');
+      const debugMsg = params.get('debug');
       let errorMsg = 'Terjadi kesalahan saat menyimpan data 😥';
       
-      // Pesan error spesifik
       if (errorType === 'penghasilan_invalid') {
         errorMsg = 'Total penghasilan harus lebih dari 0!';
       } else if (errorType === 'penghasilan_required') {
@@ -492,6 +606,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
         errorMsg = 'Format NIK tidak valid!';
       } else if (errorType === 'no_wa') {
         errorMsg = 'Format nomor WhatsApp tidak valid!';
+      } else if (debugMsg) {
+        // Tampilkan debug message jika ada
+        errorMsg = 'Error: ' + debugMsg;
       }
       
       Swal.fire({
@@ -530,6 +647,146 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
       } else {
         this.style.borderColor = '#ccc';
       }
+    });
+
+    // === FORMAT NO WHATSAPP ===
+    const noWaInput = document.getElementById('no_wa_input');
+    const noWaHidden = document.getElementById('no_wa_hidden');
+
+    noWaInput.addEventListener('input', function (e) {
+      let value = this.value.replace(/\D/g, "");
+      
+      if (value.startsWith('0')) {
+        value = value.substring(1);
+      }
+
+      if (value.startsWith('62')) {
+        value = value.substring(2);
+      }
+
+      this.value = value;
+
+      if (value.length > 0) {
+        const fullNumber = '+62' + value;
+        noWaHidden.value = fullNumber;
+        
+        if (value.length >= 10) {
+          this.style.borderColor = '#22c55e';
+        } else {
+          this.style.borderColor = '#ff4b4b';
+        }
+      } else {
+        noWaHidden.value = '';
+        this.style.borderColor = '#ccc';
+      }
+    });
+
+    noWaInput.addEventListener('blur', function() {
+      const value = this.value.replace(/\D/g, "");
+      
+      if (value === '' || value.length < 10) {
+        this.style.borderColor = '#ff4b4b';
+      }
+    });
+
+    // === 🔹 LOGIC SHOW/HIDE SUMBER BERDASARKAN PILIHAN KENAL ===
+    const kenalYa = document.getElementById('kenal_ya');
+    const kenalTidak = document.getElementById('kenal_tidak');
+    const sumberSection = document.getElementById('sumber_section');
+    const sumberAuto = document.getElementById('sumber_auto');
+    const sumberRadios = document.querySelectorAll('input[name="sumber"]');
+
+    function handleKenalChange() {
+      if (kenalYa.checked) {
+        // Jika pilih "Ya", tampilkan section sumber
+        sumberSection.classList.add('show');
+        sumberAuto.value = ''; // Kosongkan auto value
+      } else if (kenalTidak.checked) {
+        // Jika pilih "Tidak", sembunyikan section sumber
+        sumberSection.classList.remove('show');
+        
+        // Uncheck semua radio sumber
+        sumberRadios.forEach(radio => radio.checked = false);
+        
+        // Set auto value ke "Tidak Kenal"
+        sumberAuto.value = 'Tidak Kenal';
+      }
+    }
+
+    kenalYa.addEventListener('change', handleKenalChange);
+    kenalTidak.addEventListener('change', handleKenalChange);
+
+    // Validasi sebelum submit
+    document.getElementById('multiForm').addEventListener('submit', function(e) {
+      // Validasi WhatsApp
+      const waValue = noWaInput.value.replace(/\D/g, "");
+      
+      if (waValue === '' || waValue.length < 10) {
+        e.preventDefault();
+        noWaInput.style.borderColor = '#ff4b4b';
+        noWaInput.focus();
+        
+        Swal.fire({
+          title: 'Peringatan!',
+          text: 'Nomor WhatsApp tidak valid. Minimal 10 digit setelah +62',
+          icon: 'warning',
+          confirmButtonColor: '#ff4b4b'
+        });
+        return false;
+      }
+
+      // Validasi kenal & sumber
+      const kenalChecked = document.querySelector('input[name="kenal"]:checked');
+      if (!kenalChecked) {
+        e.preventDefault();
+        
+        Swal.fire({
+          title: 'Peringatan!',
+          text: 'Mohon pilih apakah Anda mengenal Josiah Michael',
+          icon: 'warning',
+          confirmButtonColor: '#ff4b4b'
+        });
+        return false;
+      }
+
+      // Jika pilih Ya, sumber harus dipilih
+      if (kenalChecked.value === 'Ya') {
+        const sumberChecked = document.querySelector('input[name="sumber"]:checked');
+        if (!sumberChecked) {
+          e.preventDefault();
+          
+          Swal.fire({
+            title: 'Peringatan!',
+            text: 'Mohon pilih dari mana Anda mengenal Josiah Michael',
+            icon: 'warning',
+            confirmButtonColor: '#ff4b4b'
+          });
+          return false;
+        }
+      }
+
+      // Validasi penghasilan
+      const penghasilanVal = penghasilanInput.value.replace(/\D/g, "");
+      if (penghasilanVal === '' || parseInt(penghasilanVal) <= 0) {
+        e.preventDefault();
+        penghasilanInput.style.borderColor = '#ff4b4b';
+        
+        Swal.fire({
+          title: 'Peringatan!',
+          text: 'Total penghasilan harus diisi dan lebih dari 0',
+          icon: 'warning',
+          confirmButtonColor: '#ff4b4b'
+        });
+        return false;
+      }
+    });
+
+    // Reset form juga reset tampilan sumber
+    document.querySelector('.btn-reset').addEventListener('click', function() {
+      setTimeout(() => {
+        sumberSection.classList.remove('show');
+        sumberAuto.value = '';
+      }, 100);
     });
 
   </script>
