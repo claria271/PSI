@@ -18,8 +18,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
     header("Location: ../login.php");
     exit();
 }
-?>
 
+/* 🔥 AMBIL DATA USER DARI SESSION UNTUK DIKIRIM OTOMATIS */
+$userId  = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+$email   = isset($_SESSION['alamat_email']) ? $_SESSION['alamat_email'] : '';
+?>
 
 <!DOCTYPE html>
 <html lang="id">
@@ -356,6 +359,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
   </div>
 
   <form id="multiForm" action="proses_keluarga.php" method="POST">
+    <!-- 🆕 HIDDEN UNTUK USER ID & EMAIL PENGISI (OTOMATIS DARI AKUN) -->
+    <input type="hidden" name="user_id" value="<?php echo (int)$userId; ?>">
+    <input type="hidden" name="email_pengisi" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
+
     <!-- Slide 1 -->
     <div class="container slide active">
       <div class="section-title">Data Pribadi</div>

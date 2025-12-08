@@ -20,12 +20,11 @@ $conn->set_charset("utf8mb4");
 // ==== KONSTANTA UMR PER ORANG ====
 define('UMR_PERSON', 4725479);
 
-// ==== AMBIL FILTER GET (SAMA DENGAN laporan.php) ====
+// ==== AMBIL FILTER GET (SAMA DENGAN laporan.php - CARD BULANAN) ====
+// range = 1 / 3 / 7 / 14 / 30 (hari terakhir)
+$range    = isset($_GET['range'])    ? trim($_GET['range'])    : '';
 $dapil    = isset($_GET['dapil'])    ? trim($_GET['dapil'])    : '';
 $kategori = isset($_GET['kategori']) ? trim($_GET['kategori']) : '';
-$kenal    = isset($_GET['kenal'])    ? trim($_GET['kenal'])    : '';
-$bulan    = isset($_GET['bulan'])    ? trim($_GET['bulan'])    : '';
-$tahun    = isset($_GET['tahun'])    ? trim($_GET['tahun'])    : '';
 
 
 // =======================
@@ -33,28 +32,27 @@ $tahun    = isset($_GET['tahun'])    ? trim($_GET['tahun'])    : '';
 // =======================
 $where = [];
 
+// RANGE HARI TERAKHIR (berdasarkan created_at)
+if ($range !== '') {
+    $allowed = ['1', '3', '7', '14', '30'];
+    if (in_array($range, $allowed, true)) {
+        $days = (int)$range;
+        // DATE(created_at) supaya ignore jam
+        $where[] = "DATE(created_at) >= (CURDATE() - INTERVAL $days DAY)";
+    }
+}
+
+// FILTER DAPIL
 if ($dapil !== '') {
     $safe = $conn->real_escape_string($dapil);
     $where[] = "dapil = '$safe'";
 }
 
-if ($kenal !== '') {
-    $safe = $conn->real_escape_string($kenal);
-    $where[] = "kenal = '$safe'";
-}
-
+// FILTER KATEGORI (UMR per orang)
 if ($kategori === 'dibawah') {
     $where[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) < " . UMR_PERSON . " )";
 } elseif ($kategori === 'diatas') {
     $where[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) >= " . UMR_PERSON . " )";
-}
-
-if ($bulan !== '') {
-    $where[] = "MONTH(created_at) = " . intval($bulan);
-}
-
-if ($tahun !== '') {
-    $where[] = "YEAR(created_at) = " . intval($tahun);
 }
 
 $whereSQL = '';
@@ -119,22 +117,33 @@ if ($res && $res->num_rows > 0) {
             ? 'Dibawah UMR'
             : 'Diatas UMR';
 
+        // (opsional) bisa pakai htmlspecialchars kalau mau super aman
+        $nama       = htmlspecialchars($row['nama_lengkap'] ?? '', ENT_QUOTES, 'UTF-8');
+        $nik        = htmlspecialchars($row['nik'] ?? '', ENT_QUOTES, 'UTF-8');
+        $nowa       = htmlspecialchars($row['no_wa'] ?? '', ENT_QUOTES, 'UTF-8');
+        $alamat     = htmlspecialchars($row['alamat'] ?? '', ENT_QUOTES, 'UTF-8');
+        $dapilRow   = htmlspecialchars($row['dapil'] ?? '', ENT_QUOTES, 'UTF-8');
+        $kecamatan  = htmlspecialchars($row['kecamatan'] ?? '', ENT_QUOTES, 'UTF-8');
+        $kenalRow   = htmlspecialchars($row['kenal'] ?? '', ENT_QUOTES, 'UTF-8');
+        $sumber     = htmlspecialchars($row['sumber'] ?? '', ENT_QUOTES, 'UTF-8');
+        $created    = htmlspecialchars($row['created_at'] ?? '', ENT_QUOTES, 'UTF-8');
+
         $html .= "
         <tr>
-            <td>{$row['nama_lengkap']}</td>
-            <td>{$row['nik']}</td>
-            <td>{$row['no_wa']}</td>
-            <td>{$row['alamat']}</td>
-            <td>{$row['dapil']}</td>
-            <td>{$row['kecamatan']}</td>
+            <td>{$nama}</td>
+            <td>{$nik}</td>
+            <td>{$nowa}</td>
+            <td>{$alamat}</td>
+            <td>{$dapilRow}</td>
+            <td>{$kecamatan}</td>
             <td>{$row['jumlah_anggota']}</td>
             <td>{$row['jumlah_bekerja']}</td>
             <td>" . number_format($penghasilan, 0, ',', '.') . "</td>
             <td>" . number_format($perOrang, 0, ',', '.') . "</td>
-            <td>{$row['kenal']}</td>
-            <td>{$row['sumber']}</td>
+            <td>{$kenalRow}</td>
+            <td>{$sumber}</td>
             <td>{$kategoriLabel}</td>
-            <td>{$row['created_at']}</td>
+            <td>{$created}</td>
         </tr>
         ";
     }

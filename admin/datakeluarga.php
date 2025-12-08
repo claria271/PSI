@@ -12,7 +12,6 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
 
 // Helper aman untuk output HTML
-// Helper aman untuk output HTML
 function e($str) {
     return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
@@ -39,12 +38,6 @@ if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
     if ($res->num_rows > 0) {
         $admin = $res->fetch_assoc();
     }
-}
-
-// Tentukan nama & foto admin
-if ($admin) {
-    $adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : 'Admin';
-    $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/admin_photo.jpg';
 }
 
 // Jika admin tidak ditemukan, redirect ke login
@@ -81,7 +74,8 @@ if ($search !== '') {
     $safe = mysqli_real_escape_string($conn, $search);
     $conditions[] = "(k.nama_lengkap LIKE '%$safe%' 
                   OR k.nik LIKE '%$safe%' 
-                  OR k.no_wa LIKE '%$safe%')";
+                  OR k.no_wa LIKE '%$safe%'
+                  OR l.alamat_email LIKE '%$safe%')"; // cari berdasarkan email akun pengisi
 }
 
 if ($dapil !== '') {
@@ -103,13 +97,15 @@ if ($status_umr === 'Dibawah') {
     $conditions[] = "( (k.total_penghasilan / NULLIF(k.jumlah_anggota,0)) >= $umr )";
 }
 
-// Join dengan tabel verifikasi untuk cek status
+// Join dengan tabel verifikasi + login (untuk ambil email akun pengisi)
 $query = "SELECT k.*, 
           v.id as verification_id,
           v.verified_by,
-          v.verified_at
+          v.verified_at,
+          l.alamat_email AS email_pengisi
           FROM keluarga k
-          LEFT JOIN verifikasi v ON k.id = v.keluarga_id";
+          LEFT JOIN verifikasi v ON k.id = v.keluarga_id
+          LEFT JOIN login l ON k.user_id = l.id";
 
 if (!empty($conditions)) {
     $query .= " WHERE " . implode(" AND ", $conditions);
@@ -314,7 +310,7 @@ if (isset($_SESSION['error'])) {
       font-size: 14px;
     }
 
-    /* 🔥 ALERT MESSAGES */
+    /* ALERT */
     .alert {
       padding: 15px 20px;
       border-radius: 8px;
@@ -360,7 +356,7 @@ if (isset($_SESSION['error'])) {
       min-height: 0;
     }
 
-    /* === CARD, FILTER, TABEL === */
+    /* CARD, FILTER, TABEL */
     .card {
       background: #fff;
       border-radius: 12px;
@@ -417,7 +413,7 @@ if (isset($_SESSION['error'])) {
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1300px;
+      min-width: 1400px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -442,7 +438,7 @@ if (isset($_SESSION['error'])) {
       background: #fafafa;
     }
 
-    /* 🔥 STYLING UNTUK BARIS TERVERIFIKASI - IMPROVED */
+    /* BARIS TERVERIFIKASI */
     tr.verified {
       background: #e8f5e9 !important;
       border-left: 4px solid #4CAF50 !important;
@@ -515,7 +511,7 @@ if (isset($_SESSION['error'])) {
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    /* === FOOTER === */
+    /* FOOTER */
     footer {
       flex: 0 0 auto;
       margin-top: 5px;
@@ -547,19 +543,6 @@ if (isset($_SESSION['error'])) {
     }
     ::-webkit-scrollbar-thumb:hover {
       background: #555;
-    }
-
-    @media (max-width: 1024px) {
-      .content {
-        padding: 20px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 220px;
-        flex: 0 0 220px;
-      }
     }
   </style>
 </head>
@@ -604,7 +587,7 @@ if (isset($_SESSION['error'])) {
       </div>
 
       <div class="content-scroll">
-        <!-- 🔥 TAMPILKAN ALERT MESSAGES -->
+        <!-- ALERT -->
         <?php if ($successMessage): ?>
           <div class="alert alert-success">
             <?php echo $successMessage; ?>
@@ -631,7 +614,7 @@ if (isset($_SESSION['error'])) {
               <input
                 type="text"
                 name="search"
-                placeholder="Cari Pengguna, NIK, No HP"
+                placeholder="Cari Nama, NIK, No HP, Email"
                 value="<?php echo e($search); ?>"
               >
 
@@ -668,6 +651,7 @@ if (isset($_SESSION['error'])) {
                   <th>Nama Lengkap</th>
                   <th>NIK</th>
                   <th>No WA</th>
+                  <th>Email Pengisi</th>
                   <th>Alamat Lengkap</th>
                   <th>Dapil</th>
                   <th>Kecamatan</th>
@@ -687,20 +671,18 @@ if (isset($_SESSION['error'])) {
                 <?php if (mysqli_num_rows($result) > 0): ?>
                   <?php while ($row = mysqli_fetch_assoc($result)): ?>
                     <?php
-                      $anggota = (int)$row['jumlah_anggota'];
+                      $anggota     = (int)$row['jumlah_anggota'];
                       $penghasilan = (float)$row['total_penghasilan'];
-                      $per_orang = $anggota > 0 ? ($penghasilan / $anggota) : 0;
-                      
-                      // Kategori berdasarkan UMR per orang
+                      $per_orang   = $anggota > 0 ? ($penghasilan / $anggota) : 0;
+
                       $kategori = ($per_orang < UMR_PERSON)
                         ? "<span class='dibawah'>Dibawah UMR</span>"
                         : "<span class='diatas'>Diatas UMR</span>";
-                      
-                      // 🔥 CEK APAKAH DATA TERVERIFIKASI (verification_id tidak null)
+
                       $isVerified = !empty($row['verification_id']);
-                      $rowClass = $isVerified ? 'class="verified"' : '';
+                      $rowClass   = $isVerified ? ' verified' : '';
                     ?>
-                    <tr <?php echo $rowClass; ?>>
+                    <tr class="<?php echo $isVerified ? 'verified' : ''; ?>">
                       <td>
                         <?php echo e($row['nama_lengkap']); ?>
                         <?php if ($isVerified): ?>
@@ -709,6 +691,7 @@ if (isset($_SESSION['error'])) {
                       </td>
                       <td><?php echo e($row['nik']); ?></td>
                       <td><?php echo e($row['no_wa']); ?></td>
+                      <td><?php echo e($row['email_pengisi']); ?></td>
                       <td><?php echo e($row['alamat']); ?></td>
                       <td><?php echo e($row['dapil']); ?></td>
                       <td><?php echo e($row['kecamatan']); ?></td>
@@ -736,7 +719,7 @@ if (isset($_SESSION['error'])) {
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="16" style="text-align:center; padding: 30px;">Tidak ada data ditemukan.</td>
+                    <td colspan="17" style="text-align:center; padding: 30px;">Tidak ada data ditemukan.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
@@ -754,7 +737,7 @@ if (isset($_SESSION['error'])) {
     </div>
   </div>
 
-  <!-- 🔥 MODAL FORM BANTUAN -->
+  <!-- MODAL FORM BANTUAN -->
   <div id="modalBantuan" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
     <div style="background:#fff; padding:30px; border-radius:12px; max-width:500px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
       <h3 style="margin-bottom:20px; color:#000; font-size:20px; text-align:center;">📋 Form Bantuan</h3>
@@ -783,12 +766,9 @@ if (isset($_SESSION['error'])) {
     </div>
   </div>
 
-  <!-- JAVASCRIPT UNTUK VERIFIKASI -->
   <script>
     function verifikasiData(id, nama) {
-      // Pop-up konfirmasi pertama
       if (confirm('Apakah Anda yakin ingin memverifikasi data atas nama:\n\n' + nama + '?')) {
-        // Tampilkan modal bantuan
         document.getElementById('modalBantuan').style.display = 'flex';
         document.getElementById('namaKeluarga').textContent = nama;
         document.getElementById('idKeluarga').value = id;
@@ -800,14 +780,13 @@ if (isset($_SESSION['error'])) {
       document.getElementById('formBantuan').reset();
     }
 
-    // Close modal jika klik di luar form
     document.getElementById('modalBantuan').addEventListener('click', function(e) {
       if (e.target === this) {
         closeModal();
       }
     });
 
-    // 🔥 AUTO-HIDE ALERT SETELAH 5 DETIK
+    // AUTO-HIDE ALERT
     setTimeout(function() {
       const alerts = document.querySelectorAll('.alert');
       alerts.forEach(function(alert) {

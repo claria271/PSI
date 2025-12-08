@@ -19,12 +19,11 @@ function h($v) {
     return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 }
 
-// ==== AMBIL FILTER GET (SAMA DENGAN LINK DI laporan.php) ====
+// ==== AMBIL FILTER GET (SAMA DENGAN LINK DI laporan.php - BULANAN) ====
+// range = 1 / 3 / 7 / 14 / 30 (hari terakhir)
+$range    = isset($_GET['range'])    ? trim($_GET['range'])    : '';
 $dapil    = isset($_GET['dapil'])    ? trim($_GET['dapil'])    : '';
 $kategori = isset($_GET['kategori']) ? trim($_GET['kategori']) : '';
-$kenal    = isset($_GET['kenal'])    ? trim($_GET['kenal'])    : '';
-$bulan    = isset($_GET['bulan'])    ? trim($_GET['bulan'])    : '';
-$tahun    = isset($_GET['tahun'])    ? trim($_GET['tahun'])    : '';
 
 
 // =======================
@@ -32,28 +31,27 @@ $tahun    = isset($_GET['tahun'])    ? trim($_GET['tahun'])    : '';
 // =======================
 $where = [];
 
+// RANGE HARI TERAKHIR (berdasarkan created_at)
+if ($range !== '') {
+    $allowed = ['1', '3', '7', '14', '30'];
+    if (in_array($range, $allowed, true)) {
+        $days = (int)$range;
+        // DATE(created_at) supaya ignore jam
+        $where[] = "DATE(created_at) >= (CURDATE() - INTERVAL $days DAY)";
+    }
+}
+
+// FILTER DAPIL
 if ($dapil !== '') {
     $safe = $conn->real_escape_string($dapil);
     $where[] = "dapil = '$safe'";
 }
 
-if ($kenal !== '') {
-    $safe = $conn->real_escape_string($kenal);
-    $where[] = "kenal = '$safe'";
-}
-
+// FILTER KATEGORI (UMR per orang)
 if ($kategori === 'dibawah') {
     $where[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) < " . UMR_PERSON . " )";
 } elseif ($kategori === 'diatas') {
     $where[] = "( (total_penghasilan / NULLIF(jumlah_anggota,0)) >= " . UMR_PERSON . " )";
-}
-
-if ($bulan !== '') {
-    $where[] = "MONTH(created_at) = " . intval($bulan);
-}
-
-if ($tahun !== '') {
-    $where[] = "YEAR(created_at) = " . intval($tahun);
 }
 
 $whereSQL = '';

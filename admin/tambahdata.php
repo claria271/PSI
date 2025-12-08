@@ -8,28 +8,66 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
   exit();
 }
 
+// 🔥 AMBIL ID ADMIN DARI SESSION (UNTUK DISIMPAN DI kolom user_id)
+$adminId = null;
+if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
+    $adminId = (int)$_SESSION['id'];
+} elseif (isset($_SESSION['user_id']) && is_numeric($_SESSION['user_id'])) {
+    // fallback kalau pakai nama lain
+    $adminId = (int)$_SESSION['user_id'];
+}
+
 // Proses simpan data langsung dari halaman ini
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nama_lengkap = $_POST['nama_lengkap'];
-    $nik = $_POST['nik'];
-    $no_wa = $_POST['no_wa'];
-    $alamat = $_POST['alamat'];
-    $dapil = $_POST['dapil'];
-    $kecamatan = $_POST['kecamatan'];
-    $jumlah_anggota = $_POST['jumlah_anggota'];
-    $jumlah_bekerja = $_POST['jumlah_bekerja'];
-    $total_penghasilan = $_POST['total_penghasilan'];
-    $kenal = $_POST['kenal'];
-    $sumber = $_POST['sumber'];
+    $nama_lengkap      = $_POST['nama_lengkap'] ?? '';
+    $nik               = $_POST['nik'] ?? '';
+    $no_wa             = $_POST['no_wa'] ?? '';
+    $alamat            = $_POST['alamat'] ?? '';
+    $dapil             = $_POST['dapil'] ?? '';
+    $kecamatan         = $_POST['kecamatan'] ?? '';
+    $jumlah_anggota    = isset($_POST['jumlah_anggota']) ? (int)$_POST['jumlah_anggota'] : 0;
+    $jumlah_bekerja    = isset($_POST['jumlah_bekerja']) ? (int)$_POST['jumlah_bekerja'] : 0;
+    $total_penghasilan = isset($_POST['total_penghasilan']) ? (int)$_POST['total_penghasilan'] : 0;
+    $kenal             = $_POST['kenal'] ?? '';
+    $sumber            = $_POST['sumber'] ?? '';
 
+    // 🔥 TAMBAHKAN kolom user_id DI SINI
     $query = "INSERT INTO keluarga 
-      (nama_lengkap, nik, no_wa, alamat, dapil, kecamatan, jumlah_anggota, jumlah_bekerja, total_penghasilan, kenal, sumber, created_at, updated_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+      (user_id, nama_lengkap, nik, no_wa, alamat, dapil, kecamatan, 
+       jumlah_anggota, jumlah_bekerja, total_penghasilan, kenal, sumber, 
+       created_at, updated_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
+    /*
+      Tipe data:
+      user_id           -> i (int)
+      nama_lengkap      -> s
+      nik               -> s
+      no_wa             -> s
+      alamat            -> s
+      dapil             -> s
+      kecamatan         -> s
+      jumlah_anggota    -> i
+      jumlah_bekerja    -> i
+      total_penghasilan -> i
+      kenal             -> s
+      sumber            -> s
+    */
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("ssssssissss", 
-      $nama_lengkap, $nik, $no_wa, $alamat, $dapil, $kecamatan, 
-      $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, $kenal, $sumber
+    $stmt->bind_param(
+        "issssssiiiss",
+        $adminId,
+        $nama_lengkap,
+        $nik,
+        $no_wa,
+        $alamat,
+        $dapil,
+        $kecamatan,
+        $jumlah_anggota,
+        $jumlah_bekerja,
+        $total_penghasilan,
+        $kenal,
+        $sumber
     );
 
     if ($stmt->execute()) {
