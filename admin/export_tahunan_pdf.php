@@ -69,49 +69,73 @@ $res = $conn->query($sql);
 // =======================
 //  TEMPLATE HTML PDF
 // =======================
-$judul = 'LAPORAN DATA KELUARGA - TAHUNAN';
-$subJudul = 'Dibuat pada: ' . date('d-m-Y H:i');
-if ($tahun !== '') {
-    $subJudul .= ' | Tahun: ' . $tahun;
-}
-
 $html = "
 <style>
-body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-table { width: 100%; border-collapse: collapse; margin-top:10px; }
-th, td { border: 1px solid #555; padding: 6px; font-size: 11px; }
-th { background: #eee; }
-h2 { text-align:center; margin-bottom: 4px; }
-.small { font-size: 11px; text-align:center; }
+body { 
+    font-family: DejaVu Sans, sans-serif; 
+    font-size: 10px;
+    margin: 20px;
+}
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 15px; 
+}
+th, td { 
+    border: 1px solid #666; 
+    padding: 8px 6px; 
+    font-size: 9px;
+    vertical-align: middle;
+}
+th { 
+    background: #e8e8e8; 
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+    border: 1px solid #555;
+}
+tbody tr:nth-child(even) {
+    background: #f9f9f9;
+}
+tbody tr:hover {
+    background: #f0f0f0;
+}
+td.center { text-align: center; }
+td.right { text-align: right; }
+h2 { 
+    text-align: center; 
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    color: #222;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 </style>
 
-<h2>$judul</h2>
-<div class='small'>$subJudul</div>
-<br>
+<h2>LAPORAN DATA KELUARGA - TAHUNAN</h2>
 
 <table>
 <thead>
 <tr>
-    <th>Nama</th>
-    <th>NIK</th>
-    <th>No WA</th>
-    <th>Alamat</th>
-    <th>Dapil</th>
-    <th>Kecamatan</th>
-    <th>Anggota</th>
-    <th>Bekerja</th>
-    <th>Total Penghasilan</th>
-    <th>Rata-rata</th>
-    <th>Kenal</th>
-    <th>Sumber</th>
-    <th>Kategori</th>
-    <th>Created</th>
+    <th style='width: 3%;'>No</th>
+    <th style='width: 16%;'>Nama Lengkap</th>
+    <th style='width: 11%;'>NIK</th>
+    <th style='width: 10%;'>No WhatsApp</th>
+    <th style='width: 19%;'>Alamat</th>
+    <th style='width: 5%;'>Anggota</th>
+    <th style='width: 5%;'>Bekerja</th>
+    <th style='width: 11%;'>Total Penghasilan</th>
+    <th style='width: 8%;'>Kategori</th>
+    <th style='width: 11%;'>Created At</th>
+    <th style='width: 11%;'>Updated At</th>
 </tr>
 </thead>
 <tbody>
 ";
 
 if ($res && $res->num_rows > 0) {
+    $no = 1;
 
     while ($row = $res->fetch_assoc()) {
         $anggota     = (int)$row['jumlah_anggota'];
@@ -122,28 +146,34 @@ if ($res && $res->num_rows > 0) {
             ? 'Dibawah UMR'
             : 'Diatas UMR';
 
+        $nama       = htmlspecialchars($row['nama_lengkap'] ?? '', ENT_QUOTES, 'UTF-8');
+        $nik        = htmlspecialchars($row['nik'] ?? '', ENT_QUOTES, 'UTF-8');
+        $nowa       = htmlspecialchars($row['no_wa'] ?? '', ENT_QUOTES, 'UTF-8');
+        $alamat     = htmlspecialchars($row['alamat'] ?? '', ENT_QUOTES, 'UTF-8');
+        $createdAt  = htmlspecialchars($row['created_at'] ?? '', ENT_QUOTES, 'UTF-8');
+        $updatedAt  = htmlspecialchars($row['updated_at'] ?? '', ENT_QUOTES, 'UTF-8');
+
         $html .= "
         <tr>
-            <td>{$row['nama_lengkap']}</td>
-            <td>{$row['nik']}</td>
-            <td>{$row['no_wa']}</td>
-            <td>{$row['alamat']}</td>
-            <td>{$row['dapil']}</td>
-            <td>{$row['kecamatan']}</td>
-            <td>{$row['jumlah_anggota']}</td>
-            <td>{$row['jumlah_bekerja']}</td>
-            <td>" . number_format($penghasilan, 0, ',', '.') . "</td>
-            <td>" . number_format($perOrang, 0, ',', '.') . "</td>
-            <td>{$row['kenal']}</td>
-            <td>{$row['sumber']}</td>
-            <td>{$kategoriLabel}</td>
-            <td>{$row['created_at']}</td>
+            <td class='center' style='font-weight:bold;'>{$no}</td>
+            <td style='padding-left:8px;'>{$nama}</td>
+            <td class='center' style='font-size:8.5px;'>{$nik}</td>
+            <td class='center'>{$nowa}</td>
+            <td style='padding-left:8px;'>{$alamat}</td>
+            <td class='center' style='font-weight:bold;'>{$anggota}</td>
+            <td class='center' style='font-weight:bold;'>{$row['jumlah_bekerja']}</td>
+            <td class='right' style='padding-right:8px; font-weight:bold;'>Rp " . number_format($penghasilan, 0, ',', '.') . "</td>
+            <td class='center' style='font-size:8.5px;'>{$kategoriLabel}</td>
+            <td class='center' style='font-size:8px;'>{$createdAt}</td>
+            <td class='center' style='font-size:8px;'>{$updatedAt}</td>
         </tr>
         ";
+        
+        $no++;
     }
 
 } else {
-    $html .= "<tr><td colspan='14' align='center'>Tidak ada data.</td></tr>";
+    $html .= "<tr><td colspan='11' class='center' style='padding: 15px;'>Tidak ada data.</td></tr>";
 }
 
 $html .= "</tbody></table>";
@@ -158,9 +188,9 @@ $options->set('isRemoteEnabled', true);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'landscape'); // supaya tabel lebar muat
+$dompdf->setPaper('A4', 'landscape');
 $dompdf->render();
 
 // STREAM KE BROWSER
-$dompdf->stream("laporan_tahunan.pdf", ["Attachment" => true]);
+$dompdf->stream("laporan_tahunan_" . date('Ymd') . ".pdf", ["Attachment" => true]);
 exit;
