@@ -672,6 +672,7 @@ for ($i = 3; $i >= 0; $i--) {
       </div>
       <nav>
         <a href="#" class="active">Dashboard</a>
+        <a href="manage_permissions.php">user edit</a>
         <a href="datakeluarga.php">Data Keluarga</a>
         <a href="tambah_admin.php">➕ Tambah Admin</a>
         <a href="verifikasi.php">Hasil Verifikasi</a>
