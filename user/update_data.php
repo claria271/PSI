@@ -1,5 +1,5 @@
 <?php
-//update_data.php
+// user/update_data.php
 declare(strict_types=1);
 session_start();
 include '../koneksi/config.php';
@@ -79,7 +79,7 @@ if ($conn->query("SHOW COLUMNS FROM keluarga LIKE 'total_penghasilan'")->num_row
   }
 }
 
-// ================== UPDATE ==================
+// ================== UPDATE (dengan approval check) ==================
 if ($id > 0) {
   
   if ($relMode === 'user_id' && $userId !== null) {
@@ -96,15 +96,70 @@ if ($id > 0) {
     }
     $checkStmt->close();
     
+    // CEK APPROVAL: Apakah ada approved request?
+    $stmtApproval = $conn->prepare("SELECT id FROM edit_requests WHERE user_id = ? AND keluarga_id = ? AND status = 'approved' ORDER BY updated_at DESC LIMIT 1");
+    $stmtApproval->bind_param('ii', $userId, $id);
+    $stmtApproval->execute();
+    $approvalResult = $stmtApproval->get_result();
+    
+    if ($approvalResult->num_rows === 0) {
+      // Tidak ada approval, tolak update
+      $stmtApproval->close();
+      header("Location: profil.php?status=no_permission");
+      exit;
+    }
+    
+    $approvalData = $approvalResult->fetch_assoc();
+    $approvalId = (int)$approvalData['id'];
+    $stmtApproval->close();
+    
+    // ✅ PERBAIKAN: Lakukan UPDATE dengan type yang benar
     $sql = "UPDATE keluarga SET 
               nama_lengkap=?, nik=?, no_wa=?, alamat=?, domisili=?, 
               jumlah_anggota=?, jumlah_bekerja=?, $penghasilanCol=?"
               . ($hasUpdatedAt ? ", updated_at=NOW()" : "") .
             " WHERE id=? AND user_id=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sssssiiii', $nama_lengkap, $nik, $no_wa, $alamat, $domisili,
-                                   $jumlah_anggota, $jumlah_bekerja, $total_penghasilan,
-                                   $id, $userId);
+    
+    // ✅ FIX: 10 parameters = 10 type specifiers (s=string, i=integer)
+    // nama, nik, no_wa, alamat, domisili = string (s)
+    // jumlah_anggota, jumlah_bekerja, total_penghasilan, id, user_id = integer (i)
+    $stmt->bind_param('sssssiiiii', 
+                      $nama_lengkap,      // s
+                      $nik,               // s
+                      $no_wa,             // s
+                      $alamat,            // s
+                      $domisili,          // s
+                      $jumlah_anggota,    // i
+                      $jumlah_bekerja,    // i
+                      $total_penghasilan, // i
+                      $id,                // i
+                      $userId             // i
+    );
+    
+    $stmt->execute();
+    $ok = $stmt->affected_rows;
+    $stmt->close();
+    
+    // ✅ PERUBAHAN UTAMA: Ubah status menjadi 'completed' dan catat waktu edit
+    // JANGAN HAPUS data, hanya update status
+    $stmtCompleted = $conn->prepare("UPDATE edit_requests 
+                                      SET status = 'completed', 
+                                          edited_at = NOW(),
+                                          updated_at = NOW()
+                                      WHERE id = ?");
+    $stmtCompleted->bind_param('i', $approvalId);
+    $stmtCompleted->execute();
+    $stmtCompleted->close();
+    
+    if ($ok > 0) {
+      header("Location: profil.php?status=updated");
+      exit;
+    } else {
+      // Tidak ada perubahan (data sama), tetap tandai sebagai completed
+      header("Location: profil.php?status=no_changes");
+      exit;
+    }
                                    
   } elseif ($relMode === 'email') {
     // Cek kepemilikan
@@ -120,29 +175,59 @@ if ($id > 0) {
     }
     $checkStmt->close();
     
+    // ✅ PERBAIKAN: Untuk mode email, juga update status ke completed
+    // Cari approval jika ada
+    $stmtApprovalEmail = $conn->query("SELECT id FROM edit_requests WHERE keluarga_id = $id AND status = 'approved' LIMIT 1");
+    if ($stmtApprovalEmail && $stmtApprovalEmail->num_rows > 0) {
+      $approvalEmailData = $stmtApprovalEmail->fetch_assoc();
+      $approvalEmailId = (int)$approvalEmailData['id'];
+      
+      // Update ke completed
+      $stmtCompletedEmail = $conn->prepare("UPDATE edit_requests 
+                                            SET status = 'completed', 
+                                                edited_at = NOW(),
+                                                updated_at = NOW()
+                                            WHERE id = ?");
+      $stmtCompletedEmail->bind_param('i', $approvalEmailId);
+      $stmtCompletedEmail->execute();
+      $stmtCompletedEmail->close();
+    }
+    
+    // ✅ PERBAIKAN: Untuk mode email
     $sql = "UPDATE keluarga SET 
               nama_lengkap=?, nik=?, no_wa=?, alamat=?, domisili=?, 
               jumlah_anggota=?, jumlah_bekerja=?, $penghasilanCol=?"
               . ($hasUpdatedAt ? ", updated_at=NOW()" : "") .
             " WHERE id=? AND alamat_email=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sssssiiiis', $nama_lengkap, $nik, $no_wa, $alamat, $domisili,
-                                    $jumlah_anggota, $jumlah_bekerja, $total_penghasilan,
-                                    $id, $email);
+    
+    // ✅ FIX: 10 parameters dengan type yang benar
+    $stmt->bind_param('sssssiiiis', 
+                      $nama_lengkap,      // s
+                      $nik,               // s
+                      $no_wa,             // s
+                      $alamat,            // s
+                      $domisili,          // s
+                      $jumlah_anggota,    // i
+                      $jumlah_bekerja,    // i
+                      $total_penghasilan, // i
+                      $id,                // i
+                      $email              // s
+    );
+    
+    $stmt->execute();
+    $ok = $stmt->affected_rows;
+    $stmt->close();
+
+    header("Location: profil.php?status=" . ($ok > 0 ? "updated" : "failed"));
+    exit;
   } else {
     header("Location: profil.php?status=failed");
     exit;
   }
-
-  $stmt->execute();
-  $ok = $stmt->affected_rows;
-  $stmt->close();
-
-  header("Location: profil.php?status=" . ($ok > 0 ? "updated" : "failed"));
-  exit;
 }
 
-// ================== INSERT ==================
+// ================== INSERT (tidak perlu approval untuk data baru) ==================
 
 if ($relMode === 'user_id' && $userId !== null) {
   $sql = "INSERT INTO keluarga
@@ -160,12 +245,32 @@ if ($relMode === 'user_id' && $userId !== null) {
   $stmt = $conn->prepare($sql);
   
   if ($hasEmailCol) {
-    $stmt->bind_param('isssssiiss', $userId, $nama_lengkap, $nik, $no_wa, $alamat, $domisili,
-                                   $jumlah_anggota, $jumlah_bekerja, $total_penghasilan, 
-                                   $email);
+    // 10 parameters: user_id, nama, nik, no_wa, alamat, domisili, jumlah_anggota, jumlah_bekerja, penghasilan, email
+    $stmt->bind_param('isssssiiis', 
+                      $userId,            // i
+                      $nama_lengkap,      // s
+                      $nik,               // s
+                      $no_wa,             // s
+                      $alamat,            // s
+                      $domisili,          // s
+                      $jumlah_anggota,    // i
+                      $jumlah_bekerja,    // i
+                      $total_penghasilan, // i
+                      $email              // s
+    );
   } else {
-    $stmt->bind_param('isssssiii', $userId, $nama_lengkap, $nik, $no_wa, $alamat, $domisili,
-                                   $jumlah_anggota, $jumlah_bekerja, $total_penghasilan);
+    // 9 parameters: user_id, nama, nik, no_wa, alamat, domisili, jumlah_anggota, jumlah_bekerja, penghasilan
+    $stmt->bind_param('isssssiil', 
+                      $userId,            // i
+                      $nama_lengkap,      // s
+                      $nik,               // s
+                      $no_wa,             // s
+                      $alamat,            // s
+                      $domisili,          // s
+                      $jumlah_anggota,    // i
+                      $jumlah_bekerja,    // i
+                      $total_penghasilan  // i
+    );
   }
   
 } elseif ($relMode === 'email') {
@@ -180,8 +285,19 @@ if ($relMode === 'user_id' && $userId !== null) {
             . ($hasUpdatedAt ? ", NOW()" : "") .
           ")";
   $stmt = $conn->prepare($sql);
-  $stmt->bind_param('ssssssiis', $email, $nama_lengkap, $nik, $no_wa, $alamat, $domisili,
-                                 $jumlah_anggota, $jumlah_bekerja, $total_penghasilan);
+  
+  // 9 parameters: email, nama, nik, no_wa, alamat, domisili, jumlah_anggota, jumlah_bekerja, penghasilan
+  $stmt->bind_param('ssssssiil', 
+                    $email,             // s
+                    $nama_lengkap,      // s
+                    $nik,               // s
+                    $no_wa,             // s
+                    $alamat,            // s
+                    $domisili,          // s
+                    $jumlah_anggota,    // i
+                    $jumlah_bekerja,    // i
+                    $total_penghasilan  // i
+  );
 } else {
   header("Location: profil.php?status=failed");
   exit;
@@ -193,3 +309,4 @@ $stmt->close();
 
 header("Location: profil.php?status=" . ($insertSuccess ? "created" : "failed"));
 exit;
+?>

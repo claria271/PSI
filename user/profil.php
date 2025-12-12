@@ -58,15 +58,31 @@ if ($hasUserIdCol && !empty($user['id'])) {
   }
 }
 
-// Cek apakah ada pending edit
+// Cek apakah ada pending edit request
 $hasPendingEdit = false;
+$pendingRequestId = null;
 if (!empty($user['id'])) {
   $stmtPending = $conn->prepare("SELECT id FROM edit_requests WHERE user_id = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1");
   $stmtPending->bind_param('i', $user['id']);
   $stmtPending->execute();
   $pendingRes = $stmtPending->get_result();
-  $hasPendingEdit = $pendingRes->num_rows > 0;
+  if ($pendingRes->num_rows > 0) {
+    $pendingRow = $pendingRes->fetch_assoc();
+    $hasPendingEdit = true;
+    $pendingRequestId = $pendingRow['id'];
+  }
   $stmtPending->close();
+}
+
+// Cek apakah user bisa edit (ada approved request yang belum digunakan)
+$canEdit = false;
+if (!empty($user['id']) && $keluarga) {
+  $stmtApproved = $conn->prepare("SELECT id FROM edit_requests WHERE user_id = ? AND keluarga_id = ? AND status = 'approved' ORDER BY updated_at DESC LIMIT 1");
+  $stmtApproved->bind_param('ii', $user['id'], $keluarga['id']);
+  $stmtApproved->execute();
+  $approvedRes = $stmtApproved->get_result();
+  $canEdit = $approvedRes->num_rows > 0;
+  $stmtApproved->close();
 }
 
 $noWaDisplay = '';
@@ -213,6 +229,11 @@ if (!empty($keluarga['no_wa'])) {
       font-size: 14px;
     }
     .info-box strong { color: #664d03; }
+    .info-box.success {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+    }
 
     .pending-badge {
       display: inline-block;
@@ -259,6 +280,10 @@ if (!empty($keluarga['no_wa'])) {
       width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px;
       background: #fff; color: #111;
     }
+    input:disabled, textarea:disabled {
+      background: #f3f4f6;
+      cursor: not-allowed;
+    }
     textarea { resize: none; height: 90px; }
     
     .phone-input-wrapper {
@@ -298,6 +323,16 @@ if (!empty($keluarga['no_wa'])) {
       cursor: pointer; font-weight: 600; transition: 0.3s;
     }
     .btn-save:hover { background: #2563eb; }
+    .btn-save:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    .btn-request {
+      width: 100%; padding: 12px; background: #f59e0b; color: #fff; border: none; border-radius: 8px;
+      cursor: pointer; font-weight: 600; transition: 0.3s; margin-bottom: 15px;
+    }
+    .btn-request:hover { background: #d97706; }
 
     /* Modal Styles */
     .modal {
@@ -361,6 +396,12 @@ if (!empty($keluarga['no_wa'])) {
       background: #2563eb;
       transform: translateY(-2px);
     }
+    .modal-btn.warning {
+      background: #f59e0b;
+    }
+    .modal-btn.warning:hover {
+      background: #d97706;
+    }
   </style>
 </head>
 <body>
@@ -408,14 +449,22 @@ if (!empty($keluarga['no_wa'])) {
     <?php if ($_GET['status'] === 'created'): ?>
       <div class="flash success">✓ Data keluarga berhasil ditambahkan!</div>
     <?php elseif ($_GET['status'] === 'pending_approval'): ?>
-      <div class="flash info">⏳ Perubahan data Anda telah dikirim dan menunggu persetujuan admin.</div>
+      <div class="flash info">⏳ Permintaan perubahan data telah dikirim dan menunggu persetujuan admin.</div>
+    <?php elseif ($_GET['status'] === 'request_sent'): ?>
+      <div class="flash info">⏳ Permintaan edit telah dikirim ke admin!</div>
+    <?php elseif ($_GET['status'] === 'request_exists'): ?>
+      <div class="flash warn">⚠️ Anda sudah memiliki permintaan edit yang sedang diproses.</div>
+    <?php elseif ($_GET['status'] === 'updated'): ?>
+      <div class="flash success">✓ Data berhasil diperbarui!</div>
     <?php elseif ($_GET['status'] === 'failed'): ?>
       <div class="flash fail">✗ Operasi gagal. Pastikan semua data terisi dengan benar.</div>
+    <?php elseif ($_GET['status'] === 'approved'): ?>
+      <div class="flash success">✓ Permintaan edit Anda telah disetujui! Silakan edit data Anda.</div>
     <?php endif; ?>
   <?php endif; ?>
 
   <div class="data-section">
-    <div class="section-header" onclick="toggleSection()">
+    <div class="section-header" onclick="handleSectionClick()">
       <div>
         <h3>
           📄 Data Keluarga
@@ -520,12 +569,24 @@ if (!empty($keluarga['no_wa'])) {
 
           <hr style="margin: 24px 0; border: none; border-top: 1px solid #e0e0e0;">
 
-          <!-- Form Edit (Selalu tampil) -->
+          <!-- Form Edit -->
           <h4 style="margin-bottom: 16px; color: #333;">✏️ Edit Data Keluarga</h4>
-          <?php if ($hasPendingEdit): ?>
-            <div class="info-box" style="background: #fef3c7; border-color: #fbbf24;">
-              <strong>⏳ Perhatian:</strong> Anda memiliki perubahan yang sedang menunggu persetujuan admin. Anda tetap bisa mengedit, namun perubahan baru akan menggantikan perubahan sebelumnya.
+          
+          <?php if ($canEdit): ?>
+            <div class="info-box success">
+              <strong>✓ Izin Edit Aktif:</strong> Admin telah menyetujui permintaan Anda. Silakan edit data sekarang!
             </div>
+          <?php elseif ($hasPendingEdit): ?>
+            <div class="info-box" style="background: #fef3c7; border-color: #fbbf24;">
+              <strong>⏳ Menunggu Persetujuan:</strong> Permintaan edit Anda sedang diproses oleh admin.
+            </div>
+          <?php else: ?>
+            <div class="info-box">
+              <strong>🔒 Perlu Izin:</strong> Untuk mengubah data, Anda perlu meminta izin kepada admin terlebih dahulu.
+            </div>
+            <button type="button" class="btn-request" onclick="requestEdit()">
+              📤 Minta Izin Edit ke Admin
+            </button>
           <?php endif; ?>
           
           <form action="update_data.php" method="POST" id="profilFormEdit">
@@ -533,10 +594,10 @@ if (!empty($keluarga['no_wa'])) {
             <input type="hidden" name="is_edit" value="1">
 
             <label>Nama Lengkap <span style="color: red;">*</span></label>
-            <input type="text" name="nama_lengkap" value="<?= fv($keluarga, 'nama_lengkap') ?>" required>
+            <input type="text" name="nama_lengkap" value="<?= fv($keluarga, 'nama_lengkap') ?>" <?= $canEdit ? '' : 'disabled' ?> required>
 
             <label>NIK <span style="color: red;">*</span></label>
-            <input type="text" name="nik" value="<?= fv($keluarga, 'nik') ?>" maxlength="20" required>
+            <input type="text" name="nik" value="<?= fv($keluarga, 'nik') ?>" maxlength="20" <?= $canEdit ? '' : 'disabled' ?> required>
 
             <label>No WhatsApp <span style="color: red;">*</span></label>
             <div class="phone-input-wrapper">
@@ -549,6 +610,7 @@ if (!empty($keluarga['no_wa'])) {
                 placeholder="8123456789" 
                 maxlength="13"
                 value="<?= htmlspecialchars($noWaDisplay) ?>"
+                <?= $canEdit ? '' : 'disabled' ?>
                 required
               >
             </div>
@@ -556,38 +618,67 @@ if (!empty($keluarga['no_wa'])) {
             <small class="phone-status" id="phone_status_edit">Masukkan nomor tanpa 0 di depan</small>
 
             <label>Alamat Sesuai KTP <span style="color: red;">*</span></label>
-            <textarea name="alamat" required><?= fv($keluarga, 'alamat') ?></textarea>
+            <textarea name="alamat" <?= $canEdit ? '' : 'disabled' ?> required><?= fv($keluarga, 'alamat') ?></textarea>
 
             <label>Alamat Domisili <span style="color: red;">*</span></label>
-            <textarea name="domisili" required><?= fv($keluarga, 'domisili') ?></textarea>
+            <textarea name="domisili" <?= $canEdit ? '' : 'disabled' ?> required><?= fv($keluarga, 'domisili') ?></textarea>
 
             <label>Jumlah Anggota Keluarga</label>
-            <input type="number" name="jumlah_anggota" value="<?= fv($keluarga, 'jumlah_anggota') ?>" min="1">
+            <input type="number" name="jumlah_anggota" value="<?= fv($keluarga, 'jumlah_anggota') ?>" min="1" <?= $canEdit ? '' : 'disabled' ?>>
 
             <label>Jumlah Anggota yang Bekerja</label>
-            <input type="number" name="jumlah_bekerja" value="<?= fv($keluarga, 'jumlah_bekerja') ?>" min="0">
+            <input type="number" name="jumlah_bekerja" value="<?= fv($keluarga, 'jumlah_bekerja') ?>" min="0" <?= $canEdit ? '' : 'disabled' ?>>
 
             <label>Total Penghasilan Keluarga (Rp)</label>
-            <input type="text" name="total_penghasilan" value="<?= fv($keluarga, 'total_penghasilan') ?>" placeholder="Contoh: 5000000">
+            <input type="text" name="total_penghasilan" value="<?= fv($keluarga, 'total_penghasilan') ?>" placeholder="Contoh: 5000000" <?= $canEdit ? '' : 'disabled' ?>>
 
-            <button type="submit" class="btn-save">💾 Simpan Perubahan</button>
+            <button type="submit" class="btn-save" <?= $canEdit ? '' : 'disabled' ?>>
+              💾 Simpan Perubahan
+            </button>
           </form>
         <?php endif; ?>
       </div>
     </div>
   </div>
 
-  <!-- Modal -->
-  <div id="approvalModal" class="modal">
+  <!-- Modal Request Edit -->
+  <div id="requestModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">🔒</div>
+      <h2 class="modal-title">Minta Izin Edit Data</h2>
+      <p class="modal-text">
+        Untuk keamanan data, Anda perlu meminta izin kepada admin untuk mengubah data keluarga.<br><br>
+        Setelah admin menyetujui, Anda akan dapat mengedit data Anda.
+      </p>
+      <button class="modal-btn warning" onclick="submitRequest()">Kirim Permintaan</button>
+      <button class="modal-btn" onclick="closeRequestModal()" style="background: #6b7280; margin-top: 10px;">Batal</button>
+    </div>
+  </div>
+
+  <!-- Modal Pending -->
+  <div id="pendingModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon">⏳</div>
       <h2 class="modal-title">Menunggu Persetujuan Admin</h2>
       <p class="modal-text">
-        Perubahan data Anda telah berhasil dikirim dan sedang menunggu persetujuan dari admin.<br><br>
-        <strong>Approved:</strong> Perubahan akan tersimpan ke database<br>
-        <strong>Ditolak:</strong> Perubahan tidak akan tersimpan
+        Permintaan edit data Anda telah dikirim dan sedang menunggu persetujuan dari admin.<br><br>
+        Anda akan menerima notifikasi setelah admin memproses permintaan Anda.
       </p>
-      <button class="modal-btn" onclick="closeModal()">Mengerti</button>
+      <button class="modal-btn" onclick="closePendingModal()">Mengerti</button>
+    </div>
+  </div>
+
+  <!-- Modal Approved -->
+  <div id="approvedModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">✅</div>
+      <h2 class="modal-title">Permintaan Disetujui!</h2>
+      <p class="modal-text">
+        Selamat! Admin telah menyetujui permintaan edit Anda.<br><br>
+        <strong>Sekarang Anda dapat mengubah data keluarga Anda.</strong><br>
+        Silakan scroll ke bawah untuk mengedit data.
+      </p>
+      <button class="modal-btn" onclick="closeApprovedModal()">Mulai Edit</button>
     </div>
   </div>
 
@@ -605,14 +696,53 @@ if (!empty($keluarga['no_wa'])) {
       chevron.classList.toggle('open');
     }
 
-    function closeModal() {
-      document.getElementById('approvalModal').style.display = 'none';
-      window.location.href = 'profil.php';
+    function handleSectionClick() {
+      <?php if ($keluarga && !$canEdit && !$hasPendingEdit): ?>
+        // Jika ada data tapi belum request, tampilkan modal request
+        document.getElementById('requestModal').style.display = 'block';
+      <?php else: ?>
+        // Jika tidak ada data atau sudah request/approved, toggle biasa
+        toggleSection();
+      <?php endif; ?>
     }
 
-    // Show modal if redirected with pending status
-    <?php if (isset($_GET['status']) && $_GET['status'] === 'pending_approval'): ?>
-      document.getElementById('approvalModal').style.display = 'block';
+    function requestEdit() {
+      document.getElementById('requestModal').style.display = 'block';
+    }
+
+    function closeRequestModal() {
+      document.getElementById('requestModal').style.display = 'none';
+    }
+
+    function submitRequest() {
+      // Kirim request via AJAX atau form
+      window.location.href = 'request_edit.php';
+    }
+
+    function closePendingModal() {
+      document.getElementById('pendingModal').style.display = 'none';
+      // Tetap bisa toggle section untuk melihat data
+      toggleSection();
+    }
+
+    function closeApprovedModal() {
+      document.getElementById('approvedModal').style.display = 'none';
+      // Auto open section untuk edit
+      const content = document.getElementById('sectionContent');
+      const chevron = document.getElementById('chevron');
+      if (!content.classList.contains('open')) {
+        content.classList.add('open');
+        chevron.classList.add('open');
+      }
+    }
+
+    // Show appropriate modal based on URL parameters
+    <?php if (isset($_GET['status'])): ?>
+      <?php if ($_GET['status'] === 'request_sent' || $_GET['status'] === 'pending_approval'): ?>
+        document.getElementById('pendingModal').style.display = 'block';
+      <?php elseif ($_GET['status'] === 'approved'): ?>
+        document.getElementById('approvedModal').style.display = 'block';
+      <?php endif; ?>
     <?php endif; ?>
 
     // Phone input handlers
@@ -666,4 +796,8 @@ if (!empty($keluarga['no_wa'])) {
       }
     }
 
-    setupPhoneInput
+    setupPhoneInput('no_wa_input', 'no_wa_hidden', 'phone_status');
+    setupPhoneInput('no_wa_input_edit', 'no_wa_hidden_edit', 'phone_status_edit');
+  </script>
+</body>
+</html>
