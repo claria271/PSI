@@ -1,285 +1,320 @@
-<?php
+<?php 
 // index.php
-session_start();
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Brooklyn - Portfolio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PSI Surabaya</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
     }
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background: #f2f2f2;
-      color: #222;
-      overflow-x: hidden;
+      background: #ffffff;
+      color: #111827;
     }
 
-    /* HEADER */
+    /* NAVBAR GRADIENT */
     header {
+      width: 100%;
       background: linear-gradient(to right, #ffffff, #000000);
-      padding: 15px 50px;
+      padding: 14px 48px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
-      z-index: 100;
-      animation: slideDown 1s ease-out;
+      z-index: 20;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.20);
     }
 
-    header img {
-      height: 40px;
-    }
-
-    nav a, nav .dropdown-toggle {
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: bold;
-      color: #fff;
-      transition: 0.3s;
-    }
-
-    nav a:hover, nav .dropdown-toggle:hover {
-      color: #ff4b4b;
-    }
-
-    /* HERO SECTION */
-    .hero {
-      background: url('assets/image/index.jpeg') center/cover no-repeat;
-      height: 100vh;
+    .nav-left {
       display: flex;
-      justify-content: center;
       align-items: center;
-      position: relative;
-      animation: fadeIn 2s ease-in-out;
+      gap: 10px;
     }
 
-    .hero::before {
+    .nav-logo-image img {
+      height: 34px;
+    }
+
+    nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    nav a {
+      color: white;
+      position: relative;
+      font-weight: 500;
+    }
+
+    nav a::after {
       content: "";
       position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.4);
-      z-index: 1;
+      width: 0;
+      height: 2px;
+      left: 0;
+      bottom: -4px;
+      background: #dc2626;
+      transition: .3s;
     }
 
-    .hero-content {
+    nav a:hover::after,
+    nav a.active::after {
+      width: 100%;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 20px 40px 100px;
+      display: flex;
+      justify-content: center;
+      background: #fff;
       position: relative;
-      z-index: 2;
-      background: rgba(255, 255, 255, 0.03); /* 90% transparan */
-      backdrop-filter: blur(6px);
-      width: 80%;
-      height: 90vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+    }
+
+    .hero-inner {
+      max-width: 1180px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.65fr 0.95fr 1.2fr;
+      gap: 28px;
       align-items: center;
-      border-radius: 20px;
-      text-align: center;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-      animation: slideUp 1.5s ease-out;
     }
 
-    .hero-content h1 {
+    /* NAMA BESAR */
+    .hero-big-name {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 140px;
+      font-weight: 800;
+      color: #c4c4c4;
+      opacity: .12;
+      letter-spacing: 8px;
+      white-space: nowrap;
+    }
+
+    /* KOTAK KIRI */
+    .hero-card-left {
+      background: #fff;
+      border-radius: 26px;
+      padding: 55px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 18px 40px rgba(148,163,184,.35);
+      margin-top: 140px;
+      z-index: 3;
+    }
+
+    .hero-card-left .tag {
+      font-size: 12px;
       font-weight: 700;
-      color: #fff;
+      color: #dc2626;
+      letter-spacing: .15em;
       margin-bottom: 10px;
-      font-size: 2.5rem;
+      text-transform: uppercase;
     }
 
-    .hero-content p {
-      font-size: 18px;
-      color: #f1f1f1;
-      margin-bottom: 25px;
+    .hero-card-left h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      line-height: 1.4;
     }
 
-    /* Tombol */
-    .hero-content .btn {
-      border-radius: 30px;
-      padding: 10px 30px;
-      font-weight: bold;
-      transition: all 0.3s ease;
+    .hero-card-left p {
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 14px;
+      color: #4b5563;
     }
 
-    .btn-login {
-      background-color: #000;
-      color: #fff;
-    }
-
-    .btn-login:hover {
-      background-color: #ff4b4b;
-      color: #fff;
-      transform: scale(1.05);
-    }
-
-    .btn-register {
-      border: 2px solid #fff;
-      color: #fff;
-    }
-
-    .btn-register:hover {
-      background-color: #fff;
-      color: #000;
-      transform: scale(1.05);
-    }
-
-    /* SECTION ISI */
-    .content {
-      text-align: center;
-      padding: 60px 20px;
-      animation: fadeIn 2.2s ease-in-out;
-    }
-
-    .content p {
-      max-width: 700px;
-      margin: auto;
-      line-height: 1.8;
-      color: #333;
-    }
-
-    .gallery {
+    .hero-left-buttons {
+      margin-top: 18px;
       display: flex;
-      justify-content: center;
-      gap: 30px;
-      margin-top: 40px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
-    .gallery img {
-      width: 280px;
-      border-radius: 10px;
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
-      animation: fadeIn 2.4s ease-in-out;
+    /* BUTTON PSI */
+    .btn-login,
+    .btn-daftar,
+    .btn-aduan {
+      padding: 10px 20px;
+      border-radius: 999px;
+      border: 2px solid #dc2626;
+      background: black;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: .25s;
     }
 
-    .gallery img:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    .btn-login:hover,
+    .btn-daftar:hover,
+    .btn-aduan:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
     }
 
-    /* FOOTER */
-    footer {
-      background: linear-gradient(to right, #ffffff, #000000);
-      color: #fff;
+    /* FOTO */
+    .hero-photo-wrapper {
       text-align: center;
-      padding: 20px 10px;
-      margin-top: 50px;
-      animation: slideUp 1.5s ease-in;
+      position: relative;
     }
 
-    footer .social-icons a {
-      color: #fff;
-      margin: 0 10px;
-      font-size: 20px;
-      text-decoration: none;
-      transition: 0.3s;
+    .photo-bg-blur {
+      position: absolute;
+      top: 120px;
+      width: 360px;
+      height: 390px;
+      background: rgba(0,0,0,.33);
+      filter: blur(30px);
+      border-radius: 45% 45% 35% 35%;
+      z-index: 1;
     }
 
-    footer .social-icons a:hover {
-      color: #ff4b4b;
+    .hero-photo-wrapper img {
+      width: 490px;
+      position: relative;
+      z-index: 2;
     }
 
-    /* ANIMASI */
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    .hero-title-under {
+      margin-top: -20px;
+      margin-left: 45px;
+      font-size: 18px;
+      font-weight: 700;
     }
 
-    @keyframes slideUp {
-      from { transform: translateY(60px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    /* KANAN — SUDAH DITURUNKAN LAGI (70px) */
+    .hero-right h3 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .2em;
+      color: #6b7280;
+      margin-bottom: 10px;
+      margin-top: 70px;   /* 🔥 turun lagi */
     }
 
-    @keyframes slideDown {
-      from { transform: translateY(-40px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .hero-right h1 {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.45;
+      margin-bottom: 14px;
     }
 
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-      .hero-content {
-        width: 90%;
-        height: auto;
-        padding: 30px 20px;
-      }
-      .hero-content h1 {
-        font-size: 1.8rem;
-      }
+    .hero-right h1 span {
+      color: #dc2626;
     }
+
+    .hero-right p {
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .hero-metric .value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #dc2626;
+    }
+
   </style>
 </head>
+
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <div class="logo">
-      <img src="assets/image/logo.png" alt="PSI Logo">
+<header>
+  <div class="nav-left">
+    <div class="nav-logo-image">
+      <img src="assets/image/logo.png">
     </div>
-    <nav>
-      <!-- <a href="dashboard.php">Beranda</a> -->
-      <?php if (isset($_SESSION['user_id'])): ?>
-        <!-- Jika sudah login -->
-        <a href="user/profil.php">Profil</a>
-      <?php else: ?>
-        <div class="dropdown d-inline">
-          <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Profil</a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="login.php">Login</a></li>
-            <li><a class="dropdown-item" href="register.php">Register</a></li>
-          </ul>
-        </div>
-      <?php endif; ?>
-    </nav>
-  </header>
+    <div class="nav-brand">Josiah Michael</div>
+  </div>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>Selamat Datang di Website Fraksi PSI Kota Surabaya</h1>
-      <p>Temukan makna, tumbuhkan karya</p>
-      <div class="d-flex justify-content-center gap-3">
-        <a href="login.php" class="btn btn-login">Login</a>
-        <a href="register.php" class="btn btn-register">Register</a>
+  <nav>
+    <a class="active">Home</a>
+    <a>Services</a>
+    <a>Case Studies</a>
+    <a>About</a>
+    <a>Resources</a>
+    <a>Contact</a>
+  </nav>
+</header>
+
+<section class="hero">
+
+  <div class="hero-big-name">JOSIAH MICHAEL</div>
+
+  <div class="hero-inner">
+
+    <!-- KIRI -->
+    <div class="hero-card-left">
+
+      <div class="tag">JOSIAH MICHAEL</div>
+
+      <h2>
+         Ketua Fraksi Partai Solidaritas Indonesia (PSI).
+      </h2>
+
+      <p>yang menjabat sebagai Anggota Dewan Perwakilan Rakyat.</p>
+      <p>DPRD Kota Surabaya, di mana ia dikenal vokal.</p>
+      <p>dalam mengawal isu-isu lokal seperti pertanahan eigendom verponding.</p>
+      <p>dan pembangunan wilayah Surabaya Barat.</p>
+
+      <div class="hero-left-buttons">
+        <a href="login.php"><button class="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Login</button></a>
+        <a href="register.php"><button class="btn-daftar"><i class="fa-solid fa-user-plus"></i> Daftar</button></a>
+        <a href="aduan.php"><button class="btn-aduan"><i class="fa-solid fa-envelope"></i> Form Aduan</button></a>
       </div>
+
     </div>
-  </section>
 
-  <!-- KONTEN -->
-  <section class="content">
-    <p>
-      Kita percaya, solidaritas bukan sekadar kata. Melalui program bantuan dana sosial, 
-      PSI berupaya meringankan beban masyarakat yang membutuhkan dukungan, 
-      dengan proses yang terbuka, cepat, dan tanpa diskriminasi.
-    </p>
-
-    <div class="gallery">
-      <img src="assets/image/index1.jpeg" alt="Kegiatan PSI">
-      <img src="assets/image/index2.jpeg" alt="Anggota PSI">
+    <!-- FOTO -->
+    <div class="hero-photo-wrapper">
+      <div class="photo-bg-blur"></div>
+      <img src="assets/josiah2.png">
+      <div class="hero-title-under">KETUA FRAKSI PSI SURABAYA</div>
     </div>
-  </section>
 
-  <!-- FOOTER -->
-  <footer>
-    <div class="social-icons">
-      <a href="#"><i class="bi bi-linkedin"></i></a>
-      <a href="#"><i class="bi bi-instagram"></i></a>
-      <a href="#"><i class="bi bi-envelope-fill"></i></a>
-      <a href="#"><i class="bi bi-telephone-fill"></i></a>
-      <a href="#"><i class="bi bi-facebook"></i></a>
+    <!-- KANAN -->
+    <div class="hero-right">
+
+      <h3>Langkah berikutnya</h3>
+
+      <h1>
+        Sistem pendataan keluarga <br>
+        <span>yang membantu perkembangan wilayah Anda.</span>
+      </h1>
+
+      <p>Website ini memastikan setiap data keluarga tercatat aman dan rapi.</p>
+
+      <div class="hero-metric">
+        <div class="value">100%</div>
+        <div>Target keluarga tercatat lengkap.</div>
+      </div>
+
     </div>
-    <p class="mt-2">Hak cipta © 2025 - Partai Solidaritas Indonesia</p>
-  </footer>
 
-  <!-- Bootstrap & Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </div>
+</section>
+
 </body>
 </html>

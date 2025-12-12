@@ -64,8 +64,6 @@ define('UMR_PERSON', 4725479);
 // Ambil filter dari GET
 $search      = isset($_GET['search']) ? trim($_GET['search']) : '';
 $status_umr  = isset($_GET['status_umr']) ? $_GET['status_umr'] : '';
-$dapil       = isset($_GET['dapil']) ? $_GET['dapil'] : '';
-$kenal       = isset($_GET['kenal']) ? $_GET['kenal'] : '';
 
 // Bangun query dengan kondisi dinamis
 $conditions = [];
@@ -76,16 +74,6 @@ if ($search !== '') {
                   OR k.nik LIKE '%$safe%' 
                   OR k.no_wa LIKE '%$safe%'
                   OR l.alamat_email LIKE '%$safe%')"; // cari berdasarkan email akun pengisi
-}
-
-if ($dapil !== '') {
-    $safeDapil = mysqli_real_escape_string($conn, $dapil);
-    $conditions[] = "k.dapil = '$safeDapil'";
-}
-
-if ($kenal !== '') {
-    $safeKenal = mysqli_real_escape_string($conn, $kenal);
-    $conditions[] = "k.kenal = '$safeKenal'";
 }
 
 // Filter UMR berdasarkan UMR PER ORANG
@@ -413,7 +401,7 @@ if (isset($_SESSION['error'])) {
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1400px;
+      min-width: 1000px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -618,26 +606,10 @@ if (isset($_SESSION['error'])) {
                 value="<?php echo e($search); ?>"
               >
 
-              <select name="dapil" onchange="this.form.submit()">
-                <option value="">Semua Dapil</option>
-                <option value="Kota Surabaya 1" <?php echo $dapil === 'Kota Surabaya 1' ? 'selected' : ''; ?>>Kota Surabaya 1</option>
-                <option value="Kota Surabaya 2" <?php echo $dapil === 'Kota Surabaya 2' ? 'selected' : ''; ?>>Kota Surabaya 2</option>
-                <option value="Kota Surabaya 3" <?php echo $dapil === 'Kota Surabaya 3' ? 'selected' : ''; ?>>Kota Surabaya 3</option>
-                <option value="Kota Surabaya 4" <?php echo $dapil === 'Kota Surabaya 4' ? 'selected' : ''; ?>>Kota Surabaya 4</option>
-                <option value="Kota Surabaya 5" <?php echo $dapil === 'Kota Surabaya 5' ? 'selected' : ''; ?>>Kota Surabaya 5</option>
-              </select>
-
               <select name="status_umr" onchange="this.form.submit()">
                 <option value=""  <?php echo $status_umr === '' ? 'selected' : ''; ?>>Semua Status</option>
                 <option value="Dibawah" <?php echo $status_umr === 'Dibawah' ? 'selected' : ''; ?>>Dibawah UMR</option>
                 <option value="Diatas"  <?php echo $status_umr === 'Diatas'  ? 'selected' : ''; ?>>Diatas UMR</option>
-              </select>
-
-              <select name="kenal" onchange="this.form.submit()">
-                <option value=""      <?php echo $kenal === '' ? 'selected' : ''; ?>>Sumber Kenal</option>
-                <option value="Ya"    <?php echo $kenal === 'Ya' ? 'selected' : ''; ?>>Ya</option>
-                <option value="Tidak" <?php echo $kenal === 'Tidak' ? 'selected' : ''; ?>>Tidak</option>
-                <option value="Tidak pernah" <?php echo $kenal === 'Tidak pernah' ? 'selected' : ''; ?>>Tidak pernah</option>
               </select>
 
               <button type="submit" style="display:none;"></button>
@@ -653,14 +625,10 @@ if (isset($_SESSION['error'])) {
                   <th>No WA</th>
                   <th>Email Pengisi</th>
                   <th>Alamat Lengkap</th>
-                  <th>Dapil</th>
-                  <th>Kecamatan</th>
                   <th>Jumlah Anggota</th>
                   <th>Jumlah Bekerja</th>
                   <th>Total Penghasilan</th>
                   <th>Rata-rata/Orang</th>
-                  <th>Kenal</th>
-                  <th>Sumber</th>
                   <th>Kategori</th>
                   <th>Created At</th>
                   <th>Updated At</th>
@@ -693,14 +661,10 @@ if (isset($_SESSION['error'])) {
                       <td><?php echo e($row['no_wa']); ?></td>
                       <td><?php echo e($row['email_pengisi']); ?></td>
                       <td><?php echo e($row['alamat']); ?></td>
-                      <td><?php echo e($row['dapil']); ?></td>
-                      <td><?php echo e($row['kecamatan']); ?></td>
                       <td><?php echo e($row['jumlah_anggota']); ?></td>
                       <td><?php echo e($row['jumlah_bekerja']); ?></td>
                       <td><?php echo e(number_format($penghasilan, 0, ',', '.')); ?></td>
                       <td><?php echo e(number_format($per_orang, 0, ',', '.')); ?></td>
-                      <td><?php echo e($row['kenal']); ?></td>
-                      <td><?php echo e($row['sumber']); ?></td>
                       <td><?php echo $kategori; ?></td>
                       <td><?php echo e($row['created_at']); ?></td>
                       <td><?php echo e($row['updated_at']); ?></td>
@@ -719,7 +683,7 @@ if (isset($_SESSION['error'])) {
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="17" style="text-align:center; padding: 30px;">Tidak ada data ditemukan.</td>
+                    <td colspan="13" style="text-align:center; padding: 30px;">Tidak ada data ditemukan.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
@@ -749,54 +713,3 @@ if (isset($_SESSION['error'])) {
         <label style="display:block; margin-bottom:8px; font-weight:600; color:#000;">Bentuk Bantuan:</label>
         <select name="bentuk_bantuan" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; margin-bottom:20px; background:#f5f5f5;">
           <option value="">-- Pilih Bentuk Bantuan --</option>
-          <option value="Bantuan Pendidikan">📚 Bantuan Pendidikan</option>
-          <option value="Alat Bantu Dengar">👂 Alat Bantu Dengar</option>
-          <option value="Kursi Roda">♿ Kursi Roda</option>
-          <option value="Kesehatan">🏥 Kesehatan</option>
-          <option value="Sembako">🛒 Sembako</option>
-          <option value="Uang Muka">💰 Uang Muka</option>
-          <option value="Lainnya">📦 Lainnya</option>
-        </select>
-        
-        <div style="display:flex; gap:10px;">
-          <button type="button" onclick="closeModal()" style="flex:1; padding:10px; background:#999; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition:0.3s;">Batal</button>
-          <button type="submit" style="flex:1; padding:10px; background:#4CAF50; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition:0.3s;">✓ Verifikasi</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    function verifikasiData(id, nama) {
-      if (confirm('Apakah Anda yakin ingin memverifikasi data atas nama:\n\n' + nama + '?')) {
-        document.getElementById('modalBantuan').style.display = 'flex';
-        document.getElementById('namaKeluarga').textContent = nama;
-        document.getElementById('idKeluarga').value = id;
-      }
-    }
-
-    function closeModal() {
-      document.getElementById('modalBantuan').style.display = 'none';
-      document.getElementById('formBantuan').reset();
-    }
-
-    document.getElementById('modalBantuan').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeModal();
-      }
-    });
-
-    // AUTO-HIDE ALERT
-    setTimeout(function() {
-      const alerts = document.querySelectorAll('.alert');
-      alerts.forEach(function(alert) {
-        alert.style.transition = 'opacity 0.5s';
-        alert.style.opacity = '0';
-        setTimeout(function() {
-          alert.remove();
-        }, 500);
-      });
-    }, 5000);
-  </script>
-</body>
-</html>

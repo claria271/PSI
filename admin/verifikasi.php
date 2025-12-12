@@ -51,7 +51,6 @@ define('UMR_PERSON', 4725479);
 
 // Ambil filter
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$dapil = isset($_GET['dapil']) ? $_GET['dapil'] : '';
 $bantuan_filter = isset($_GET['bantuan']) ? $_GET['bantuan'] : '';
 
 // Query data verifikasi
@@ -59,10 +58,6 @@ $conditions = [];
 if ($search !== '') {
     $safe = mysqli_real_escape_string($conn, $search);
     $conditions[] = "(nama_lengkap LIKE '%$safe%' OR nik LIKE '%$safe%' OR no_wa LIKE '%$safe%')";
-}
-if ($dapil !== '') {
-    $safeDapil = mysqli_real_escape_string($conn, $dapil);
-    $conditions[] = "dapil = '$safeDapil'";
 }
 if ($bantuan_filter !== '') {
     $safeBantuan = mysqli_real_escape_string($conn, $bantuan_filter);
@@ -345,7 +340,7 @@ if (isset($_SESSION['warning'])) {
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1500px;
+      min-width: 1200px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -523,15 +518,6 @@ if (isset($_SESSION['warning'])) {
                 value="<?php echo e($search); ?>"
               >
 
-              <select name="dapil" onchange="this.form.submit()">
-                <option value="">Semua Dapil</option>
-                <option value="Kota Surabaya 1" <?php echo $dapil === 'Kota Surabaya 1' ? 'selected' : ''; ?>>Kota Surabaya 1</option>
-                <option value="Kota Surabaya 2" <?php echo $dapil === 'Kota Surabaya 2' ? 'selected' : ''; ?>>Kota Surabaya 2</option>
-                <option value="Kota Surabaya 3" <?php echo $dapil === 'Kota Surabaya 3' ? 'selected' : ''; ?>>Kota Surabaya 3</option>
-                <option value="Kota Surabaya 4" <?php echo $dapil === 'Kota Surabaya 4' ? 'selected' : ''; ?>>Kota Surabaya 4</option>
-                <option value="Kota Surabaya 5" <?php echo $dapil === 'Kota Surabaya 5' ? 'selected' : ''; ?>>Kota Surabaya 5</option>
-              </select>
-
               <select name="bantuan" onchange="this.form.submit()">
                 <option value="">Semua Bantuan</option>
                 <option value="Bantuan Pendidikan" <?php echo $bantuan_filter === 'Bantuan Pendidikan' ? 'selected' : ''; ?>>Bantuan Pendidikan</option>
@@ -539,7 +525,7 @@ if (isset($_SESSION['warning'])) {
                 <option value="Kursi Roda" <?php echo $bantuan_filter === 'Kursi Roda' ? 'selected' : ''; ?>>Kursi Roda</option>
                 <option value="Kesehatan" <?php echo $bantuan_filter === 'Kesehatan' ? 'selected' : ''; ?>>Kesehatan</option>
                 <option value="Sembako" <?php echo $bantuan_filter === 'Sembako' ? 'selected' : ''; ?>>Sembako</option>
-                <option value="Uang Muka" <?php echo $bantuan_filter === 'Uang Muka' ? 'selected' : ''; ?>>Uang Muka</option>
+                <option value="Uang Muka" <?php echo $bantuan_filter === 'Uang Muka' ? 'selected' : ''; ?>>Bantuan Uang</option>
                 <option value="Lainnya" <?php echo $bantuan_filter === 'Lainnya' ? 'selected' : ''; ?>>Lainnya</option>
               </select>
 
@@ -556,12 +542,8 @@ if (isset($_SESSION['warning'])) {
                   <th>NIK</th>
                   <th>No WA</th>
                   <th>Alamat</th>
-                  <th>Dapil</th>
-                  <th>Kecamatan</th>
                   <th>Jumlah Anggota</th>
                   <th>Total Penghasilan</th>
-                  <th>Kenal</th>
-                  <th>Sumber</th>
                   <th>Bantuan</th>
                   <th>Status</th>
                   <th>Diverifikasi Oleh</th>
@@ -579,12 +561,8 @@ if (isset($_SESSION['warning'])) {
                       <td><?php echo e($row['nik']); ?></td>
                       <td><?php echo e($row['no_wa']); ?></td>
                       <td><?php echo e($row['alamat']); ?></td>
-                      <td><?php echo e($row['dapil']); ?></td>
-                      <td><?php echo e($row['kecamatan']); ?></td>
                       <td><?php echo e($row['jumlah_anggota']); ?></td>
                       <td><?php echo e(number_format($row['total_penghasilan'], 0, ',', '.')); ?></td>
-                      <td><?php echo e($row['kenal']); ?></td>
-                      <td><?php echo e($row['sumber']); ?></td>
                       <td><span class="badge-bantuan"><?php echo e($row['bantuan']); ?></span></td>
                       <td><span class="badge-verified"><?php echo e($row['status_verifikasi']); ?></span></td>
                       <td><?php echo e($row['verified_by']); ?></td>
@@ -597,7 +575,7 @@ if (isset($_SESSION['warning'])) {
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="16" style="text-align:center; padding: 30px;">
+                    <td colspan="12" style="text-align:center; padding: 30px;">
                       Belum ada data yang diverifikasi.
                     </td>
                   </tr>
