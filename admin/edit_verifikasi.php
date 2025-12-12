@@ -519,7 +519,7 @@ if ($admin) {
               <option value="Kursi Roda" <?php echo $data['bantuan'] === 'Kursi Roda' ? 'selected' : ''; ?>>♿ Kursi Roda</option>
               <option value="Kesehatan" <?php echo $data['bantuan'] === 'Kesehatan' ? 'selected' : ''; ?>>🏥 Kesehatan</option>
               <option value="Sembako" <?php echo $data['bantuan'] === 'Sembako' ? 'selected' : ''; ?>>🛒 Sembako</option>
-              <option value="Uang Muka" <?php echo $data['bantuan'] === 'Uang Muka' ? 'selected' : ''; ?>>💰 Uang Muka</option>
+              <option value="Uang Muka" <?php echo $data['bantuan'] === 'Uang Muka' ? 'selected' : ''; ?>>💰 Bantuan Uang</option>
               <option value="Lainnya" <?php echo $data['bantuan'] === 'Lainnya' ? 'selected' : ''; ?>>📦 Lainnya</option>
             </select>
           </div>

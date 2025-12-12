@@ -539,7 +539,7 @@ if (isset($_SESSION['warning'])) {
                 <option value="Kursi Roda" <?php echo $bantuan_filter === 'Kursi Roda' ? 'selected' : ''; ?>>Kursi Roda</option>
                 <option value="Kesehatan" <?php echo $bantuan_filter === 'Kesehatan' ? 'selected' : ''; ?>>Kesehatan</option>
                 <option value="Sembako" <?php echo $bantuan_filter === 'Sembako' ? 'selected' : ''; ?>>Sembako</option>
-                <option value="Uang Muka" <?php echo $bantuan_filter === 'Uang Muka' ? 'selected' : ''; ?>>Uang Muka</option>
+                <option value="Uang Muka" <?php echo $bantuan_filter === 'Uang Muka' ? 'selected' : ''; ?>>Bantuan Uang</option>
                 <option value="Lainnya" <?php echo $bantuan_filter === 'Lainnya' ? 'selected' : ''; ?>>Lainnya</option>
               </select>
 
