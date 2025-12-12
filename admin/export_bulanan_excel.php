@@ -69,7 +69,7 @@ $res = $conn->query($sql);
 //  HEADER UNTUK EXCEL
 // =======================
 header("Content-Type: application/vnd.ms-excel; charset=utf-8");
-header("Content-Disposition: attachment; filename=laporan_bulanan.xls");
+header("Content-Disposition: attachment; filename=laporan_bulanan_" . date('Ymd') . ".xls");
 header("Pragma: no-cache");
 header("Expires: 0");
 
@@ -77,25 +77,30 @@ header("Expires: 0");
 //  OUTPUT TABEL
 // =======================
 echo "<table border='1'>";
-echo "<tr>
+
+// JUDUL & INFO
+echo "<tr><th colspan='11' style='font-size:16px; font-weight:bold; text-align:center; background-color:#e0e0e0; padding:10px;'>LAPORAN DATA KELUARGA - BULANAN</th></tr>";
+echo "<tr><td colspan='11' style='text-align:center; background-color:#f5f5f5; padding:5px;'>Tanggal Cetak: " . date('d-m-Y H:i') . " WIB</td></tr>";
+echo "<tr><td colspan='11'></td></tr>"; // baris kosong
+
+// HEADER TABEL
+echo "<tr style='background-color:#d9d9d9; font-weight:bold;'>
+        <th>No</th>
         <th>Nama Lengkap</th>
         <th>NIK</th>
-        <th>No WA</th>
+        <th>No WhatsApp</th>
         <th>Alamat Lengkap</th>
-        <th>Dapil</th>
-        <th>Kecamatan</th>
         <th>Jumlah Anggota</th>
         <th>Jumlah Bekerja</th>
         <th>Total Penghasilan</th>
-        <th>Rata-rata/Orang</th>
-        <th>Kenal</th>
-        <th>Sumber</th>
         <th>Kategori</th>
         <th>Created At</th>
         <th>Updated At</th>
       </tr>";
 
 if ($res && $res->num_rows > 0) {
+    $no = 1;
+    
     while ($row = $res->fetch_assoc()) {
         $anggota     = (int)$row['jumlah_anggota'];
         $penghasilan = (float)$row['total_penghasilan'];
@@ -106,26 +111,24 @@ if ($res && $res->num_rows > 0) {
             : 'Diatas UMR';
 
         echo "<tr>";
+        echo "<td>".$no."</td>";
         echo "<td>".h($row['nama_lengkap'])."</td>";
         // pakai ' di depan supaya Excel tidak ubah ke scientific notation
         echo "<td>'".h($row['nik'])."</td>";
         echo "<td>'".h($row['no_wa'])."</td>";
         echo "<td>".h($row['alamat'])."</td>";
-        echo "<td>".h($row['dapil'])."</td>";
-        echo "<td>".h($row['kecamatan'])."</td>";
         echo "<td>".$row['jumlah_anggota']."</td>";
         echo "<td>".$row['jumlah_bekerja']."</td>";
         echo "<td>".number_format($penghasilan,0,',','.')."</td>";
-        echo "<td>".number_format($perOrang,0,',','.')."</td>";
-        echo "<td>".h($row['kenal'])."</td>";
-        echo "<td>".h($row['sumber'])."</td>";
         echo "<td>".$kategoriLabel."</td>";
         echo "<td>".$row['created_at']."</td>";
         echo "<td>".$row['updated_at']."</td>";
         echo "</tr>";
+        
+        $no++;
     }
 } else {
-    echo "<tr><td colspan='15' align='center'>Tidak ada data.</td></tr>";
+    echo "<tr><td colspan='11' align='center'>Tidak ada data.</td></tr>";
 }
 
 echo "</table>";

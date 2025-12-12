@@ -1,5 +1,5 @@
 <?php
-// laporan.php (versi filter: Riwayat (hari) utk Bulanan, Tahun utk Tahunan, Dapil, Kategori)
+// laporan.php (versi filter: Riwayat (hari) utk Bulanan, Tahun utk Tahunan, Kategori)
 session_start();
 include '../koneksi/config.php';
 
@@ -46,12 +46,10 @@ define('UMR_PERSON', 4725479);
 
 // --- FILTERS KHUSUS UNTUK MASING-MASING CARD ---
 // Bulanan (prefix: m_) → range = HARI terakhir
-$m_dapil    = isset($_GET['m_dapil'])    ? trim($_GET['m_dapil'])    : '';
 $m_kategori = isset($_GET['m_kategori']) ? trim($_GET['m_kategori']) : ''; // dibawah / diatas / ''
 $m_range    = isset($_GET['m_range'])    ? trim($_GET['m_range'])    : ''; // 1,3,7,14,30 (hari terakhir)
 
 // Tahunan (prefix: y_) → range = TAHUN (2025/2026/2027)
-$y_dapil    = isset($_GET['y_dapil'])    ? trim($_GET['y_dapil'])    : '';
 $y_kategori = isset($_GET['y_kategori']) ? trim($_GET['y_kategori']) : '';
 $y_range    = isset($_GET['y_range'])    ? trim($_GET['y_range'])    : ''; // 2025,2026,2027
 
@@ -80,12 +78,6 @@ function build_where_clause($conn, $filters) {
         }
     }
 
-    // DAPIL
-    if (!empty($filters['dapil'])) {
-        $safe = mysqli_real_escape_string($conn, $filters['dapil']);
-        $conds[] = "dapil = '$safe'";
-    }
-
     // KATEGORI (UMR per orang)
     if (!empty($filters['kategori'])) {
         $umr = intval($filters['umr']);
@@ -104,7 +96,6 @@ function build_where_clause($conn, $filters) {
 $filters_month = [
     'mode'     => 'days',      // range dalam HARI
     'range'    => $m_range,
-    'dapil'    => $m_dapil,
     'kategori' => $m_kategori,
     'umr'      => UMR_PERSON
 ];
@@ -116,23 +107,12 @@ $res_month   = $conn->query($sql_month);
 $filters_year = [
     'mode'     => 'year',      // range dalam TAHUN
     'range'    => $y_range,
-    'dapil'    => $y_dapil,
     'kategori' => $y_kategori,
     'umr'      => UMR_PERSON
 ];
 $where_year = build_where_clause($conn, $filters_year);
 $sql_year   = "SELECT * FROM keluarga $where_year ORDER BY created_at DESC";
 $res_year   = $conn->query($sql_year);
-
-// Untuk opsi dapil (sesuai permintaan)
-$dapil_options = [
-    ''                => 'Semua Dapil',
-    'Kota Surabaya 1' => 'Kota Surabaya 1',
-    'Kota Surabaya 2' => 'Kota Surabaya 2',
-    'Kota Surabaya 3' => 'Kota Surabaya 3',
-    'Kota Surabaya 4' => 'Kota Surabaya 4',
-    'Kota Surabaya 5' => 'Kota Surabaya 5'
-];
 
 ?>
 <!DOCTYPE html>
@@ -270,7 +250,7 @@ $dapil_options = [
     .btn-primary{background:#ff4b4b;color:#fff}
     .btn-muted{background:#f1f1f1;color:#333;border:1px solid #e6e6e6}
     .table-container{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:1200px}
+    table{width:100%;border-collapse:collapse;min-width:900px}
     th,td{padding:10px;border:1px solid #e6e6e6;font-size:13px;white-space:nowrap}
     thead th{background:#f7fafc;font-weight:600}
     tbody tr:nth-child(even){background:#fcfcfd}
@@ -328,7 +308,7 @@ $dapil_options = [
           <div>
             <h3 style="margin:0 0 4px 0">Laporan Bulanan</h3>
             <div style="color:#666;font-size:13px">
-              Filter: Riwayat Pengisian (Hari), Dapil, Kategori (UMR per orang)
+              Filter: Riwayat Pengisian (Hari), Kategori (UMR per orang)
             </div>
           </div>
 
@@ -343,15 +323,6 @@ $dapil_options = [
                 <option value="7"  <?php echo ($m_range === '7'  ? 'selected' : ''); ?>>7 Hari Terakhir</option>
                 <option value="14" <?php echo ($m_range === '14' ? 'selected' : ''); ?>>14 Hari Terakhir</option>
                 <option value="30" <?php echo ($m_range === '30' ? 'selected' : ''); ?>>30 Hari Terakhir</option>
-              </select>
-
-              <!-- DAPIL -->
-              <select name="m_dapil">
-                <?php foreach($dapil_options as $k=>$v): ?>
-                  <option value="<?php echo e($k); ?>" <?php echo ($m_dapil === $k ? 'selected' : ''); ?>>
-                    <?php echo e($v); ?>
-                  </option>
-                <?php endforeach; ?>
               </select>
 
               <!-- KATEGORI UMR -->
@@ -369,7 +340,6 @@ $dapil_options = [
               <a class="btn btn-primary" href="export_bulanan.php?<?php
                   echo http_build_query([
                       'range'    => $m_range,
-                      'dapil'    => $m_dapil,
                       'kategori' => $m_kategori,
                   ]);
               ?>" target="_blank">Download PDF</a>
@@ -377,7 +347,6 @@ $dapil_options = [
               <a class="btn btn-primary" href="export_bulanan_excel.php?<?php
                   echo http_build_query([
                       'range'    => $m_range,
-                      'dapil'    => $m_dapil,
                       'kategori' => $m_kategori,
                   ]);
               ?>" target="_blank">Download Excel</a>
@@ -393,14 +362,10 @@ $dapil_options = [
                 <th>NIK</th>
                 <th>No WA</th>
                 <th>Alamat Lengkap</th>
-                <th>Dapil</th>
-                <th>Kecamatan</th>
                 <th>Jumlah Anggota</th>
                 <th>Jumlah Bekerja</th>
                 <th>Total Penghasilan</th>
                 <th>Rata-rata/Orang</th>
-                <th>Kenal</th>
-                <th>Sumber</th>
                 <th>Kategori</th>
                 <th>Created At</th>
                 <th>Updated At</th>
@@ -421,21 +386,17 @@ $dapil_options = [
                     <td><?php echo e($row['nik']); ?></td>
                     <td><?php echo e($row['no_wa']); ?></td>
                     <td><?php echo e($row['alamat']); ?></td>
-                    <td><?php echo e($row['dapil']); ?></td>
-                    <td><?php echo e($row['kecamatan']); ?></td>
                     <td><?php echo e($row['jumlah_anggota']); ?></td>
                     <td><?php echo e($row['jumlah_bekerja']); ?></td>
                     <td><?php echo e(number_format($penghasilan,0,',','.')); ?></td>
                     <td><?php echo e(number_format($per_orang,0,',','.')); ?></td>
-                    <td><?php echo e($row['kenal']); ?></td>
-                    <td><?php echo e($row['sumber']); ?></td>
                     <td><?php echo $kategori_label; ?></td>
                     <td><?php echo e($row['created_at']); ?></td>
                     <td><?php echo e($row['updated_at']); ?></td>
                   </tr>
                 <?php endwhile; ?>
               <?php else: ?>
-                <tr><td colspan="15" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
+                <tr><td colspan="11" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -448,7 +409,7 @@ $dapil_options = [
           <div>
             <h3 style="margin:0 0 4px 0">Laporan Tahunan</h3>
             <div style="color:#666;font-size:13px">
-              Filter: Tahun, Dapil, Kategori (UMR per orang)
+              Filter: Tahun, Kategori (UMR per orang)
             </div>
           </div>
 
@@ -461,15 +422,6 @@ $dapil_options = [
                 <option value="2025" <?php echo ($y_range === '2025' ? 'selected' : ''); ?>>2025</option>
                 <option value="2026" <?php echo ($y_range === '2026' ? 'selected' : ''); ?>>2026</option>
                 <option value="2027" <?php echo ($y_range === '2027' ? 'selected' : ''); ?>>2027</option>
-              </select>
-
-              <!-- DAPIL -->
-              <select name="y_dapil">
-                <?php foreach($dapil_options as $k=>$v): ?>
-                  <option value="<?php echo e($k); ?>" <?php echo ($y_dapil === $k ? 'selected' : ''); ?>>
-                    <?php echo e($v); ?>
-                  </option>
-                <?php endforeach; ?>
               </select>
 
               <!-- KATEGORI UMR -->
@@ -488,7 +440,6 @@ $dapil_options = [
               <a class="btn btn-primary" href="export_tahunan_pdf.php?<?php
                   echo http_build_query([
                       'range'    => $y_range,
-                      'dapil'    => $y_dapil,
                       'kategori' => $y_kategori,
                   ]);
               ?>" target="_blank">Download PDF</a>
@@ -496,7 +447,6 @@ $dapil_options = [
               <a class="btn btn-primary" href="export_tahunan_excel.php?<?php
                   echo http_build_query([
                       'range'    => $y_range,
-                      'dapil'    => $y_dapil,
                       'kategori' => $y_kategori,
                   ]);
               ?>" target="_blank">Download Excel</a>
@@ -512,14 +462,10 @@ $dapil_options = [
                 <th>NIK</th>
                 <th>No WA</th>
                 <th>Alamat Lengkap</th>
-                <th>Dapil</th>
-                <th>Kecamatan</th>
                 <th>Jumlah Anggota</th>
                 <th>Jumlah Bekerja</th>
                 <th>Total Penghasilan</th>
                 <th>Rata-rata/Orang</th>
-                <th>Kenal</th>
-                <th>Sumber</th>
                 <th>Kategori</th>
                 <th>Created At</th>
                 <th>Updated At</th>
@@ -540,21 +486,17 @@ $dapil_options = [
                     <td><?php echo e($row['nik']); ?></td>
                     <td><?php echo e($row['no_wa']); ?></td>
                     <td><?php echo e($row['alamat']); ?></td>
-                    <td><?php echo e($row['dapil']); ?></td>
-                    <td><?php echo e($row['kecamatan']); ?></td>
                     <td><?php echo e($row['jumlah_anggota']); ?></td>
                     <td><?php echo e($row['jumlah_bekerja']); ?></td>
                     <td><?php echo e(number_format($penghasilan,0,',','.')); ?></td>
                     <td><?php echo e(number_format($per_orang,0,',','.')); ?></td>
-                    <td><?php echo e($row['kenal']); ?></td>
-                    <td><?php echo e($row['sumber']); ?></td>
                     <td><?php echo $kategori_label; ?></td>
                     <td><?php echo e($row['created_at']); ?></td>
                     <td><?php echo e($row['updated_at']); ?></td>
                   </tr>
                 <?php endwhile; ?>
               <?php else: ?>
-                <tr><td colspan="15" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
+                <tr><td colspan="11" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>

@@ -24,13 +24,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['role'] = $row['role'];
 
             // Redirect sesuai role
-           // Redirect sesuai role
             if ($row['role'] === 'admin') {
                 header("Location: http://localhost/PSI/admin/dashboardadmin.php");
-          } else {
+            } else {
                 header("Location: http://localhost/PSI/user/dashboard.php");
-    }
-    exit();
+            }
+            exit();
 
         } else {
             echo "<script>alert('Password salah!'); window.location.href='login.php';</script>";
@@ -44,138 +43,343 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - PSI Surabaya</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      background: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(26, 26, 26, 0.85) 50%, rgba(0, 0, 0, 0.85) 100%),
+                  url('assets/image/index.jpeg') center/cover fixed no-repeat;
+      background-size: cover;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
+      padding: 30px 20px;
+      position: relative;
     }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
     .wrapper {
-      width: 50%;
+      width: 40%;
       max-width: 600px;
+      min-width: 400px;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(10px);
     }
+    
     .logo {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    .logo img {
-      width: 100%;
-      height: auto;
-      border-radius: 20px 20px 0 0;
-      opacity: 0.5;
-    }
-    .container {
-      background: #fff;
+      background: linear-gradient(135deg, #000000 0%, #434343 50%, #1a1a1a 100%);
       padding: 30px;
-      border-radius: 10px 10px 20px 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      width: 100%;
-      box-sizing: border-box;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
     }
+    
+    .logo::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      animation: shine 3s infinite;
+    }
+    
+    @keyframes shine {
+      to { left: 100%; }
+    }
+    
+    .logo img {
+      max-width: 50%;
+      height: auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .container {
+      padding: 50px;
+    }
+    
     h2 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+      font-size: 32px;
+      font-weight: 700;
     }
-    form {
-      margin: 0 10%;
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 15px;
     }
+    
+    .form-section {
+      background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border: 1px solid #ddd;
+      margin-bottom: 25px;
+    }
+    
     label {
       display: block;
       font-size: 14px;
-      margin-top: 10px;
-      margin-bottom: 4px;
-      font-weight: bold;
+      margin-top: 15px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #2d2d2d;
     }
+    
+    label:first-of-type {
+      margin-top: 0;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      border: 2px solid #d0d0d0;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      background: #fff;
+    }
+    
+    input:focus {
+      border-color: #333;
+      box-shadow: 0 0 0 3px rgba(51, 51, 51, 0.1);
+      outline: none;
+    }
+    
     .input-group {
       position: relative;
     }
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px 40px 10px 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 14px;
-      box-sizing: border-box;
+    
+    .input-group input {
+      padding-right: 45px;
     }
+    
     .toggle-password {
       position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      right: 15px;
+      top: 12px;
       cursor: pointer;
+      font-size: 20px;
+      color: #666;
+      user-select: none;
+      transition: color 0.3s ease;
     }
-    .toggle-password img {
-      width: 20px;
-      height: 20px;
+    
+    .toggle-password:hover {
+      color: #333;
     }
+    
     .checkbox-forgot {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 14px;
-      margin-bottom: 15px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      color: #555;
     }
+    
+    .checkbox-forgot label {
+      margin: 0;
+      font-weight: 400;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .checkbox-forgot input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      cursor: pointer;
+    }
+    
     .checkbox-forgot a {
-      color: #4a90e2;
+      color: #1a1a1a;
       text-decoration: none;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
     }
+    
     .checkbox-forgot a:hover {
-      text-decoration: underline;
+      border-bottom-color: #1a1a1a;
     }
+    
     .btn {
       width: 100%;
-      padding: 10px;
+      padding: 16px;
       border: none;
       border-radius: 10px;
-      font-size: 16px;
+      font-size: 17px;
+      font-weight: bold;
       cursor: pointer;
-      margin-top: 8px;
-      box-sizing: border-box;
+      margin-top: 10px;
+      transition: all 0.3s ease;
     }
+    
     .btn-primary {
-      background: #ff3e3ed4;
+      background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 50%, #2d2d2d 100%);
       color: #fff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
+    
     .btn-primary:hover {
-      background: #ff0000ff;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      background: linear-gradient(135deg, #000000 0%, #3a3a3a 50%, #1a1a1a 100%);
     }
+    
+    .btn-primary:active {
+      transform: translateY(-1px);
+    }
+    
     .btn-secondary {
-      background: #ccc;
+      background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
       color: #333;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+    
+    .btn-secondary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      background: linear-gradient(135deg, #d0d0d0 0%, #b0b0b0 100%);
+    }
+    
+    .btn-secondary:active {
+      transform: translateY(-1px);
+    }
+    
+    .register-link {
+      text-align: center;
+      margin-top: 25px;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .register-link a {
+      color: #1a1a1a;
+      text-decoration: none;
+      font-weight: 700;
+      border-bottom: 2px solid #1a1a1a;
+      padding-bottom: 2px;
+      transition: all 0.3s ease;
+    }
+    
+    .register-link a:hover {
+      color: #4a4a4a;
+      border-bottom-color: #4a4a4a;
+    }
+    
+    @media (max-width: 1200px) {
+      .wrapper {
+        width: 50%;
+        min-width: 350px;
+      }
+    }
+    
+    @media (max-width: 900px) {
+      .wrapper {
+        width: 70%;
+        min-width: 300px;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+      
+      .wrapper {
+        width: 100%;
+        min-width: unset;
+      }
+      
+      .container {
+        padding: 30px 25px;
+      }
+      
+      .form-section {
+        padding: 20px;
+      }
+      
+      h2 {
+        font-size: 26px;
+      }
     }
   </style>
 </head>
 <body>
+  
   <div class="wrapper">
     <div class="logo">
-      <img src="assets/image/psi2.jpg" alt="PSI">
+      <img src="assets/image/logou.png" alt="Logo DPRD">
     </div>
+    
     <div class="container">
-      <h2>Masuk ke Akun Anda</h2>
+      <h2>LOGIN</h2>
+      <p class="subtitle">Masuk ke akun Anda untuk melanjutkan</p>
+      
       <form method="POST">
-        
-        <label for="email">Nama Pengguna atau Email</label>
-        <input type="email" id="email" name="alamat_email" placeholder="Alamat Email" required>
-        
-        <label for="password">Password</label>
-        <div class="input-group">
-          <input type="password" id="password" name="password" placeholder="Kata Sandi" required>
-          <span class="toggle-password" onclick="togglePassword()"></span>
-        </div>
+        <div class="form-section">
+          <label for="email">Alamat Email</label>
+          <input type="email" id="email" name="alamat_email" placeholder="nama@email.com" required>
+          
+          <label for="password">Password</label>
+          <div class="input-group">
+            <input type="password" id="password" name="password" placeholder="Masukkan password Anda" required>
+            <span class="toggle-password" onclick="togglePassword()">👁️</span>
+          </div>
 
-        <div class="checkbox-forgot">
-          <label><input type="checkbox" name="ingat_saya"> Ingat saya</label>
-        </div>
+          <div class="checkbox-forgot">
+            <label>
+              <input type="checkbox" name="ingat_saya">
+              Ingat saya
+            </label>
+            <a href="#">Lupa password?</a>
+          </div>
 
-        <button type="submit" class="btn btn-primary">Masuk</button>
-        <a href="register.php"><button type="button" class="btn btn-secondary">Daftar</button></a>
+          <button type="submit" class="btn btn-primary">Masuk</button>
+        </div>
+        
+        <div class="register-link">
+          Belum punya akun? <a href="register.php">Daftar di sini</a>
+        </div>
       </form>
     </div>
   </div>
@@ -183,7 +387,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <script>
     function togglePassword() {
       const pwd = document.getElementById("password");
-      pwd.type = pwd.type === "password" ? "text" : "password";
+      const toggle = document.querySelector(".toggle-password");
+      
+      if (pwd.type === "password") {
+        pwd.type = "text";
+        toggle.textContent = "🙈";
+      } else {
+        pwd.type = "password";
+        toggle.textContent = "👁️";
+      }
     }
   </script>
 </body>
