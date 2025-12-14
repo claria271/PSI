@@ -15,7 +15,7 @@ function e($str) {
     return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
 
-// Ambil data admin dari tabel login
+// Ambil data admin berdasarkan email di session
 $admin = null;
 $keluarga = null;
 
@@ -35,38 +35,26 @@ if (!$admin) {
     exit();
 }
 
-// Ambil data keluarga admin (jika ada)
-$stmt = $conn->prepare("SELECT * FROM keluarga WHERE user_id = ? LIMIT 1");
-$stmt->bind_param('i', $admin['id']);
-$stmt->execute();
-$res = $stmt->get_result();
-if ($res->num_rows > 0) {
-    $keluarga = $res->fetch_assoc();
-}
-$stmt->close();
-
 $success = '';
 $error   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Data untuk tabel keluarga
-        $nama_lengkap = trim($_POST['nama_lengkap'] ?? '');
-        $nik          = trim($_POST['nik'] ?? '');
-        $no_wa        = trim($_POST['no_wa'] ?? '');
-        $alamat       = trim($_POST['alamat'] ?? '');
-        $domisili     = trim($_POST['domisili'] ?? '');
-        
-        // Data untuk tabel login
-        $email_baru    = trim($_POST['alamat_email'] ?? '');
-        $password_baru = $_POST['password_baru'] ?? '';
-        $password_konf = $_POST['password_konfirmasi'] ?? '';
+        $nama_lengkap   = trim($_POST['nama_lengkap'] ?? '');
+        $alamat_lengkap = trim($_POST['alamat_lengkap'] ?? '');
+        $nomor_telepon  = trim($_POST['nomor_telepon'] ?? '');
+        $email_baru     = trim($_POST['alamat_email'] ?? '');
+        $password_baru  = $_POST['password_baru'] ?? '';
+        $password_konf  = $_POST['password_konfirmasi'] ?? '';
 
         if ($email_baru === '') {
             throw new Exception("Email wajib diisi.");
         }
 
-        // Cek email sudah dipakai user lain atau tidak
+        // Mulai transaksi biar update 2 tabel aman
+        $conn->begin_transaction();
+
+        // 1) Cek email sudah dipakai user lain atau tidak
         if ($email_baru !== $admin['alamat_email']) {
             $stmt = $conn->prepare("SELECT id FROM login WHERE alamat_email = ? AND id != ? LIMIT 1");
             $stmt->bind_param('si', $email_baru, $admin['id']);
@@ -78,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
         }
 
-        // Siapkan nilai password (tetap lama jika tidak diubah)
+        // 2) Password (tetap lama jika tidak diubah)
         $password_final = $admin['password'];
         $updatePassword = false;
         
@@ -86,15 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($password_baru !== $password_konf) {
                 throw new Exception("Password baru dan konfirmasi tidak sama.");
             }
-            if (strlen($password_baru) < 6) {
-                throw new Exception("Password minimal 6 karakter.");
-            }
-            $password_final = password_hash($password_baru, PASSWORD_DEFAULT);
-            $updatePassword = true;
+            // Password sudah dalam bentuk hash bcrypt
+            $password_final = password_hash($password_baru, PASSWORD_BCRYPT);
         }
 
         // Foto profil (opsional)
-        $foto_final = $admin['foto'] ?? '';
+        $foto_final = $admin['foto'] ?? null;
 
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
             $tmp_name  = $_FILES['foto']['tmp_name'];
@@ -102,15 +87,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
             $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
-            if (!in_array($ext, $allowed)) {
+            if (!in_array($ext, $allowed, true)) {
                 throw new Exception("Format foto tidak valid. Gunakan JPG, PNG, GIF, atau WEBP.");
             }
 
             $new_name   = 'admin_' . $admin['id'] . '_' . time() . '.' . $ext;
-            $upload_dir = __DIR__ . '/../uploads';
+            $upload_dir = realpath(__DIR__ . '/../uploads');
 
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
+            if (!$upload_dir) {
+                // Jika folder belum ada, coba buat
+                $upload_dir = __DIR__ . '/../uploads';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
             }
 
             $dest = $upload_dir . '/' . $new_name;
@@ -130,66 +119,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $foto_final = $new_name;
         }
 
-        // ✅ UPDATE TABEL LOGIN (hanya email, password, foto)
-        if ($updatePassword) {
-            $stmt = $conn->prepare("UPDATE login SET alamat_email = ?, password = ?, foto = ? WHERE id = ?");
-            $stmt->bind_param('sssi', $email_baru, $password_final, $foto_final, $admin['id']);
-        } else {
-            $stmt = $conn->prepare("UPDATE login SET alamat_email = ?, foto = ? WHERE id = ?");
-            $stmt->bind_param('ssi', $email_baru, $foto_final, $admin['id']);
-        }
+        // Update data admin (TANPA kolom username)
+        $stmt = $conn->prepare("
+            UPDATE login 
+            SET nama_lengkap = ?, alamat_lengkap = ?, nomor_telepon = ?, 
+                alamat_email = ?, password = ?, foto = ?
+            WHERE id = ?
+        ");
+        $stmt->bind_param(
+            'ssssssi',
+            $nama_lengkap,
+            $alamat_lengkap,
+            $nomor_telepon,
+            $email_baru,
+            $password_final,
+            $foto_final,
+            $admin['id']
+        );
         $stmt->execute();
-        $stmt->close();
 
-        // ✅ UPDATE atau INSERT TABEL KELUARGA
-        if ($keluarga) {
-            // Update data yang ada
-            $stmt = $conn->prepare("
-                UPDATE keluarga 
-                SET nama_lengkap = ?, nik = ?, no_wa = ?, alamat = ?, domisili = ?, updated_at = NOW()
-                WHERE user_id = ?
-            ");
-            $stmt->bind_param('sssssi', $nama_lengkap, $nik, $no_wa, $alamat, $domisili, $admin['id']);
-            $stmt->execute();
-            $stmt->close();
-        } else {
-            // Insert data baru
-            $stmt = $conn->prepare("
-                INSERT INTO keluarga 
-                (user_id, nama_lengkap, nik, no_wa, alamat, domisili, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ");
-            $stmt->bind_param('isssss', $admin['id'], $nama_lengkap, $nik, $no_wa, $alamat, $domisili);
-            $stmt->execute();
-            $stmt->close();
-        }
-
-        // Update session email
+        // Update session email supaya tetap sinkron
         $_SESSION['alamat_email'] = $email_baru;
 
-        // Refresh data
-        $admin['alamat_email'] = $email_baru;
-        $admin['password'] = $password_final;
-        $admin['foto'] = $foto_final;
-
-        // Reload data keluarga
-        $stmt = $conn->prepare("SELECT * FROM keluarga WHERE user_id = ? LIMIT 1");
-        $stmt->bind_param('i', $admin['id']);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        if ($res->num_rows > 0) {
-            $keluarga = $res->fetch_assoc();
-        }
-        $stmt->close();
+        // Refresh data admin di array $admin
+        $admin['nama_lengkap']   = $nama_lengkap;
+        $admin['alamat_lengkap'] = $alamat_lengkap;
+        $admin['nomor_telepon']  = $nomor_telepon;
+        $admin['alamat_email']   = $email_baru;
+        $admin['password']       = $password_final;
+        $admin['foto']           = $foto_final;
 
         $success = "Profil berhasil diperbarui.";
     } catch (Exception $e) {
+        if ($conn->errno === 0) {
+            // no-op
+        }
+        // rollback kalau transaksi sudah dimulai
+        if ($conn->affected_rows >= 0) {
+            // aman, tapi kita coba rollback saja
+            @$conn->rollback();
+        }
         $error = $e->getMessage();
     }
 }
 
-$adminName = !empty($keluarga['nama_lengkap']) ? $keluarga['nama_lengkap'] : 'Admin';
-$adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/user.png';
+$adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : 'Admin';
+
+$adminPhoto = !empty($admin['foto'])
+    ? '../uploads/' . $admin['foto']
+    : '../assets/image/admin_photo.jpg';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -200,11 +178,7 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f4f4f4;
-      color: #333;
-    }
+    body { font-family: 'Poppins', sans-serif; background: #f4f4f4; color: #333; }
     header {
       background: linear-gradient(to right, #ffffff, #000000);
       padding: 12px 40px;
@@ -213,9 +187,7 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
       justify-content: space-between;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    header img {
-      height: 40px;
-    }
+    header img { height: 40px; }
     .container {
       max-width: 900px;
       margin: 40px auto;
@@ -224,27 +196,11 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
       border-radius: 16px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     }
-    .title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .title h2 {
-      font-size: 22px;
-      font-weight: 600;
-      color: #000;
-    }
+    .title { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .title h2 { font-size: 22px; font-weight: 600; color: #000; }
     .back-btn {
-      padding: 8px 16px;
-      font-size: 13px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: #000;
-      color: #fff;
-      transition: 0.3s;
-      text-decoration: none;
+      padding: 8px 16px; font-size: 13px; border-radius: 999px; border: none;
+      cursor: pointer; background: #000; color: #fff; transition: 0.3s; text-decoration: none;
     }
     .back-btn:hover {
       background: #ff4b4b;
@@ -254,18 +210,10 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
       align-items: center;
       gap: 18px;
       margin-bottom: 20px;
-      padding: 15px;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-radius: 12px;
     }
     .profile-photo {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      overflow: hidden;
-      background: #ddd;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      flex-shrink: 0;
+      width: 80px; height: 80px; border-radius: 50%; overflow: hidden;
+      background: #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); flex-shrink: 0;
     }
     .profile-photo img {
       width: 100%;
@@ -280,7 +228,6 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
     .profile-info p {
       font-size: 13px;
       color: #666;
-      margin-top: 3px;
     }
     .alert {
       padding: 10px 14px;
@@ -298,35 +245,8 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
       color: #991b1b;
       border: 1px solid #fecaca;
     }
-    .info-box {
-      background: #e3f2fd;
-      border-left: 4px solid #2196f3;
-      padding: 12px;
-      margin-bottom: 20px;
-      border-radius: 6px;
-      font-size: 13px;
-    }
     form {
       margin-top: 10px;
-    }
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #000;
-      margin: 20px 0 12px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #f0f0f0;
-    }
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-bottom: 14px;
-    }
-    @media (max-width: 600px) {
-      .form-row {
-        grid-template-columns: 1fr;
-      }
     }
     .form-group {
       margin-bottom: 14px;
@@ -338,14 +258,10 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
       margin-bottom: 4px;
       color: #111;
     }
-    label .required {
-      color: #ff4b4b;
-    }
     input[type="text"],
     input[type="email"],
     input[type="password"],
-    input[type="file"],
-    textarea {
+    input[type="file"] {
       width: 100%;
       padding: 9px 10px;
       border-radius: 8px;
@@ -356,35 +272,18 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
       font-family: inherit;
       background: #fafafa;
     }
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-    input:focus, textarea:focus {
+    input:focus {
       border-color: #ff4b4b;
       background: #fff;
       box-shadow: 0 0 0 2px rgba(255,75,75,0.08);
     }
-    .hint {
-      font-size: 11px;
-      color: #777;
-      margin-top: 2px;
-    }
+    .hint { font-size: 11px; color: #777; margin-top: 2px; }
     .btn-submit {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 999px;
-      background: #ff4b4b;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: 0.3s;
+      padding: 10px 20px; border: none; border-radius: 999px;
+      background: #ff4b4b; color: #fff; font-size: 14px; font-weight: 500;
+      cursor: pointer; margin-top: 8px; transition: 0.3s;
     }
-    .btn-submit:hover {
-      background: #000;
-    }
+    .btn-submit:hover { background: #000; }
   </style>
 </head>
 <body>
@@ -400,7 +299,8 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
 
   <div class="profile-top">
     <div class="profile-photo">
-      <img src="<?= e($adminPhoto) ?>" alt="Admin Photo">
+      <img src="<?php echo e($adminPhoto); ?>" alt="Admin Photo"
+           onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23bbb\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23666\'%3E👤%3C/text%3E%3C/svg%3E';">
     </div>
     <div class="profile-info">
       <h3><?= e($adminName) ?></h3>
@@ -422,50 +322,33 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
   <?php endif; ?>
 
   <form method="POST" enctype="multipart/form-data">
-    
-    <div class="section-title">📋 Data Pribadi</div>
-    
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nama Lengkap <span class="required">*</span></label>
-        <input type="text" name="nama_lengkap" value="<?= e($keluarga['nama_lengkap'] ?? '') ?>" required>
-      </div>
-
-      <div class="form-group">
-        <label>NIK</label>
-        <input type="text" name="nik" value="<?= e($keluarga['nik'] ?? '') ?>" maxlength="20">
-      </div>
+    <div class="form-group">
+      <label>Nama Lengkap</label>
+      <input type="text" name="nama_lengkap" value="<?php echo e($admin['nama_lengkap'] ?? ''); ?>" required>
     </div>
 
     <div class="form-group">
-      <label>No. WhatsApp</label>
-      <input type="text" name="no_wa" value="<?= e($keluarga['no_wa'] ?? '') ?>" placeholder="+628123456789">
-      <div class="hint">Format: +628xxxxxxxxxx</div>
+      <label>Alamat Lengkap</label>
+      <input type="text" name="alamat_lengkap" value="<?php echo e($admin['alamat_lengkap'] ?? ''); ?>">
     </div>
 
     <div class="form-group">
-      <label>Alamat Lengkap (sesuai KTP)</label>
-      <textarea name="alamat"><?= e($keluarga['alamat'] ?? '') ?></textarea>
+      <label>Nomor Telepon</label>
+      <input type="text" name="nomor_telepon" value="<?php echo e($admin['nomor_telepon'] ?? ''); ?>">
     </div>
 
     <div class="form-group">
-      <label>Alamat Domisili</label>
-      <textarea name="domisili"><?= e($keluarga['domisili'] ?? '') ?></textarea>
+      <label>Email</label>
+      <input type="email" name="alamat_email" value="<?php echo e($admin['alamat_email'] ?? ''); ?>" required>
     </div>
 
     <div class="section-title">🔐 Data Login</div>
 
     <div class="form-group">
-      <label>Email <span class="required">*</span></label>
-      <input type="email" name="alamat_email" value="<?= e($admin['alamat_email'] ?? '') ?>" required>
+      <label>Password Baru (opsional)</label>
+      <input type="password" name="password_baru" placeholder="Kosongkan jika tidak ingin mengubah password">
+      <div class="hint">Isi hanya jika ingin mengganti password.</div>
     </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Password Baru (opsional)</label>
-        <input type="password" name="password_baru" placeholder="Kosongkan jika tidak ingin mengubah">
-        <div class="hint">Minimal 6 karakter</div>
-      </div>
 
       <div class="form-group">
         <label>Konfirmasi Password Baru</label>
@@ -476,7 +359,7 @@ $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../asse
     <div class="form-group">
       <label>Foto Profil (opsional)</label>
       <input type="file" name="foto" accept=".jpg,.jpeg,.png,.gif,.webp">
-      <div class="hint">Format: JPG, PNG, GIF, WEBP. Max 2MB. Jika tidak diisi, foto lama tetap digunakan.</div>
+      <div class="hint">Jika tidak diisi, foto lama tetap digunakan.</div>
     </div>
 
     <button type="submit" class="btn-submit">💾 Simpan Perubahan</button>

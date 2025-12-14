@@ -1,4 +1,4 @@
-<?php
+<?php 
 // laporan.php (versi filter: Riwayat (hari) utk Bulanan, Tahun utk Tahunan, Kategori)
 session_start();
 include '../koneksi/config.php';
@@ -138,15 +138,8 @@ $res_year   = $conn->query($sql_year);
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    header .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    header img {
-      height: 40px;
-    }
+    header .logo { display:flex; align-items:center; gap:10px; }
+    header img { height: 40px; }
 
     nav a {
       margin: 0 15px;
@@ -156,10 +149,7 @@ $res_year   = $conn->query($sql_year);
       transition: 0.3s;
     }
 
-    nav a:hover,
-    nav a.active {
-      color: #ff4b4b;
-    }
+    nav a:hover, nav a.active { color: #ff4b4b; }
 
     .layout{display:flex;min-height:calc(100vh - 84px)}
     /* === SIDEBAR === */
@@ -170,76 +160,31 @@ $res_year   = $conn->query($sql_year);
       border-right: 1px solid #ccc;
     }
 
-    .admin-profile {
-      text-align: center;
-      margin-bottom: 30px;
-      position: relative;
-    }
-
+    .admin-profile { text-align:center; margin-bottom:30px; position:relative; }
     .admin-photo {
-      width: 70px;
-      height: 70px;
-      background: #bbb;
-      border-radius: 50%;
-      margin: 0 auto 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.3s;
+      width:70px;height:70px;background:#bbb;border-radius:50%;
+      margin:0 auto 12px; box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      overflow:hidden; cursor:pointer; transition:all 0.3s;
     }
-
-    .admin-photo:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
-    }
-
-    .admin-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .admin-photo:hover { transform:scale(1.05); box-shadow:0 6px 15px rgba(255,0,0,0.3); }
+    .admin-photo img { width:100%; height:100%; object-fit:cover; }
 
     .admin-name {
-      color: #000;
-      font-weight: 600;
-      font-size: 15px;
-      padding: 10px 15px;
-      background: #cfcfcf;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s;
+      color:#000;font-weight:600;font-size:15px;padding:10px 15px;
+      background:#cfcfcf;border-radius:10px;cursor:pointer;transition:all 0.3s;
     }
-
-    .admin-name:hover {
-      background: #ff4b4b;
-      color: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
-    }
+    .admin-name:hover { background:#ff4b4b;color:#fff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,75,75,0.3); }
 
     .sidebar nav a {
-      display: block;
-      padding: 12px 16px;
-      margin: 8px 0;
-      text-decoration: none;
-      color: #000;
-      background: #b5b5b5;
-      border-radius: 10px;
-      transition: all 0.3s;
-      font-weight: 500;
-      font-size: 14px;
-      text-align: center;
+      display:block;padding:12px 16px;margin:8px 0;text-decoration:none;
+      color:#000;background:#b5b5b5;border-radius:10px;transition:all 0.3s;
+      font-weight:500;font-size:14px;text-align:center;
+    }
+    .sidebar nav a:hover, .sidebar nav a.active {
+      background:#ff4b4b;color:#fff;transform:translateX(5px);
+      box-shadow:0 4px 12px rgba(255,75,75,0.3);
     }
 
-    .sidebar nav a:hover,
-    .sidebar nav a.active {
-      background: #ff4b4b;
-      color: #fff;
-      transform: translateX(5px);
-      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
-    }
-    .admin-photo{width:72px;height:72px;border-radius:50%;overflow:hidden;margin:0 auto 8px}
-    .admin-photo img{width:100%;height:100%;object-fit:cover}
     .content{flex:1;padding:22px;overflow:auto}
     .page-header h2{font-size:22px;margin-bottom:6px}
     .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
@@ -250,7 +195,7 @@ $res_year   = $conn->query($sql_year);
     .btn-primary{background:#ff4b4b;color:#fff}
     .btn-muted{background:#f1f1f1;color:#333;border:1px solid #e6e6e6}
     .table-container{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:900px}
+    table{width:100%;border-collapse:collapse;min-width:1100px}
     th,td{padding:10px;border:1px solid #e6e6e6;font-size:13px;white-space:nowrap}
     thead th{background:#f7fafc;font-weight:600}
     tbody tr:nth-child(even){background:#fcfcfd}
@@ -317,7 +262,6 @@ $res_year   = $conn->query($sql_year);
           <div>
             <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 
-              <!-- RIWAYAT PENGISIAN (HARI) -->
               <select name="m_range">
                 <option value="">Semua Riwayat</option>
                 <option value="1"  <?php echo ($m_range === '1'  ? 'selected' : ''); ?>>1 Hari Terakhir</option>
@@ -327,7 +271,6 @@ $res_year   = $conn->query($sql_year);
                 <option value="30" <?php echo ($m_range === '30' ? 'selected' : ''); ?>>30 Hari Terakhir</option>
               </select>
 
-              <!-- KATEGORI UMR -->
               <select name="m_kategori">
                 <option value="">Semua Kategori</option>
                 <option value="dibawah" <?php echo ($m_kategori === 'dibawah' ? 'selected' : ''); ?>>Di bawah UMR</option>
@@ -363,12 +306,14 @@ $res_year   = $conn->query($sql_year);
                 <th>Nama Lengkap</th>
                 <th>NIK</th>
                 <th>No WA</th>
-                <th>Alamat Lengkap</th>
+                <th>Alamat</th>
+                <th>Domisili</th>
                 <th>Jumlah Anggota</th>
                 <th>Jumlah Bekerja</th>
                 <th>Total Penghasilan</th>
                 <th>Rata-rata/Orang</th>
                 <th>Kategori</th>
+                <th>User ID</th>
                 <th>Created At</th>
                 <th>Updated At</th>
               </tr>
@@ -388,17 +333,19 @@ $res_year   = $conn->query($sql_year);
                     <td><?php echo e($row['nik']); ?></td>
                     <td><?php echo e($row['no_wa']); ?></td>
                     <td><?php echo e($row['alamat']); ?></td>
+                    <td><?php echo e($row['domisili']); ?></td>
                     <td><?php echo e($row['jumlah_anggota']); ?></td>
                     <td><?php echo e($row['jumlah_bekerja']); ?></td>
                     <td><?php echo e(number_format($penghasilan,0,',','.')); ?></td>
                     <td><?php echo e(number_format($per_orang,0,',','.')); ?></td>
                     <td><?php echo $kategori_label; ?></td>
+                    <td><?php echo e($row['user_id']); ?></td>
                     <td><?php echo e($row['created_at']); ?></td>
                     <td><?php echo e($row['updated_at']); ?></td>
                   </tr>
                 <?php endwhile; ?>
               <?php else: ?>
-                <tr><td colspan="11" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
+                <tr><td colspan="13" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -418,7 +365,6 @@ $res_year   = $conn->query($sql_year);
           <div>
             <form method="GET" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 
-              <!-- TAHUN (2025/2026/2027) -->
               <select name="y_range">
                 <option value="">Semua Tahun</option>
                 <option value="2025" <?php echo ($y_range === '2025' ? 'selected' : ''); ?>>2025</option>
@@ -426,7 +372,6 @@ $res_year   = $conn->query($sql_year);
                 <option value="2027" <?php echo ($y_range === '2027' ? 'selected' : ''); ?>>2027</option>
               </select>
 
-              <!-- KATEGORI UMR -->
               <select name="y_kategori">
                 <option value="">Semua Kategori</option>
                 <option value="dibawah" <?php echo ($y_kategori === 'dibawah' ? 'selected' : ''); ?>>Di bawah UMR</option>
@@ -463,12 +408,14 @@ $res_year   = $conn->query($sql_year);
                 <th>Nama Lengkap</th>
                 <th>NIK</th>
                 <th>No WA</th>
-                <th>Alamat Lengkap</th>
+                <th>Alamat</th>
+                <th>Domisili</th>
                 <th>Jumlah Anggota</th>
                 <th>Jumlah Bekerja</th>
                 <th>Total Penghasilan</th>
                 <th>Rata-rata/Orang</th>
                 <th>Kategori</th>
+                <th>User ID</th>
                 <th>Created At</th>
                 <th>Updated At</th>
               </tr>
@@ -488,17 +435,19 @@ $res_year   = $conn->query($sql_year);
                     <td><?php echo e($row['nik']); ?></td>
                     <td><?php echo e($row['no_wa']); ?></td>
                     <td><?php echo e($row['alamat']); ?></td>
+                    <td><?php echo e($row['domisili']); ?></td>
                     <td><?php echo e($row['jumlah_anggota']); ?></td>
                     <td><?php echo e($row['jumlah_bekerja']); ?></td>
                     <td><?php echo e(number_format($penghasilan,0,',','.')); ?></td>
                     <td><?php echo e(number_format($per_orang,0,',','.')); ?></td>
                     <td><?php echo $kategori_label; ?></td>
+                    <td><?php echo e($row['user_id']); ?></td>
                     <td><?php echo e($row['created_at']); ?></td>
                     <td><?php echo e($row['updated_at']); ?></td>
                   </tr>
                 <?php endwhile; ?>
               <?php else: ?>
-                <tr><td colspan="11" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
+                <tr><td colspan="13" style="text-align:center;padding:12px">Tidak ada data untuk filter ini.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
