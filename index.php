@@ -25,11 +25,10 @@ try {
     $beritaList[] = $row;
   }
 } catch (Throwable $e) {
-  // Kalau DB error, kita biarkan berita kosong tapi halaman tetap jalan
   $beritaList = [];
 }
 
-// Lokasi gambar berita (sesuai yang kamu pakai di halaman general)
+// Lokasi gambar berita
 $uploadDirUrl = 'uploads/berita/';
 
 // fallback gambar kalau kosong/error
@@ -509,16 +508,161 @@ function formatTanggalIndo($ymd){
     .reveal.delay-3{ transition-delay: .24s; }
     .reveal.delay-4{ transition-delay: .32s; }
 
+    /* =========================================================
+       CV SECTION (SETELAH BERITA) - MIRIP GAMBAR
+    ========================================================= */
+    .cv-section{
+      padding: 90px 40px 110px;
+      background: #ffffff;
+    }
+    .cv-inner{
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 520px 1fr;
+      gap: 70px;
+      align-items: center;
+    }
+
+    .cv-photo-card{
+      position: relative;
+      width: 100%;
+      border-radius: 18px;
+      background: #f3f4f6;
+      box-shadow: 0 22px 55px rgba(15,23,42,.14);
+      overflow: visible;
+      padding: 18px;
+    }
+    .cv-photo{
+      width: 100%;
+      height: 520px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+    .cv-photo img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cv-social{
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -28px;
+      width: 86%;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 18px 45px rgba(15,23,42,.12);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 16px 18px;
+      gap: 12px;
+    }
+    .cv-social a{
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #7c3aed; /* ungu seperti gambar */
+      background: rgba(124,58,237,.08);
+      border: 1px solid rgba(124,58,237,.14);
+      transition: .25s;
+      font-weight: 800;
+    }
+    .cv-social a:hover{
+      transform: translateY(-2px);
+      background: rgba(124,58,237,.14);
+      border-color: rgba(124,58,237,.24);
+    }
+
+    .cv-right h1{
+      font-size: 46px;
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      color: #0f172a;
+      letter-spacing: .2px;
+    }
+    .cv-right p{
+      font-size: 15px;
+      line-height: 1.9;
+      color: #64748b;
+      max-width: 680px;
+      margin-bottom: 14px;
+    }
+
+    .cv-actions{
+      margin-top: 26px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .cv-btn-primary{
+      padding: 14px 26px;
+      border-radius: 10px;
+      background: #7c3aed; /* ungu */
+      color: #ffffff;
+      font-weight: 800;
+      border: 1px solid rgba(124,58,237,.35);
+      box-shadow: 0 14px 28px rgba(124,58,237,.22);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: .25s;
+    }
+    .cv-btn-primary:hover{
+      transform: translateY(-2px);
+      background: #6d28d9;
+      box-shadow: 0 18px 36px rgba(124,58,237,.28);
+    }
+
+    .cv-btn-outline{
+      padding: 14px 26px;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 800;
+      border: 1px solid rgba(15,23,42,.18);
+      box-shadow: 0 12px 24px rgba(15,23,42,.08);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: .25s;
+    }
+    .cv-btn-outline:hover{
+      transform: translateY(-2px);
+      border-color: rgba(124,58,237,.35);
+      background: rgba(124,58,237,.06);
+    }
+
     /* RESPONSIVE */
     @media (max-width: 1100px){
       .news-grid{ grid-template-columns: repeat(2, 1fr); }
+      .cv-inner{ grid-template-columns: 1fr; gap: 40px; }
+      .cv-photo{ height: 520px; }
+      .cv-right h1{ font-size: 40px; }
     }
     @media (max-width: 650px){
       header{ padding: 14px 18px; }
       .hero{ padding: 20px 18px 80px; }
       .news-section{ padding: 55px 18px 80px; }
       .news-grid{ grid-template-columns: 1fr; }
-      nav{ display:none; } /* biar ga numpuk di mobile */
+      nav{ display:none; }
+
+      .cv-section{ padding: 70px 18px 95px; }
+      .cv-photo{ height: 420px; }
+      .cv-right h1{ font-size: 34px; }
+      .cv-social{ width: 92%; }
     }
   </style>
 </head>
@@ -630,20 +774,16 @@ function formatTanggalIndo($ymd){
           <?php
             $img = $fallbackImg;
             if (!empty($b['gambar'])) {
-              // kalau gambar ada, pakai uploads/berita/nama_file
               $img = $uploadDirUrl . rawurlencode($b['gambar']);
             }
 
-            // tag kecil biar tetap ada "label" di card (biar mirip desain kamu)
             $tagText = 'Update';
             if (!empty($b['status']) && $b['status'] === 'publish') $tagText = 'Update';
 
-            // ringkasan pendek biar rapi di card
             $ring = (string)($b['ringkasan'] ?? '');
             $ringShort = mb_substr($ring, 0, 95);
             if (mb_strlen($ring) > 95) $ringShort .= '...';
 
-            // delay animasi (muter 1-4)
             $delayClass = 'delay-' . (($i % 4) === 1 ? 1 : (($i % 4) === 2 ? 2 : (($i % 4) === 3 ? 3 : 4)));
           ?>
           <article class="news-card reveal <?php echo $delayClass; ?>">
@@ -677,6 +817,58 @@ function formatTanggalIndo($ymd){
   </div>
 </section>
 
+<!-- =========================
+     CV SECTION (SETELAH BERITA)
+========================= -->
+<section class="cv-section" id="cv">
+  <div class="cv-inner">
+
+    <!-- KIRI (FOTO + SOSIAL) -->
+    <div class="cv-photo-card reveal">
+      <div class="cv-photo">
+        <!-- GANTI FOTO INI SESUAI PUNYA KAMU -->
+        <img src="assets/josiah2.png"
+             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=60';"
+             alt="CV Photo">
+      </div>
+
+      <div class="cv-social">
+        <a href="#" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#" title="Dribbble"><i class="fa-solid fa-basketball"></i></a>
+        <a href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="#" title="Behance"><i class="fa-brands fa-behance"></i></a>
+      </div>
+    </div>
+
+    <!-- KANAN (TEKS + BUTTON) -->
+    <div class="cv-right reveal delay-2">
+      <h1>I am Professional User<br>Experience Designer</h1>
+
+      <p>
+        I design and develop services for customers specializing creating stylish, modern websites, web services and online stores.
+        My passion is to design digital user experiences.
+      </p>
+      <p>
+        I design and develop services for customers specializing creating stylish, modern websites, web services.
+      </p>
+
+      <div class="cv-actions">
+        <!-- GANTI LINK "My Projects" SESUAI HALAMAN KAMU -->
+        <a href="#projects" class="cv-btn-primary">
+          My Projects
+        </a>
+
+        <!-- TARUH FILE CV DI assets/cv.pdf -->
+        <a href="assets/cv.pdf" class="cv-btn-outline" download>
+          <i class="fa-solid fa-download"></i> Download CV
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <script>
   // Scroll reveal pakai IntersectionObserver (lebih halus & ringan)
   const reveals = document.querySelectorAll('.reveal');
@@ -685,7 +877,7 @@ function formatTanggalIndo($ymd){
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('show');
-        io.unobserve(entry.target); // muncul sekali saja
+        io.unobserve(entry.target);
       }
     });
   }, { threshold: 0.12 });
