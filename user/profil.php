@@ -16,7 +16,7 @@ $conn->set_charset('utf8mb4');
 function h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function fv($arr, $key) { return isset($arr[$key]) && $arr[$key] !== null ? h($arr[$key]) : ''; }
 
-// Ambil data user (prepared)
+// Ambil data user
 $email = $_SESSION['alamat_email'];
 $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ?");
 $stmt->bind_param('s', $email);
@@ -25,12 +25,7 @@ $resUser = $stmt->get_result();
 $user = $resUser->fetch_assoc() ?: [];
 $stmt->close();
 
-/**
- * TAHUN GABUNG (PERUBAHAN DI SINI)
- * - Jika kolom created_at ada & berisi tanggal valid -> ambil tahunnya
- * - Jika kosong / tidak ada -> pakai tahun sekarang
- */
-$tahunGabung = date('Y'); // default: tahun berjalan
+$tahunGabung = date('Y');
 if (!empty($user['created_at'])) {
   $ts = strtotime((string)$user['created_at']);
   if ($ts !== false) {
@@ -38,36 +33,58 @@ if (!empty($user['created_at'])) {
   }
 }
 
-// Ambil data keluarga terbaru milik user
+// Ambil data keluarga
 $keluarga = null;
 $hasUserIdCol = $conn->query("SHOW COLUMNS FROM keluarga LIKE 'user_id'")->num_rows > 0;
-$hasEmailCol  = $conn->query("SHOW COLUMNS FROM keluarga LIKE 'alamat_email'")->num_rows > 0;
 
-if ($hasUserIdCol && isset($_SESSION['user_id'])) {
-  $uid = (int)$_SESSION['user_id'];
+if ($hasUserIdCol && !empty($user['id'])) {
+  $uid = (int)$user['id'];
   $stmtK = $conn->prepare("SELECT * FROM keluarga WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 1");
   $stmtK->bind_param('i', $uid);
   $stmtK->execute();
   $kelRes = $stmtK->get_result();
   $keluarga = $kelRes->fetch_assoc();
   $stmtK->close();
-} elseif ($hasEmailCol) {
-  $stmtK = $conn->prepare("SELECT * FROM keluarga WHERE alamat_email = ? ORDER BY created_at DESC, id DESC LIMIT 1");
-  $stmtK->bind_param('s', $email);
-  $stmtK->execute();
-  $kelRes = $stmtK->get_result();
-  $keluarga = $kelRes->fetch_assoc();
-  $stmtK->close();
+  $_SESSION['user_id'] = $uid;
 } else {
-  // Fallback (tanpa relasi): ambil entry terbaru global
-  $keluarga = $conn->query("SELECT * FROM keluarga ORDER BY created_at DESC, id DESC LIMIT 1")->fetch_assoc();
+  $hasEmailColInKeluarga = $conn->query("SHOW COLUMNS FROM keluarga LIKE 'alamat_email'")->num_rows > 0;
+  if ($hasEmailColInKeluarga) {
+    $stmtK = $conn->prepare("SELECT * FROM keluarga WHERE alamat_email = ? ORDER BY created_at DESC, id DESC LIMIT 1");
+    $stmtK->bind_param('s', $email);
+    $stmtK->execute();
+    $kelRes = $stmtK->get_result();
+    $keluarga = $kelRes->fetch_assoc();
+    $stmtK->close();
+  }
 }
 
-// Dapil options untuk select
-$dapilOptions = ['Kota Surabaya 1','Kota Surabaya 2','Kota Surabaya 3','Kota Surabaya 4','Kota Surabaya 5'];
-$dapilNow = $keluarga['dapil'] ?? '';
+// Cek apakah ada pending edit request
+$hasPendingEdit = false;
+$pendingRequestId = null;
+if (!empty($user['id'])) {
+  $stmtPending = $conn->prepare("SELECT id FROM edit_requests WHERE user_id = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1");
+  $stmtPending->bind_param('i', $user['id']);
+  $stmtPending->execute();
+  $pendingRes = $stmtPending->get_result();
+  if ($pendingRes->num_rows > 0) {
+    $pendingRow = $pendingRes->fetch_assoc();
+    $hasPendingEdit = true;
+    $pendingRequestId = $pendingRow['id'];
+  }
+  $stmtPending->close();
+}
 
-// Ekstrak nomor WA untuk display (hapus +62)
+// Cek apakah user bisa edit (ada approved request yang belum digunakan)
+$canEdit = false;
+if (!empty($user['id']) && $keluarga) {
+  $stmtApproved = $conn->prepare("SELECT id FROM edit_requests WHERE user_id = ? AND keluarga_id = ? AND status = 'approved' ORDER BY updated_at DESC LIMIT 1");
+  $stmtApproved->bind_param('ii', $user['id'], $keluarga['id']);
+  $stmtApproved->execute();
+  $approvedRes = $stmtApproved->get_result();
+  $canEdit = $approvedRes->num_rows > 0;
+  $stmtApproved->close();
+}
+
 $noWaDisplay = '';
 if (!empty($keluarga['no_wa'])) {
   $noWaDisplay = preg_replace('/^\+62/', '', $keluarga['no_wa']);
@@ -83,7 +100,6 @@ if (!empty($keluarga['no_wa'])) {
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body { background: #fff; color: #222; }
 
-       /* === HEADER === */
     header {
       background: linear-gradient(to right, #ffffff, #000000);
       padding: 12px 40px;
@@ -91,11 +107,7 @@ if (!empty($keluarga['no_wa'])) {
       justify-content: space-between;
       align-items: center;
     }
-
-    header img {
-      height: 40px;
-    }
-
+    header img { height: 40px; }
     nav a {
       margin-left: 20px;
       color: #fff;
@@ -103,12 +115,8 @@ if (!empty($keluarga['no_wa'])) {
       font-weight: 600;
       transition: 0.3s;
     }
-
     nav a:hover,
-    nav a.active {
-      color: #ff4b4b;
-    }
-
+    nav a.active { color: #ff4b4b; }
 
     .profile-section {
       background-color: #111;
@@ -153,33 +161,131 @@ if (!empty($keluarga['no_wa'])) {
     .flash.success { border:1px solid #a7f3d0; background:#e6ffed; color:#065f46; }
     .flash.warn { border:1px solid #fed7aa; background:#fff7ed; color:#9a3412; }
     .flash.fail { border:1px solid #fecaca; background:#fee2e2; color:#991b1b; }
+    .flash.info { border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; }
 
-    .summary {
-      width: 70%; max-width: 800px; margin: 16px auto 0;
-      padding: 16px 20px; border: 1px solid #eee; border-radius: 10px; background: #fafafa; color: #111;
+    .data-section {
+      width: 70%; max-width: 800px; margin: 16px auto 40px;
+      border: 1px solid #e0e0e0; border-radius: 10px; background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    .summary h3 { margin-bottom: 10px; }
-    .summary .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; }
-    @media (max-width: 640px) { .summary .grid { grid-template-columns: 1fr; } }
-    .muted { color: #666; }
+
+    .section-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .section-header:hover { background: #f8f8f8; }
+    .section-header h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-header .meta {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+    .section-header .meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .chevron {
+      font-size: 20px;
+      color: #666;
+      transition: transform 0.3s;
+    }
+    .chevron.open { transform: rotate(180deg); }
+
+    .section-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .section-content.open {
+      max-height: 2000px;
+    }
+
+    .section-body {
+      padding: 24px;
+    }
+
+    .info-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      color: #856404;
+      font-size: 14px;
+    }
+    .info-box strong { color: #664d03; }
+    .info-box.success {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+
+    .pending-badge {
+      display: inline-block;
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      color: #78350f;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px 24px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 640px) { .data-grid { grid-template-columns: 1fr; } }
+    
+    .data-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .data-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .data-value {
+      font-size: 15px;
+      color: #111;
+    }
 
     .form-container {
-      width: 70%; max-width: 800px; margin: 20px auto 40px;
-      background: linear-gradient(to bottom, #e0e0e0, #b3b3b3);
-      padding: 30px 40px; border-radius: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.2); color: #000;
+      padding: 0;
     }
     label { font-weight: 600; display: block; margin-top: 10px; }
     input, textarea, select {
       width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px;
-      background: rgba(255,255,255,0.9); color: #111;
+      background: #fff; color: #111;
     }
-    input.error {
-      border-color: #ff4b4b !important;
-      box-shadow: 0 0 5px rgba(255, 75, 75, 0.3);
+    input:disabled, textarea:disabled {
+      background: #f3f4f6;
+      cursor: not-allowed;
     }
-    textarea { resize: none; height: 70px; }
+    textarea { resize: none; height: 90px; }
     
-    /* Phone input styling */
     .phone-input-wrapper {
       display: flex;
       gap: 10px;
@@ -213,15 +319,93 @@ if (!empty($keluarga['no_wa'])) {
     }
     
     .btn-save {
-      width: 100%; padding: 12px; background: #e60000; color: #fff; border: none; border-radius: 8px;
+      width: 100%; padding: 12px; background: #3b82f6; color: #fff; border: none; border-radius: 8px;
       cursor: pointer; font-weight: 600; transition: 0.3s;
     }
-    .btn-save:hover { background: #b80000; }
+    .btn-save:hover { background: #2563eb; }
+    .btn-save:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    .btn-request {
+      width: 100%; padding: 12px; background: #f59e0b; color: #fff; border: none; border-radius: 8px;
+      cursor: pointer; font-weight: 600; transition: 0.3s; margin-bottom: 15px;
+    }
+    .btn-request:hover { background: #d97706; }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+      animation: slideDown 0.3s;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 12px;
+    }
+    .modal-text {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+    .modal-btn {
+      padding: 12px 32px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .modal-btn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+    .modal-btn.warning {
+      background: #f59e0b;
+    }
+    .modal-btn.warning:hover {
+      background: #d97706;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <header>
     <div class="logo">
       <img src="../assets/image/logo.png" alt="PSI Logo">
@@ -229,225 +413,391 @@ if (!empty($keluarga['no_wa'])) {
     <nav>
       <a href="dashboard.php">Beranda</a>
       <a href="kontak.php">Kontak</a>
-      <a href="profil.php"class="active">Profil</a>
+      <a href="profil.php" class="active">Profil</a>
     </nav>
   </header>
 
-  <!-- Profil -->
   <section class="profile-section">
-  <div class="profile-wrapper">
-    <?php
-      // Tentukan foto profil default
-      $fotoPath = '../assets/image/user.png';
-
-      if (!empty($user['foto'])) {
-          $fotoFile = basename($user['foto']); // hindari path traversal
-          $fotoFullPath = "../uploads/" . $fotoFile;
-
-          if (file_exists($fotoFullPath)) {
-              $fotoPath = $fotoFullPath;
-          }
-      }
-
-      // Tahun bergabung (ambil dari kolom created_at jika ada, atau fallback)
-      $tahunGabung = !empty($user['created_at'])
-          ? date('Y', strtotime($user['created_at']))
-          : '2025';
-    ?>
-    <div class="profile-pic">
-      <img src="<?= htmlspecialchars($fotoPath) ?>" alt="Foto Profil" id="fotoPreview">
+    <div class="profile-wrapper">
+      <?php
+        $fotoPath = '../assets/image/user.png';
+        if (!empty($user['foto'])) {
+            $fotoFile = basename($user['foto']);
+            $fotoFullPath = "../uploads/" . $fotoFile;
+            if (file_exists($fotoFullPath)) {
+                $fotoPath = $fotoFullPath;
+            }
+        }
+      ?>
+      <div class="profile-pic">
+        <img src="<?= htmlspecialchars($fotoPath) ?>" alt="Foto Profil">
+      </div>
+      <button class="edit-profile-btn" onclick="window.location.href='editprofil.php'">📷</button>
     </div>
 
-    <button class="edit-profile-btn" onclick="window.location.href='editprofil.php'">📷</button>
-  </div>
+    <div class="profile-info">
+      <h1><?= htmlspecialchars($user['nama_lengkap'] ?? '') ?></h1>
+      <p class="email"><?= htmlspecialchars($user['alamat_email'] ?? $email) ?></p>
+      <div class="detail">🕓 Bergabung sejak <?= htmlspecialchars($tahunGabung) ?></div>
+      <div class="detail">📍 <?= htmlspecialchars($user['kota'] ?? 'Kota Surabaya') ?></div>
+    </div>
+  </section>
 
-  <div class="profile-info">
-    <h1><?= htmlspecialchars($user['nama_lengkap'] ?? '') ?></h1>
-    <p class="email"><?= htmlspecialchars($user['alamat_email'] ?? $email) ?></p>
-    <div class="detail">🕓 Bergabung sejak <?= htmlspecialchars($tahunGabung) ?></div>
-    <div class="detail">📍 <?= htmlspecialchars($user['kota'] ?? 'Kota Surabaya') ?></div>
-  </div>
-</section>
-
-
-  <!-- Logout -->
   <button class="logout-btn" onclick="window.location.href='logout.php'">Logout</button>
 
-  <!-- Flash message -->
   <?php if (isset($_GET['status'])): ?>
     <?php if ($_GET['status'] === 'created'): ?>
-      <div class="flash success">Data keluarga berhasil ditambahkan. Ditampilkan pada form di bawah.</div>
+      <div class="flash success">✓ Data keluarga berhasil ditambahkan!</div>
+    <?php elseif ($_GET['status'] === 'pending_approval'): ?>
+      <div class="flash info">⏳ Permintaan perubahan data telah dikirim dan menunggu persetujuan admin.</div>
+    <?php elseif ($_GET['status'] === 'request_sent'): ?>
+      <div class="flash info">⏳ Permintaan edit telah dikirim ke admin!</div>
+    <?php elseif ($_GET['status'] === 'request_exists'): ?>
+      <div class="flash warn">⚠️ Anda sudah memiliki permintaan edit yang sedang diproses.</div>
     <?php elseif ($_GET['status'] === 'updated'): ?>
-      <div class="flash success">Perubahan disimpan. Form di bawah menampilkan data terbaru.</div>
+      <div class="flash success">✓ Data berhasil diperbarui!</div>
     <?php elseif ($_GET['status'] === 'failed'): ?>
-      <div class="flash fail">Operasi gagal. Pastikan data wajib terisi dan format benar.</div>
+      <div class="flash fail">✗ Operasi gagal. Pastikan semua data terisi dengan benar.</div>
+    <?php elseif ($_GET['status'] === 'approved'): ?>
+      <div class="flash success">✓ Permintaan edit Anda telah disetujui! Silakan edit data Anda.</div>
     <?php endif; ?>
   <?php endif; ?>
 
-  <!-- Ringkasan Data Keluarga -->
-  <div class="summary">
-    <h3>Data Keluarga Terbaru</h3>
-    <?php if (!$keluarga): ?>
-      <div class="muted">Belum ada data keluarga. Silakan isi form di bawah, lalu simpan.</div>
-    <?php else: ?>
-      <div class="grid">
-        <div><strong>Nama Lengkap:</strong> <?= h($keluarga['nama_lengkap'] ?? '-') ?></div>
-        <div><strong>NIK:</strong> <?= h($keluarga['nik'] ?? '-') ?></div>
-        <div><strong>No. WA:</strong> <?= h($keluarga['no_wa'] ?? '-') ?></div>
-        <div><strong>Alamat:</strong> <?= h($keluarga['alamat'] ?? '-') ?></div>
-        <div><strong>Dapil:</strong> <?= h($keluarga['dapil'] ?? '-') ?></div>
-        <div><strong>Kecamatan:</strong> <?= h($keluarga['kecamatan'] ?? '-') ?></div>
-        <div><strong>Jumlah Anggota:</strong> <?= h($keluarga['jumlah_anggota'] ?? '-') ?></div>
-        <div><strong>Total Penghasilan:</strong> <?= 'Rp ' . number_format((int)($keluarga['total_penghasilan'] ?? 0), 0, ',', '.') ?></div>
-        <div><strong>Dibuat:</strong> <?= h($keluarga['created_at'] ?? '-') ?></div>
-        <div><strong>Diperbarui:</strong> <?= h($keluarga['updated_at'] ?? '-') ?></div>
+  <div class="data-section">
+    <div class="section-header" onclick="handleSectionClick()">
+      <div>
+        <h3>
+          📄 Data Keluarga
+          <?php if ($hasPendingEdit): ?>
+            <span class="pending-badge">⏳ Menunggu Persetujuan</span>
+          <?php endif; ?>
+        </h3>
       </div>
-    <?php endif; ?>
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <div class="meta">
+          <span>📋 8 Artikel</span>
+          <span>⏱️ 55 menit</span>
+        </div>
+        <span class="chevron" id="chevron">▼</span>
+      </div>
+    </div>
+
+    <div class="section-content" id="sectionContent">
+      <div class="section-body">
+        <?php if (!$keluarga): ?>
+          <div class="info-box">
+            <strong>ℹ️ Informasi:</strong> Anda belum memiliki data keluarga. Silakan isi formulir di bawah untuk menambahkan data baru.
+          </div>
+          
+          <form action="update_data.php" method="POST" id="profilForm">
+            <label>Nama Lengkap <span style="color: red;">*</span></label>
+            <input type="text" name="nama_lengkap" required>
+
+            <label>NIK <span style="color: red;">*</span></label>
+            <input type="text" name="nik" maxlength="20" required>
+
+            <label>No WhatsApp <span style="color: red;">*</span></label>
+            <div class="phone-input-wrapper">
+              <div class="phone-prefix">+62</div>
+              <input 
+                type="text" 
+                id="no_wa_input"
+                name="no_wa_display" 
+                class="phone-input"
+                placeholder="8123456789" 
+                maxlength="13"
+                required
+              >
+            </div>
+            <input type="hidden" name="no_wa" id="no_wa_hidden">
+            <small class="phone-status" id="phone_status">Masukkan nomor tanpa 0 di depan</small>
+
+            <label>Alamat Sesuai KTP <span style="color: red;">*</span></label>
+            <textarea name="alamat" required></textarea>
+
+            <label>Alamat Domisili <span style="color: red;">*</span></label>
+            <textarea name="domisili" required></textarea>
+
+            <label>Jumlah Anggota Keluarga</label>
+            <input type="number" name="jumlah_anggota" min="1">
+
+            <label>Jumlah Anggota yang Bekerja</label>
+            <input type="number" name="jumlah_bekerja" min="0">
+
+            <label>Total Penghasilan Keluarga (Rp)</label>
+            <input type="text" name="total_penghasilan" placeholder="Contoh: 5000000">
+
+            <button type="submit" class="btn-save">➕ Tambah Data Baru</button>
+          </form>
+          
+        <?php else: ?>
+          <!-- Tampilan Data -->
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="data-label">Nama Lengkap</span>
+              <span class="data-value"><?= h($keluarga['nama_lengkap'] ?? '-') ?></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">NIK</span>
+              <span class="data-value"><?= h($keluarga['nik'] ?? '-') ?></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">No. WhatsApp</span>
+              <span class="data-value"><?= h($keluarga['no_wa'] ?? '-') ?></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Jumlah Anggota</span>
+              <span class="data-value"><?= h($keluarga['jumlah_anggota'] ?? '-') ?></span>
+            </div>
+            <div class="data-item" style="grid-column: 1 / -1;">
+              <span class="data-label">Alamat KTP</span>
+              <span class="data-value"><?= h($keluarga['alamat'] ?? '-') ?></span>
+            </div>
+            <div class="data-item" style="grid-column: 1 / -1;">
+              <span class="data-label">Alamat Domisili</span>
+              <span class="data-value"><?= h($keluarga['domisili'] ?? '-') ?></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Jumlah Bekerja</span>
+              <span class="data-value"><?= h($keluarga['jumlah_bekerja'] ?? '-') ?></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Total Penghasilan</span>
+              <span class="data-value"><?= 'Rp ' . number_format((int)($keluarga['total_penghasilan'] ?? 0), 0, ',', '.') ?></span>
+            </div>
+          </div>
+
+          <hr style="margin: 24px 0; border: none; border-top: 1px solid #e0e0e0;">
+
+          <!-- Form Edit -->
+          <h4 style="margin-bottom: 16px; color: #333;">✏️ Edit Data Keluarga</h4>
+          
+          <?php if ($canEdit): ?>
+            <div class="info-box success">
+              <strong>✓ Izin Edit Aktif:</strong> Admin telah menyetujui permintaan Anda. Silakan edit data sekarang!
+            </div>
+          <?php elseif ($hasPendingEdit): ?>
+            <div class="info-box" style="background: #fef3c7; border-color: #fbbf24;">
+              <strong>⏳ Menunggu Persetujuan:</strong> Permintaan edit Anda sedang diproses oleh admin.
+            </div>
+          <?php else: ?>
+            <div class="info-box">
+              <strong>🔒 Perlu Izin:</strong> Untuk mengubah data, Anda perlu meminta izin kepada admin terlebih dahulu.
+            </div>
+            <button type="button" class="btn-request" onclick="requestEdit()">
+              📤 Minta Izin Edit ke Admin
+            </button>
+          <?php endif; ?>
+          
+          <form action="update_data.php" method="POST" id="profilFormEdit">
+            <input type="hidden" name="id" value="<?= (int)$keluarga['id'] ?>">
+            <input type="hidden" name="is_edit" value="1">
+
+            <label>Nama Lengkap <span style="color: red;">*</span></label>
+            <input type="text" name="nama_lengkap" value="<?= fv($keluarga, 'nama_lengkap') ?>" <?= $canEdit ? '' : 'disabled' ?> required>
+
+            <label>NIK <span style="color: red;">*</span></label>
+            <input type="text" name="nik" value="<?= fv($keluarga, 'nik') ?>" maxlength="20" <?= $canEdit ? '' : 'disabled' ?> required>
+
+            <label>No WhatsApp <span style="color: red;">*</span></label>
+            <div class="phone-input-wrapper">
+              <div class="phone-prefix">+62</div>
+              <input 
+                type="text" 
+                id="no_wa_input_edit"
+                name="no_wa_display" 
+                class="phone-input"
+                placeholder="8123456789" 
+                maxlength="13"
+                value="<?= htmlspecialchars($noWaDisplay) ?>"
+                <?= $canEdit ? '' : 'disabled' ?>
+                required
+              >
+            </div>
+            <input type="hidden" name="no_wa" id="no_wa_hidden_edit">
+            <small class="phone-status" id="phone_status_edit">Masukkan nomor tanpa 0 di depan</small>
+
+            <label>Alamat Sesuai KTP <span style="color: red;">*</span></label>
+            <textarea name="alamat" <?= $canEdit ? '' : 'disabled' ?> required><?= fv($keluarga, 'alamat') ?></textarea>
+
+            <label>Alamat Domisili <span style="color: red;">*</span></label>
+            <textarea name="domisili" <?= $canEdit ? '' : 'disabled' ?> required><?= fv($keluarga, 'domisili') ?></textarea>
+
+            <label>Jumlah Anggota Keluarga</label>
+            <input type="number" name="jumlah_anggota" value="<?= fv($keluarga, 'jumlah_anggota') ?>" min="1" <?= $canEdit ? '' : 'disabled' ?>>
+
+            <label>Jumlah Anggota yang Bekerja</label>
+            <input type="number" name="jumlah_bekerja" value="<?= fv($keluarga, 'jumlah_bekerja') ?>" min="0" <?= $canEdit ? '' : 'disabled' ?>>
+
+            <label>Total Penghasilan Keluarga (Rp)</label>
+            <input type="text" name="total_penghasilan" value="<?= fv($keluarga, 'total_penghasilan') ?>" placeholder="Contoh: 5000000" <?= $canEdit ? '' : 'disabled' ?>>
+
+            <button type="submit" class="btn-save" <?= $canEdit ? '' : 'disabled' ?>>
+              💾 Simpan Perubahan
+            </button>
+          </form>
+        <?php endif; ?>
+      </div>
+    </div>
   </div>
 
-  <!-- Form Edit / Tambah (selalu tampil dengan prefill) -->
-  <div class="form-container" id="formEdit">
-    <form action="update_data.php" method="POST" id="profilForm">
-      <?php if (!empty($keluarga['id'])): ?>
-        <input type="hidden" name="id" value="<?= (int)$keluarga['id'] ?>">
-      <?php endif; ?>
-
-      <label>Nama Lengkap</label>
-      <input type="text" name="nama_lengkap" value="<?= fv($keluarga, 'nama_lengkap') ?>">
-
-      <label>NIK</label>
-      <input type="text" name="nik" value="<?= fv($keluarga, 'nik') ?>">
-
-      <label>No WhatsApp</label>
-      <div class="phone-input-wrapper">
-        <div class="phone-prefix">+62</div>
-        <input 
-          type="text" 
-          id="no_wa_input"
-          name="no_wa_display" 
-          class="phone-input"
-          placeholder="8123456789" 
-          maxlength="13"
-          value="<?= htmlspecialchars($noWaDisplay) ?>"
-        >
-      </div>
-      <input type="hidden" name="no_wa" id="no_wa_hidden">
-      <small class="phone-status" id="phone_status">Masukkan nomor tanpa 0 di depan</small>
-
-      <label>Alamat Lengkap</label>
-      <textarea name="alamat"><?= fv($keluarga, 'alamat') ?></textarea>
-
-      <label>Daerah Pemilihan</label>
-      <select name="dapil">
-        <option value="">-- Pilih Dapil --</option>
-        <?php foreach ($dapilOptions as $opt): ?>
-          <option value="<?= h($opt) ?>" <?= ($opt === ($dapilNow ?? '')) ? 'selected' : '' ?>><?= h($opt) ?></option>
-        <?php endforeach; ?>
-      </select>
-
-      <label>Kecamatan</label>
-      <input type="text" name="kecamatan" value="<?= fv($keluarga, 'kecamatan') ?>">
-
-      <label>Jumlah Anggota Keluarga</label>
-      <input type="number" name="jumlah_anggota" value="<?= fv($keluarga, 'jumlah_anggota') ?>">
-
-      <label>Total Penghasilan</label>
-      <input type="text" name="total_penghasilan" value="<?= fv($keluarga, 'total_penghasilan') ?>">
-
-      <button type="submit" class="btn-save">💾 Simpan Perubahan</button>
-    </form>
+  <!-- Modal Request Edit -->
+  <div id="requestModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">🔒</div>
+      <h2 class="modal-title">Minta Izin Edit Data</h2>
+      <p class="modal-text">
+        Untuk keamanan data, Anda perlu meminta izin kepada admin untuk mengubah data keluarga.<br><br>
+        Setelah admin menyetujui, Anda akan dapat mengedit data Anda.
+      </p>
+      <button class="modal-btn warning" onclick="submitRequest()">Kirim Permintaan</button>
+      <button class="modal-btn" onclick="closeRequestModal()" style="background: #6b7280; margin-top: 10px;">Batal</button>
+    </div>
   </div>
 
-  <footer style="margin-top:0; padding:15px 5%; text-align:center; background:linear-gradient(to right, #ffffff, #000000); font-size:14px; color:#fff; border-top:1px solid #ccc;">
+  <!-- Modal Pending -->
+  <div id="pendingModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">⏳</div>
+      <h2 class="modal-title">Menunggu Persetujuan Admin</h2>
+      <p class="modal-text">
+        Permintaan edit data Anda telah dikirim dan sedang menunggu persetujuan dari admin.<br><br>
+        Anda akan menerima notifikasi setelah admin memproses permintaan Anda.
+      </p>
+      <button class="modal-btn" onclick="closePendingModal()">Mengerti</button>
+    </div>
+  </div>
+
+  <!-- Modal Approved -->
+  <div id="approvedModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">✅</div>
+      <h2 class="modal-title">Permintaan Disetujui!</h2>
+      <p class="modal-text">
+        Selamat! Admin telah menyetujui permintaan edit Anda.<br><br>
+        <strong>Sekarang Anda dapat mengubah data keluarga Anda.</strong><br>
+        Silakan scroll ke bawah untuk mengedit data.
+      </p>
+      <button class="modal-btn" onclick="closeApprovedModal()">Mulai Edit</button>
+    </div>
+  </div>
+
+  <footer style="margin-top:20px; padding:15px 5%; text-align:center; background:linear-gradient(to right, #ffffff, #000000); font-size:14px; color:#fff; border-top:1px solid #ccc;">
     <img src="../assets/image/logodprd.png" alt="dprd Logo" style="height:20px; vertical-align:middle; margin-left:5px; filter:brightness(0) invert(1);">
     <img src="../assets/image/psiputih.png" alt="PSI Logo" style="height:20px; vertical-align:middle; margin-left:5px; filter:brightness(0) invert(1);">
     Hak cipta © 2025 - Partai Solidaritas Indonesia
   </footer>
 
   <script>
-    const phoneInput = document.getElementById('no_wa_input');
-    const phoneHidden = document.getElementById('no_wa_hidden');
-    const phoneStatus = document.getElementById('phone_status');
-    const profilForm = document.getElementById('profilForm');
-
-    // Format nomor telepon otomatis
-    phoneInput.addEventListener('input', function(e) {
-      // Ambil hanya angka
-      let value = this.value.replace(/\D/g, "");
-      
-      // Hilangkan leading zero jika ada
-      if (value.startsWith('0')) {
-        value = value.substring(1);
-      }
-
-      // Hilangkan 62 di depan jika user ketik manual
-      if (value.startsWith('62')) {
-        value = value.substring(2);
-      }
-
-      // Update display
-      this.value = value;
-
-      // Update hidden input dengan format lengkap
-      if (value.length > 0) {
-        const fullNumber = '+62' + value;
-        phoneHidden.value = fullNumber;
-        
-        // Validasi minimal panjang (minimal 10 digit setelah 62)
-        if (value.length >= 10) {
-          this.style.borderColor = '#22c55e';
-          phoneStatus.style.color = '#22c55e';
-          phoneStatus.textContent = '✓ Nomor valid: ' + fullNumber;
-        } else {
-          this.style.borderColor = '#ff4b4b';
-          phoneStatus.style.color = '#ff4b4b';
-          phoneStatus.textContent = 'Minimal 10 digit diperlukan';
-        }
-      } else {
-        phoneHidden.value = '';
-        this.style.borderColor = '#ccc';
-        phoneStatus.style.color = '#666';
-        phoneStatus.textContent = 'Masukkan nomor tanpa 0 di depan';
-      }
-    });
-
-    // Validasi saat blur
-    phoneInput.addEventListener('blur', function() {
-      const value = this.value.replace(/\D/g, "");
-      
-      if (value !== '' && value.length < 10) {
-        this.style.borderColor = '#ff4b4b';
-        phoneStatus.style.color = '#ff4b4b';
-        phoneStatus.textContent = '✗ Nomor terlalu pendek (minimal 10 digit)';
-      }
-    });
-
-    // Auto focus
-    phoneInput.addEventListener('focus', function() {
-      if (this.value === '') {
-        phoneStatus.style.color = '#666';
-        phoneStatus.textContent = 'Contoh: 812XXXXXXXX (tanpa 0)';
-      }
-    });
-
-    // Set initial value jika ada
-    if (phoneInput.value !== '') {
-      phoneInput.dispatchEvent(new Event('input'));
+    function toggleSection() {
+      const content = document.getElementById('sectionContent');
+      const chevron = document.getElementById('chevron');
+      content.classList.toggle('open');
+      chevron.classList.toggle('open');
     }
 
-    // Validasi sebelum submit
-    profilForm.addEventListener('submit', function(e) {
-      const phoneValue = phoneInput.value.replace(/\D/g, "");
-      
-      if (phoneValue !== '' && phoneValue.length < 10) {
-        e.preventDefault();
-        phoneInput.style.borderColor = '#ff4b4b';
-        phoneInput.focus();
-        
-        alert('Nomor WhatsApp tidak valid. Minimal 10 digit setelah +62');
-        return false;
+    function handleSectionClick() {
+      <?php if ($keluarga && !$canEdit && !$hasPendingEdit): ?>
+        // Jika ada data tapi belum request, tampilkan modal request
+        document.getElementById('requestModal').style.display = 'block';
+      <?php else: ?>
+        // Jika tidak ada data atau sudah request/approved, toggle biasa
+        toggleSection();
+      <?php endif; ?>
+    }
+
+    function requestEdit() {
+      document.getElementById('requestModal').style.display = 'block';
+    }
+
+    function closeRequestModal() {
+      document.getElementById('requestModal').style.display = 'none';
+    }
+
+    function submitRequest() {
+      // Kirim request via AJAX atau form
+      window.location.href = 'request_edit.php';
+    }
+
+    function closePendingModal() {
+      document.getElementById('pendingModal').style.display = 'none';
+      // Tetap bisa toggle section untuk melihat data
+      toggleSection();
+    }
+
+    function closeApprovedModal() {
+      document.getElementById('approvedModal').style.display = 'none';
+      // Auto open section untuk edit
+      const content = document.getElementById('sectionContent');
+      const chevron = document.getElementById('chevron');
+      if (!content.classList.contains('open')) {
+        content.classList.add('open');
+        chevron.classList.add('open');
       }
-    });
+    }
+
+    // Show appropriate modal based on URL parameters
+    <?php if (isset($_GET['status'])): ?>
+      <?php if ($_GET['status'] === 'request_sent' || $_GET['status'] === 'pending_approval'): ?>
+        document.getElementById('pendingModal').style.display = 'block';
+      <?php elseif ($_GET['status'] === 'approved'): ?>
+        document.getElementById('approvedModal').style.display = 'block';
+      <?php endif; ?>
+    <?php endif; ?>
+
+    // Phone input handlers
+    function setupPhoneInput(inputId, hiddenId, statusId) {
+      const phoneInput = document.getElementById(inputId);
+      const phoneHidden = document.getElementById(hiddenId);
+      const phoneStatus = document.getElementById(statusId);
+
+      if (!phoneInput) return;
+
+      phoneInput.addEventListener('input', function(e) {
+        let value = this.value.replace(/\D/g, "");
+        
+        if (value.startsWith('0')) value = value.substring(1);
+        if (value.startsWith('62')) value = value.substring(2);
+
+        this.value = value;
+
+        if (value.length > 0) {
+          const fullNumber = '+62' + value;
+          phoneHidden.value = fullNumber;
+          
+          if (value.length >= 10) {
+            this.style.borderColor = '#22c55e';
+            phoneStatus.style.color = '#22c55e';
+            phoneStatus.textContent = '✓ Nomor valid: ' + fullNumber;
+          } else {
+            this.style.borderColor = '#ff4b4b';
+            phoneStatus.style.color = '#ff4b4b';
+            phoneStatus.textContent = '✗ Minimal 10 digit diperlukan';
+          }
+        } else {
+          phoneHidden.value = '';
+          this.style.borderColor = '#ccc';
+          phoneStatus.style.color = '#666';
+          phoneStatus.textContent = 'Masukkan nomor tanpa 0 di depan';
+        }
+      });
+
+      phoneInput.addEventListener('blur', function() {
+        const value = this.value.replace(/\D/g, "");
+        if (value !== '' && value.length < 10) {
+          this.style.borderColor = '#ff4b4b';
+          phoneStatus.style.color = '#ff4b4b';
+          phoneStatus.textContent = '✗ Nomor terlalu pendek (minimal 10 digit)';
+        }
+      });
+
+      if (phoneInput.value !== '') {
+        phoneInput.dispatchEvent(new Event('input'));
+      }
+    }
+
+    setupPhoneInput('no_wa_input', 'no_wa_hidden', 'phone_status');
+    setupPhoneInput('no_wa_input_edit', 'no_wa_hidden_edit', 'phone_status_edit');
   </script>
 </body>
 </html>
