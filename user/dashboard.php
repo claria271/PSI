@@ -1,6 +1,6 @@
 <?php
 
-// dashboard.php
+// user/dashboard.php
 session_start();
 include '../koneksi/config.php';
 
