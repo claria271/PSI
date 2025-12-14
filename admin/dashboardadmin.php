@@ -52,6 +52,14 @@ $adminPhoto = !empty($admin['foto'])
 
 // ================== QUERY DATA UNTUK DASHBOARD ================== //
 
+// ✅ DETEKSI KOLOM (BIAR GA ERROR "Unknown column dapil")
+$hasDapilCol = false;
+try {
+    $hasDapilCol = ($conn->query("SHOW COLUMNS FROM keluarga LIKE 'dapil'")->num_rows > 0);
+} catch (Throwable $e) {
+    $hasDapilCol = false;
+}
+
 // UMR per orang
 define('UMR_PERSON', 4725479);
 
@@ -115,35 +123,53 @@ for ($i = 3; $i >= 0; $i--) {
 // 6. DATA PIE CHART - Jumlah keluarga per Dapil
 $pieChartData = [];
 $pieChartLabels = [];
-$queryPie = "SELECT dapil, COUNT(*) as total 
-             FROM keluarga 
-             WHERE dapil IS NOT NULL AND dapil != ''
-             GROUP BY dapil 
-             ORDER BY dapil";
-$resultPie = mysqli_query($conn, $queryPie);
-while ($row = mysqli_fetch_assoc($resultPie)) {
-    $pieChartLabels[] = $row['dapil'];
-    $pieChartData[] = $row['total'];
+
+if ($hasDapilCol) {
+    $queryPie = "SELECT dapil, COUNT(*) as total 
+                 FROM keluarga 
+                 WHERE dapil IS NOT NULL AND dapil != ''
+                 GROUP BY dapil 
+                 ORDER BY dapil";
+    $resultPie = mysqli_query($conn, $queryPie);
+    while ($row = mysqli_fetch_assoc($resultPie)) {
+        $pieChartLabels[] = $row['dapil'];
+        $pieChartData[] = $row['total'];
+    }
 }
 
-// Jika tidak ada data dapil, buat dummy
+// Jika tidak ada data dapil (atau kolomnya tidak ada), buat dummy
 if (empty($pieChartLabels)) {
     $pieChartLabels = ['Dapil 1', 'Dapil 2', 'Dapil 3', 'Dapil 4', 'Dapil 5'];
     $pieChartData = [0, 0, 0, 0, 0];
 }
 
 // 7. DATA UPDATE TERBARU - 10 data terakhir yang diupdate
-$queryUpdates = "SELECT nama_lengkap, nik, alamat, dapil, updated_at 
-                 FROM keluarga 
-                 ORDER BY updated_at DESC 
-                 LIMIT 10";
+if ($hasDapilCol) {
+    $queryUpdates = "SELECT nama_lengkap, nik, alamat, dapil, updated_at 
+                     FROM keluarga 
+                     ORDER BY updated_at DESC 
+                     LIMIT 10";
+} else {
+    // kalau kolom dapil tidak ada, jangan dipanggil
+    $queryUpdates = "SELECT nama_lengkap, nik, alamat, updated_at 
+                     FROM keluarga 
+                     ORDER BY updated_at DESC 
+                     LIMIT 10";
+}
 $resultUpdates = mysqli_query($conn, $queryUpdates);
 
 // 8. DATA TAMBAH TERBARU - 10 data terakhir yang ditambahkan
-$queryAdded = "SELECT nama_lengkap, nik, alamat, dapil, created_at 
-               FROM keluarga 
-               ORDER BY created_at DESC 
-               LIMIT 10";
+if ($hasDapilCol) {
+    $queryAdded = "SELECT nama_lengkap, nik, alamat, dapil, created_at 
+                   FROM keluarga 
+                   ORDER BY created_at DESC 
+                   LIMIT 10";
+} else {
+    $queryAdded = "SELECT nama_lengkap, nik, alamat, created_at 
+                   FROM keluarga 
+                   ORDER BY created_at DESC 
+                   LIMIT 10";
+}
 $resultAdded = mysqli_query($conn, $queryAdded);
 
 // Generate label bulan untuk chart
@@ -168,11 +194,7 @@ for ($i = 3; $i >= 0; $i--) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Poppins', sans-serif;
@@ -194,15 +216,8 @@ for ($i = 3; $i >= 0; $i--) {
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    header .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    header img {
-      height: 40px;
-    }
+    header .logo { display: flex; align-items: center; gap: 10px; }
+    header img { height: 40px; }
 
     nav a {
       margin: 0 15px;
@@ -213,15 +228,10 @@ for ($i = 3; $i >= 0; $i--) {
     }
 
     nav a:hover,
-    nav a.active {
-      color: #ff4b4b;
-    }
+    nav a.active { color: #ff4b4b; }
 
     /* === MAIN LAYOUT === */
-    .main {
-      display: flex;
-      min-height: calc(100vh - 130px);
-    }
+    .main { display: flex; min-height: calc(100vh - 130px); }
 
     /* === SIDEBAR === */
     .sidebar {
@@ -233,11 +243,7 @@ for ($i = 3; $i >= 0; $i--) {
       overflow-y: auto;
     }
 
-    .admin-profile {
-      text-align: center;
-      margin-bottom: 30px;
-      position: relative;
-    }
+    .admin-profile { text-align: center; margin-bottom: 30px; position: relative; }
 
     .admin-photo {
       width: 70px;
@@ -256,11 +262,7 @@ for ($i = 3; $i >= 0; $i--) {
       box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
     }
 
-    .admin-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .admin-photo img { width: 100%; height: 100%; object-fit: cover; }
 
     .admin-name {
       color: #000;
@@ -303,14 +305,9 @@ for ($i = 3; $i >= 0; $i--) {
     }
 
     /* === CONTENT === */
-    .content {
-      flex: 1;
-      padding: 30px;
-    }
+    .content { flex: 1; padding: 30px; }
 
-    .page-header {
-      margin-bottom: 30px;
-    }
+    .page-header { margin-bottom: 30px; }
 
     .page-header h2 {
       color: #000;
@@ -319,16 +316,12 @@ for ($i = 3; $i >= 0; $i--) {
       margin-bottom: 5px;
     }
 
-    .page-header p {
-      color: #666;
-      font-size: 14px;
-    }
+    .page-header p { color: #666; font-size: 14px; }
 
-    /* === STATS CARDS === */
     /* === STATS CARDS === */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr); /* 4 kolom dengan lebar sama */
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
       margin-bottom: 30px;
     }
@@ -364,9 +357,7 @@ for ($i = 3; $i >= 0; $i--) {
       flex-shrink: 0;
     }
 
-    .stat-content {
-      flex: 1;
-    }
+    .stat-content { flex: 1; }
 
     .stat-label {
       color: #666;
@@ -407,12 +398,7 @@ for ($i = 3; $i >= 0; $i--) {
     }
 
     /* === CHARTS === */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
 
     .chart-box {
       background: #fff;
@@ -437,29 +423,13 @@ for ($i = 3; $i >= 0; $i--) {
       letter-spacing: 0.5px;
     }
 
-    .chart-small-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    .chart-small-grid { display: flex; flex-direction: column; gap: 20px; }
 
-    .chart-container {
-      position: relative;
-      height: 280px;
-    }
-
-    .chart-container-small {
-      position: relative;
-      height: 180px;
-    }
+    .chart-container { position: relative; height: 280px; }
+    .chart-container-small { position: relative; height: 180px; }
 
     /* === ACTIVITY CARDS === */
-    .activity-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
+    .activity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
 
     .activity-card {
       background: #fff;
@@ -507,11 +477,7 @@ for ($i = 3; $i >= 0; $i--) {
       margin: 0;
     }
 
-    .activity-list {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 5px;
-    }
+    .activity-list { flex: 1; overflow-y: auto; padding-right: 5px; }
 
     .activity-item {
       padding: 12px;
@@ -522,14 +488,8 @@ for ($i = 3; $i >= 0; $i--) {
       transition: all 0.2s;
     }
 
-    .activity-item:hover {
-      background: #f5f5f5;
-      transform: translateX(3px);
-    }
-
-    .activity-item.added {
-      border-left-color: #4CAF50;
-    }
+    .activity-item:hover { background: #f5f5f5; transform: translateX(3px); }
+    .activity-item.added { border-left-color: #4CAF50; }
 
     .activity-item-header {
       display: flex;
@@ -538,28 +498,11 @@ for ($i = 3; $i >= 0; $i--) {
       margin-bottom: 5px;
     }
 
-    .activity-name {
-      font-weight: 600;
-      color: #000;
-      font-size: 13px;
-    }
+    .activity-name { font-weight: 600; color: #000; font-size: 13px; }
+    .activity-time { font-size: 11px; color: #999; white-space: nowrap; }
 
-    .activity-time {
-      font-size: 11px;
-      color: #999;
-      white-space: nowrap;
-    }
-
-    .activity-details {
-      font-size: 12px;
-      color: #666;
-      line-height: 1.4;
-    }
-
-    .activity-details .nik {
-      color: #ff0000;
-      font-weight: 500;
-    }
+    .activity-details { font-size: 12px; color: #666; line-height: 1.4; }
+    .activity-details .nik { color: #ff0000; font-weight: 500; }
 
     .activity-badge {
       display: inline-block;
@@ -572,18 +515,8 @@ for ($i = 3; $i >= 0; $i--) {
       margin-top: 4px;
     }
 
-    .no-activity {
-      text-align: center;
-      padding: 30px;
-      color: #999;
-      font-size: 13px;
-    }
-
-    .no-activity .icon {
-      font-size: 40px;
-      margin-bottom: 10px;
-      opacity: 0.3;
-    }
+    .no-activity { text-align: center; padding: 30px; color: #999; font-size: 13px; }
+    .no-activity .icon { font-size: 40px; margin-bottom: 10px; opacity: 0.3; }
 
     /* === FOOTER === */
     footer {
@@ -604,46 +537,21 @@ for ($i = 3; $i >= 0; $i--) {
     }
 
     /* === SCROLLBAR === */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
 
     /* === RESPONSIVE === */
     @media (max-width: 1024px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .activity-grid {
-        grid-template-columns: 1fr;
-      }
+      .charts-grid { grid-template-columns: 1fr; }
+      .activity-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 768px) {
-      .sidebar {
-        width: 220px;
-      }
-      
-      .stats-grid {
-    grid-template-columns: 1fr; /* 1 kolom di mobile */
-  }
-      
-      .activity-grid {
-        grid-template-columns: 1fr;
-      }
+      .sidebar { width: 220px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .activity-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -676,6 +584,7 @@ for ($i = 3; $i >= 0; $i--) {
         <a href="tambah_admin.php">➕ Tambah Admin</a>
         <a href="verifikasi.php">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
+        <a href="pengaduan_admin.php">Pengaduan</a>
         <a href="logoutadmin.php">Logout</a>
       </nav>
     </aside>
@@ -715,7 +624,8 @@ for ($i = 3; $i >= 0; $i--) {
             <div class="stat-change up"><?php echo $totalKeluarga > 0 ? round(($diatasUMR/$totalKeluarga)*100, 1) : 0; ?>%</div>
           </div>
         </div>
-              <!-- 🔥 TAMBAHAN BARU: STAT CARD VERIFIKASI -->
+
+        <!-- 🔥 TAMBAHAN BARU: STAT CARD VERIFIKASI -->
         <div class="stat-card">
           <div class="stat-icon">✅</div>
           <div class="stat-content">
@@ -784,7 +694,7 @@ for ($i = 3; $i >= 0; $i--) {
                   <div class="activity-details">
                     NIK: <span class="nik"><?php echo e($update['nik']); ?></span><br>
                     <?php echo e(substr($update['alamat'], 0, 50)); ?><?php echo strlen($update['alamat']) > 50 ? '...' : ''; ?>
-                    <?php if (!empty($update['dapil'])): ?>
+                    <?php if ($hasDapilCol && !empty($update['dapil'])): ?>
                       <div class="activity-badge"><?php echo e($update['dapil']); ?></div>
                     <?php endif; ?>
                   </div>
@@ -831,7 +741,7 @@ for ($i = 3; $i >= 0; $i--) {
                   <div class="activity-details">
                     NIK: <span class="nik"><?php echo e($added['nik']); ?></span><br>
                     <?php echo e(substr($added['alamat'], 0, 50)); ?><?php echo strlen($added['alamat']) > 50 ? '...' : ''; ?>
-                    <?php if (!empty($added['dapil'])): ?>
+                    <?php if ($hasDapilCol && !empty($added['dapil'])): ?>
                       <div class="activity-badge"><?php echo e($added['dapil']); ?></div>
                     <?php endif; ?>
                   </div>
@@ -865,10 +775,9 @@ for ($i = 3; $i >= 0; $i--) {
     const lineData = <?php echo json_encode($lineChartData); ?>;
     const maxLineValue = Math.max(...lineData, 10); // minimal 10
     
-    // Tentukan step size otomatis berdasarkan nilai maksimal
     let lineStepSize = 5;
     if (maxLineValue > 100) {
-      lineStepSize = Math.ceil(maxLineValue / 20 / 5) * 5; // kelipatan 5
+      lineStepSize = Math.ceil(maxLineValue / 20 / 5) * 5;
     } else if (maxLineValue > 50) {
       lineStepSize = 10;
     }
@@ -909,28 +818,17 @@ for ($i = 3; $i >= 0; $i--) {
         scales: {
           y: {
             beginAtZero: true,
-            grid: {
-              color: '#f0f0f0',
-              drawBorder: false
-            },
+            grid: { color: '#f0f0f0', drawBorder: false },
             ticks: { 
               color: '#666',
               font: { size: 11 },
               stepSize: lineStepSize,
-              callback: function(value) {
-                return Number.isInteger(value) ? value : null;
-              }
+              callback: function(value) { return Number.isInteger(value) ? value : null; }
             }
           },
           x: {
-            grid: {
-              display: false,
-              drawBorder: false
-            },
-            ticks: { 
-              color: '#666',
-              font: { size: 11 }
-            }
+            grid: { display: false, drawBorder: false },
+            ticks: { color: '#666', font: { size: 11 } }
           }
         }
       }
@@ -940,12 +838,11 @@ for ($i = 3; $i >= 0; $i--) {
     const ctx2 = document.getElementById('chartBar');
     const barDataDibawah = <?php echo json_encode($barChartDibawah); ?>;
     const barDataDiatas = <?php echo json_encode($barChartDiatas); ?>;
-    const maxBarValue = Math.max(...barDataDibawah, ...barDataDiatas, 10); // minimal 10
+    const maxBarValue = Math.max(...barDataDibawah, ...barDataDiatas, 10);
     
-    // Tentukan step size otomatis berdasarkan nilai maksimal
     let barStepSize = 5;
     if (maxBarValue > 100) {
-      barStepSize = Math.ceil(maxBarValue / 15 / 5) * 5; // kelipatan 5
+      barStepSize = Math.ceil(maxBarValue / 15 / 5) * 5;
     } else if (maxBarValue > 50) {
       barStepSize = 10;
     }
@@ -989,28 +886,17 @@ for ($i = 3; $i >= 0; $i--) {
         scales: {
           y: {
             beginAtZero: true,
-            grid: {
-              color: '#f0f0f0',
-              drawBorder: false
-            },
+            grid: { color: '#f0f0f0', drawBorder: false },
             ticks: { 
               color: '#666',
               font: { size: 10 },
               stepSize: barStepSize,
-              callback: function(value) {
-                return Number.isInteger(value) ? value : null;
-              }
+              callback: function(value) { return Number.isInteger(value) ? value : null; }
             }
           },
           x: {
-            grid: {
-              display: false,
-              drawBorder: false
-            },
-            ticks: { 
-              color: '#666',
-              font: { size: 10 }
-            }
+            grid: { display: false, drawBorder: false },
+            ticks: { color: '#666', font: { size: 10 } }
           }
         }
       }
@@ -1058,9 +944,7 @@ for ($i = 3; $i >= 0; $i--) {
             callbacks: {
               label: function(context) {
                 let label = context.label || '';
-                if (label) {
-                  label += ': ';
-                }
+                if (label) label += ': ';
                 label += context.parsed + ' keluarga';
                 return label;
               }

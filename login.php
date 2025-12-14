@@ -1,4 +1,4 @@
-<?php
+<?php 
 include 'koneksi/config.php';
 session_start();
 
@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // Cek apakah email ada di database
-    $query = "SELECT * FROM login WHERE alamat_email = ?";
+    $query = "SELECT * FROM login WHERE alamat_email = ? LIMIT 1";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -26,16 +26,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Redirect sesuai role
             if ($row['role'] === 'admin') {
                 header("Location: http://localhost/PSI/admin/dashboardadmin.php");
+                exit();
+            } elseif ($row['role'] === 'general') {
+                header("Location: http://localhost/PSI/general/berita_general.php");
+                exit();
             } else {
+                // default user
                 header("Location: http://localhost/PSI/user/dashboard.php");
+                exit();
             }
-            exit();
 
         } else {
             echo "<script>alert('Password salah!'); window.location.href='login.php';</script>";
+            exit();
         }
     } else {
         echo "<script>alert('Email tidak ditemukan!'); window.location.href='login.php';</script>";
+        exit();
     }
 }
 ?>
@@ -263,25 +270,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     .btn-primary:active {
-      transform: translateY(-1px);
-    }
-    
-    .btn-secondary {
-      background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
-      color: #333;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      text-decoration: none;
-      display: block;
-      text-align: center;
-    }
-    
-    .btn-secondary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-      background: linear-gradient(135deg, #d0d0d0 0%, #b0b0b0 100%);
-    }
-    
-    .btn-secondary:active {
       transform: translateY(-1px);
     }
     
