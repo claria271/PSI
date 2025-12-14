@@ -1,5 +1,54 @@
-<?php 
+<?php
 // index.php
+require_once __DIR__ . '/koneksi/config.php';
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn->set_charset('utf8mb4');
+
+function e($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+
+// ==========================
+// AMBIL DATA BERITA (PUBLISH)
+// ==========================
+$beritaList = [];
+try {
+  $stmt = $conn->prepare("
+    SELECT id, judul, ringkasan, link_berita, gambar, tanggal, status
+    FROM berita
+    WHERE status = 'publish'
+    ORDER BY tanggal DESC, id DESC
+    LIMIT 8
+  ");
+  $stmt->execute();
+  $res = $stmt->get_result();
+  while ($row = $res->fetch_assoc()) {
+    $beritaList[] = $row;
+  }
+} catch (Throwable $e) {
+  // Kalau DB error, kita biarkan berita kosong tapi halaman tetap jalan
+  $beritaList = [];
+}
+
+// Lokasi gambar berita (sesuai yang kamu pakai di halaman general)
+$uploadDirUrl = 'uploads/berita/';
+
+// fallback gambar kalau kosong/error
+$fallbackImg = 'https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1200&q=60';
+
+// helper format tanggal Indo (simple)
+function formatTanggalIndo($ymd){
+  if (!$ymd) return '';
+  $bulan = [
+    1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
+    7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+  ];
+  $ts = strtotime($ymd);
+  if (!$ts) return e($ymd);
+  $d = (int)date('d',$ts);
+  $m = (int)date('m',$ts);
+  $y = (int)date('Y',$ts);
+  return $d . ' ' . ($bulan[$m] ?? $m) . ' ' . $y;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -486,7 +535,7 @@
 
   <nav>
     <a class="active">Tentang Josiah</a>
-    <a>Berita</a>
+    <a href="#news">Berita</a>
     <a>Case Studies</a>
     <a>About</a>
     <a>Resources</a>
@@ -576,133 +625,53 @@
     </div>
 
     <div class="news-grid">
-      <!-- Card 1 -->
-      <article class="news-card reveal delay-1">
-        <div class="news-thumb">
-          <img src="assets/image/berita1.jpg" alt="Berita 1" onerror="this.src='https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Prabowo Pastikan Pasokan Pangan Cukup di Lokasi Terdampak Bencana</div>
-          <div class="news-desc">Koordinasi lintas lembaga dipastikan berjalan agar kebutuhan warga tetap terpenuhi.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-bolt"></i> Update</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      </article>
+      <?php if (!empty($beritaList)): ?>
+        <?php $i=0; foreach($beritaList as $b): $i++; ?>
+          <?php
+            $img = $fallbackImg;
+            if (!empty($b['gambar'])) {
+              // kalau gambar ada, pakai uploads/berita/nama_file
+              $img = $uploadDirUrl . rawurlencode($b['gambar']);
+            }
 
-      <!-- Card 2 -->
-      <article class="news-card reveal delay-2">
-        <div class="news-thumb">
-          <img src="assets/image/berita2.jpg" alt="Berita 2" onerror="this.src='https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Target Pemulihan Listrik Dipercepat untuk Wilayah Terdampak</div>
-          <div class="news-desc">Tim teknis disiagakan untuk mempercepat pemulihan layanan dasar di lokasi bencana.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-plug"></i> Infrastruktur</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      </article>
+            // tag kecil biar tetap ada "label" di card (biar mirip desain kamu)
+            $tagText = 'Update';
+            if (!empty($b['status']) && $b['status'] === 'publish') $tagText = 'Update';
 
-      <!-- Card 3 -->
-      <article class="news-card reveal delay-3">
-        <div class="news-thumb">
-          <img src="assets/image/berita3.jpg" alt="Berita 3" onerror="this.src='https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Apresiasi Gotong Royong: Semua Pihak Bersatu Hadapi Bencana</div>
-          <div class="news-desc">Kolaborasi relawan, pemerintah, dan masyarakat jadi kunci percepatan penanganan.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-people-group"></i> Sosial</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      </article>
+            // ringkasan pendek biar rapi di card
+            $ring = (string)($b['ringkasan'] ?? '');
+            $ringShort = mb_substr($ring, 0, 95);
+            if (mb_strlen($ring) > 95) $ringShort .= '...';
 
-      <!-- Card 4 -->
-      <article class="news-card reveal delay-4">
-        <div class="news-thumb">
-          <img src="assets/image/berita4.jpg" alt="Berita 4" onerror="this.src='https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Tegas! Penindakan Pembalakan Liar Diperkuat di Sejumlah Titik</div>
-          <div class="news-desc">Upaya pengawasan ditingkatkan untuk melindungi kawasan hutan dan lingkungan.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-tree"></i> Lingkungan</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
+            // delay animasi (muter 1-4)
+            $delayClass = 'delay-' . (($i % 4) === 1 ? 1 : (($i % 4) === 2 ? 2 : (($i % 4) === 3 ? 3 : 4)));
+          ?>
+          <article class="news-card reveal <?php echo $delayClass; ?>">
+            <div class="news-thumb">
+              <img src="<?php echo e($img); ?>" alt="<?php echo e($b['judul'] ?? 'Berita'); ?>"
+                   onerror="this.onerror=null;this.src='<?php echo e($fallbackImg); ?>';">
+            </div>
+            <div class="news-body">
+              <div class="news-date"><?php echo e(formatTanggalIndo($b['tanggal'] ?? '')); ?></div>
+              <div class="news-h"><?php echo e($b['judul'] ?? ''); ?></div>
+              <div class="news-desc"><?php echo e($ringShort); ?></div>
+              <div class="news-meta">
+                <div class="news-tag"><i class="fa-solid fa-bolt"></i> <?php echo e($tagText); ?></div>
+                <a class="news-read" href="<?php echo e($b['link_berita'] ?? '#'); ?>" target="_blank" rel="noopener">
+                  <span>Baca</span> <i class="fa-solid fa-arrow-right"></i>
+                </a>
+              </div>
+            </div>
+          </article>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <div style="grid-column: 1 / -1; padding: 18px; border-radius: 16px; background: rgba(255,255,255,.9); border:1px solid rgba(15,23,42,.10);">
+          <div style="font-weight:800; font-size:16px; margin-bottom:6px;">Belum ada berita publish.</div>
+          <div style="color:#6b7280; font-size:13px; line-height:1.6;">
+            Tambahkan berita lewat halaman <b>general</b>, lalu set <b>status = publish</b> supaya tampil di sini.
           </div>
         </div>
-      </article>
-
-      <!-- Card 5 -->
-      <article class="news-card reveal delay-1">
-        <div class="news-thumb">
-          <img src="assets/image/berita5.jpg" alt="Berita 5" onerror="this.src='https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Solidaritas Nasional Menguat, Respons Bencana Terus Dipercepat</div>
-          <div class="news-desc">Distribusi bantuan dan layanan kesehatan berjalan bertahap sesuai prioritas.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-hand-holding-heart"></i> Kemanusiaan</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      </article>
-
-      <!-- Card 6 -->
-      <article class="news-card reveal delay-2">
-        <div class="news-thumb">
-          <img src="assets/image/berita6.jpg" alt="Berita 6" onerror="this.src='https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Posko Evakuasi Dipadati Warga, Dukungan Logistik Terus Ditambah</div>
-          <div class="news-desc">Kebutuhan harian disuplai berkala, fokus pada kelompok rentan dan anak-anak.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-box"></i> Logistik</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      </article>
-
-      <!-- Card 7 -->
-      <article class="news-card reveal delay-3">
-        <div class="news-thumb">
-          <img src="assets/image/berita7.jpg" alt="Berita 7" onerror="this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Kunjungan Lapangan: Evaluasi Infrastruktur dan Kebutuhan Warga</div>
-          <div class="news-desc">Data lapangan dipakai untuk menyusun prioritas tindak lanjut pemulihan.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-clipboard-check"></i> Monitoring</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      </article>
-
-      <!-- Card 8 -->
-      <article class="news-card reveal delay-4">
-        <div class="news-thumb">
-          <img src="assets/image/berita8.jpg" alt="Berita 8" onerror="this.src='https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=1200&q=60';">
-        </div>
-        <div class="news-body">
-          <div class="news-date">Desember 13, 2025</div>
-          <div class="news-h">Seruan Doa dan Dukungan Masyarakat Menguat di Lokasi Evakuasi</div>
-          <div class="news-desc">Warga saling menguatkan, kegiatan sosial dilakukan untuk menjaga semangat.</div>
-          <div class="news-meta">
-            <div class="news-tag"><i class="fa-solid fa-hands-praying"></i> Komunitas</div>
-            <a class="news-read" href="#"><span>Baca</span> <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      </article>
+      <?php endif; ?>
     </div>
 
   </div>

@@ -359,7 +359,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               <input type="checkbox" name="ingat_saya">
               Ingat saya
             </label>
-            
+            <a href="#">Lupa password?</a>
           </div>
 
           <button type="submit" class="btn btn-primary">Masuk</button>
