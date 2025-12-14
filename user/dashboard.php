@@ -10,12 +10,12 @@ $resultVerifikasi = mysqli_query($conn, $queryVerifikasi);
 $totalVerifikasi = mysqli_fetch_assoc($resultVerifikasi)['total'];
 
 // Query untuk data per dapil (opsional, untuk breakdown)
-$queryPerDapil = "SELECT dapil, COUNT(*) as total 
-                  FROM verifikasi 
-                  WHERE dapil IS NOT NULL AND dapil != ''
-                  GROUP BY dapil 
-                  ORDER BY dapil";
-$resultPerDapil = mysqli_query($conn, $queryPerDapil);
+//$queryPerDapil = "SELECT dapil, COUNT(*) as total 
+                  //FROM verifikasi 
+                  //WHERE dapil IS NOT NULL AND dapil != ''
+                  //GROUP BY dapil 
+                  //ORDER BY dapil";
+//$resultPerDapil = mysqli_query($conn, $queryPerDapil);
 ?>
 <!DOCTYPE html>
 <html lang="id">
