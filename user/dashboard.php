@@ -15,7 +15,7 @@ $queryPerDapil = "SELECT dapil, COUNT(*) as total
                   WHERE dapil IS NOT NULL AND dapil != ''
                   GROUP BY dapil 
                   ORDER BY dapil";
-$resultPerDapil = mysqli_query($conn, $queryPerDapil);
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
