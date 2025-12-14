@@ -17,8 +17,8 @@ $adminEmail = $_SESSION['alamat_email'] ?? '';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
 
-// ✅ PERBAIKAN: Join ke tabel 'login' bukan 'users'
-// ✅ PERBAIKAN: Tambahkan info admin yang approve dan tracking perubahan
+// ✅ PERBAIKAN: Query disesuaikan dengan struktur tabel login yang hanya punya: id, alamat_email, password, role, foto
+// Karena tidak ada nama_lengkap di tabel login, kita gunakan alamat_email saja atau ambil dari tabel keluarga
 $sql = "SELECT 
           er.id,
           er.user_id,
@@ -29,13 +29,12 @@ $sql = "SELECT
           er.approved_by,
           er.notes,
           er.edited_at,
-          l.nama_lengkap as user_name,
           l.alamat_email as user_email,
           k.nama_lengkap as keluarga_name,
           k.nik as keluarga_nik,
           k.no_wa as keluarga_wa,
           k.updated_at as keluarga_last_updated,
-          admin.nama_lengkap as approved_by_name
+          admin.alamat_email as approved_by_email
         FROM edit_requests er
         LEFT JOIN login l ON er.user_id = l.id
         LEFT JOIN keluarga k ON er.keluarga_id = k.id
@@ -497,7 +496,7 @@ $stats = [
           <thead>
             <tr>
               <th style="width: 60px;">ID</th>
-              <th>User</th>
+              <th>User Email</th>
               <th>Data Keluarga</th>
               <th style="width: 150px;">Status</th>
               <th style="width: 140px;">Tanggal</th>
@@ -510,8 +509,8 @@ $stats = [
                 <td><strong>#<?= $req['id'] ?></strong></td>
                 <td>
                   <div class="user-info">
-                    <strong><?= e($req['user_name'] ?? 'N/A') ?></strong>
-                    <small><?= e($req['user_email'] ?? '') ?></small>
+                    <strong><?= e($req['user_email'] ?? 'N/A') ?></strong>
+                    <small>User ID: <?= $req['user_id'] ?></small>
                   </div>
                 </td>
                 <td>
@@ -539,9 +538,9 @@ $stats = [
                   <span class="status-badge <?= $statusClass ?>">
                     <?= $statusText ?>
                   </span>
-                  <?php if (in_array($req['status'], ['approved', 'completed', 'rejected']) && $req['approved_by_name']): ?>
+                  <?php if (in_array($req['status'], ['approved', 'completed', 'rejected']) && $req['approved_by_email']): ?>
                     <div class="admin-badge">
-                      oleh: <?= e($req['approved_by_name']) ?>
+                      oleh: <?= e($req['approved_by_email']) ?>
                     </div>
                   <?php endif; ?>
                   <?php if ($req['status'] === 'completed' && $req['edited_at']): ?>
@@ -562,12 +561,12 @@ $stats = [
                       <?php if ($req['keluarga_id']): ?>
                         <a href="approve_edit_request.php?id=<?= $req['id'] ?>&action=approve" 
                            class="btn btn-approve"
-                           onclick="return confirm('✅ Setujui permintaan edit dari <?= e($req['user_name']) ?>?')">
+                           onclick="return confirm('✅ Setujui permintaan edit dari <?= e($req['user_email']) ?>?')">
                           ✓ Setujui
                         </a>
                         <a href="approve_edit_request.php?id=<?= $req['id'] ?>&action=reject" 
                            class="btn btn-reject"
-                           onclick="return confirm('❌ Tolak permintaan edit dari <?= e($req['user_name']) ?>?')">
+                           onclick="return confirm('❌ Tolak permintaan edit dari <?= e($req['user_email']) ?>?')">
                           ✗ Tolak
                         </a>
                       <?php else: ?>

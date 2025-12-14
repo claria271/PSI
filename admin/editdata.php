@@ -2,10 +2,6 @@
 session_start();
 include '../koneksi/config.php';
 
-// NOTE: Pastikan di database kolom `kenal` sudah cukup panjang:
-// Contoh:
-// ALTER TABLE keluarga MODIFY kenal VARCHAR(20);
-
 // Pastikan hanya admin yang bisa akses
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
   header("Location: ../user/login.php");
@@ -39,44 +35,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $nik               = $_POST['nik'];
   $no_wa             = $_POST['no_wa'];
   $alamat            = $_POST['alamat'];
-  $dapil             = $_POST['dapil'];
-  $kecamatan         = $_POST['kecamatan'];
+  $domisili          = $_POST['domisili'];
   $jumlah_anggota    = (int)$_POST['jumlah_anggota'];
   $jumlah_bekerja    = (int)$_POST['jumlah_bekerja'];
   $total_penghasilan = (int)$_POST['total_penghasilan'];
-  $kenal             = $_POST['kenal'];   // Ya / Tidak / Tidak pernah
-  $sumber            = $_POST['sumber'];
 
   $query = "UPDATE keluarga SET 
               nama_lengkap = ?, 
               nik = ?, 
               no_wa = ?, 
               alamat = ?, 
-              dapil = ?, 
-              kecamatan = ?, 
+              domisili = ?,
               jumlah_anggota = ?, 
               jumlah_bekerja = ?, 
               total_penghasilan = ?, 
-              kenal = ?, 
-              sumber = ?, 
               updated_at = NOW() 
             WHERE id = ?";
 
   $stmt = $conn->prepare($query);
-  // ssssssiiissi = 6 string, 3 integer, 2 string, 1 integer (total 12)
   $stmt->bind_param(
-    "ssssssiiissi",
+    "sssssiiii",
     $nama_lengkap,
     $nik,
     $no_wa,
     $alamat,
-    $dapil,
-    $kecamatan,
+    $domisili,
     $jumlah_anggota,
     $jumlah_bekerja,
     $total_penghasilan,
-    $kenal,
-    $sumber,
     $id
   );
 
@@ -200,29 +186,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="text" name="nik" value="<?= htmlspecialchars($data['nik']) ?>">
 
       <label>No WhatsApp</label>
-      <input type="text" name="no_wa" value="<?= htmlspecialchars($data['no_wa']) ?>">
+      <input type="text" name="no_wa" id="no_wa" value="<?= htmlspecialchars($data['no_wa']) ?>" placeholder="Contoh: +6281234567890">
 
-      <label>Alamat Lengkap</label>
+      <label>Alamat KTP</label>
       <textarea name="alamat"><?= htmlspecialchars($data['alamat']) ?></textarea>
 
-      <label>Dapil</label>
-      <select name="dapil" id="dapil" required>
-        <option value="<?= htmlspecialchars($data['dapil']) ?>">
-          <?= htmlspecialchars($data['dapil']) ?>
-        </option>
-        <option value="Kota Surabaya 1">Kota Surabaya 1</option>
-        <option value="Kota Surabaya 2">Kota Surabaya 2</option>
-        <option value="Kota Surabaya 3">Kota Surabaya 3</option>
-        <option value="Kota Surabaya 4">Kota Surabaya 4</option>
-        <option value="Kota Surabaya 5">Kota Surabaya 5</option>
-      </select>
-
-      <label>Kecamatan</label>
-      <select name="kecamatan" id="kecamatan">
-        <option value="<?= htmlspecialchars($data['kecamatan']) ?>">
-          <?= htmlspecialchars($data['kecamatan']) ?>
-        </option>
-      </select>
+      <label>Alamat Domisili</label>
+      <textarea name="domisili"><?= htmlspecialchars($data['domisili'] ?? '') ?></textarea>
 
       <label>Jumlah Anggota Keluarga</label>
       <input type="number" name="jumlah_anggota" value="<?= htmlspecialchars($data['jumlah_anggota']) ?>">
@@ -231,29 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="number" name="jumlah_bekerja" value="<?= htmlspecialchars($data['jumlah_bekerja']) ?>">
 
       <label>Total Penghasilan Keluarga</label>
-      <input type="number" name="total_penghasilan" value="<?= htmlspecialchars($data['total_penghasilan']) ?>">
-
-      <label>Apakah mengenal Josiah Michael?</label>
-      <select name="kenal">
-        <option value="">-- Pilih --</option>
-        <option value="Ya" <?= $data['kenal'] === 'Ya' ? 'selected' : '' ?>>Ya</option>
-        <option value="Tidak" <?= $data['kenal'] === 'Tidak' ? 'selected' : '' ?>>Tidak</option>
-        <option value="Tidak pernah" <?= $data['kenal'] === 'Tidak pernah' ? 'selected' : '' ?>>Tidak pernah</option>
-      </select>
-
-      <label>Sumber Mengenal</label>
-      <select name="sumber">
-        <option value="">-- Pilih --</option>
-        <option value="Kegiatan PSI Surabaya" <?= $data['sumber'] === 'Kegiatan PSI Surabaya' ? 'selected' : '' ?>>
-          Kegiatan PSI Surabaya
-        </option>
-        <option value="Dari teman atau relasi" <?= $data['sumber'] === 'Dari teman atau relasi' ? 'selected' : '' ?>>
-          Dari teman atau relasi
-        </option>
-        <option value="Lainnya" <?= $data['sumber'] === 'Lainnya' ? 'selected' : '' ?>>
-          Lainnya
-        </option>
-      </select>
+      <input type="text" name="total_penghasilan" id="total_penghasilan" value="<?= number_format($data['total_penghasilan'], 0, ',', '.') ?>" placeholder="Contoh: 5.000.000">
 
       <div style="text-align:right;">
         <button type="button" class="btn btn-back" onclick="window.location.href='datakeluarga.php'">Kembali</button>
@@ -269,27 +217,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </footer>
 
   <script>
-    // Dapil & Kecamatan dinamis (opsional seperti di tambahdata.php)
-    const dapil = document.getElementById('dapil');
-    const kecamatan = document.getElementById('kecamatan');
-    const dataDapil = {
-      "Kota Surabaya 1": ["Bubutan","Genteng","Gubeng","Krembangan","Simokerto","Tegalsari"],
-      "Kota Surabaya 2": ["Kenjeran","Pabean Cantikan","Semampir","Tambaksari"],
-      "Kota Surabaya 3": ["Bulak","Gunung Anyar","Mulyorejo","Rungkut","Sukolilo","Tenggilis Mejoyo","Wonocolo"],
-      "Kota Surabaya 4": ["Gayungan","Jambangan","Sawahan","Sukomanunggal","Wonokromo"],
-      "Kota Surabaya 5": ["Asemrowo","Benowo","Dukuhpakis","Karangpilang","Lakarsantri","Pakal","Sambikerep","Tandes","Wiyung"]
-    };
-
-    dapil.addEventListener('change', () => {
-      kecamatan.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
-      if (dataDapil[dapil.value]) {
-        dataDapil[dapil.value].forEach(k => {
-          const opt = document.createElement('option');
-          opt.value = k;
-          opt.textContent = k;
-          kecamatan.appendChild(opt);
-        });
+    // Format No WhatsApp dengan +62
+    const noWaInput = document.getElementById('no_wa');
+    
+    noWaInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, ''); // Hapus non-digit
+      
+      // Jika diawali 0, ganti dengan 62
+      if (value.startsWith('0')) {
+        value = '62' + value.substring(1);
       }
+      
+      // Jika belum ada 62 di awal, tambahkan
+      if (!value.startsWith('62')) {
+        value = '62' + value;
+      }
+      
+      e.target.value = '+' + value;
+    });
+
+    // Format Total Penghasilan dengan titik pemisah ribuan
+    const penghasilanInput = document.getElementById('total_penghasilan');
+    
+    penghasilanInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, ''); // Hapus non-digit
+      
+      // Format dengan titik sebagai pemisah ribuan
+      if (value) {
+        value = parseInt(value).toLocaleString('id-ID');
+      }
+      
+      e.target.value = value;
+    });
+
+    // Sebelum submit, hapus titik dari penghasilan
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const penghasilan = document.getElementById('total_penghasilan');
+      penghasilan.value = penghasilan.value.replace(/\./g, '');
     });
 
     // SweetAlert notifikasi sukses/gagal

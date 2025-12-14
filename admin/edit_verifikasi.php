@@ -45,13 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nik = trim($_POST['nik']);
     $no_wa = trim($_POST['no_wa']);
     $alamat = trim($_POST['alamat']);
-    $dapil = trim($_POST['dapil']);
-    $kecamatan = trim($_POST['kecamatan']);
+    $domisili = trim($_POST['domisili']);
     $jumlah_anggota = (int)$_POST['jumlah_anggota'];
     $jumlah_bekerja = (int)$_POST['jumlah_bekerja'];
-    $total_penghasilan = (float)$_POST['total_penghasilan'];
-    $kenal = trim($_POST['kenal']);
-    $sumber = trim($_POST['sumber']);
+    $total_penghasilan = (int)str_replace('.', '', $_POST['total_penghasilan']); // Hapus titik
     $bantuan = trim($_POST['bantuan']);
     
     try {
@@ -61,31 +58,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 nik = ?,
                 no_wa = ?,
                 alamat = ?,
-                dapil = ?,
-                kecamatan = ?,
+                domisili = ?,
                 jumlah_anggota = ?,
                 jumlah_bekerja = ?,
                 total_penghasilan = ?,
-                kenal = ?,
-                sumber = ?,
                 bantuan = ?
             WHERE id = ?
         ");
         
-        // ✅ DIPERBAIKI: Tambahkan 'i' untuk $id (13 tipe untuk 13 variabel)
         $stmt_update->bind_param(
-            'ssssssiidsssi',  // 13 karakter: s,s,s,s,s,s,i,i,d,s,s,s,i
+            'sssssiidsi',
             $nama_lengkap,
             $nik,
             $no_wa,
             $alamat,
-            $dapil,
-            $kecamatan,
+            $domisili,
             $jumlah_anggota,
             $jumlah_bekerja,
             $total_penghasilan,
-            $kenal,
-            $sumber,
             $bantuan,
             $id
         );
@@ -105,30 +95,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Ambil data admin untuk sidebar
 $admin = null;
 $adminName = 'Admin';
-$adminPhoto = '../assets/image/admin_photo.jpg';
+$adminPhoto = '../assets/image/user.png';
+$keluargaAdmin = null;
 
-if (isset($_SESSION['id'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
-    $stmt->bind_param('i', $_SESSION['id']);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res->num_rows > 0) {
-        $admin = $res->fetch_assoc();
-    }
-} elseif (isset($_SESSION['alamat_email'])) {
+if (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
     $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
     $stmt->bind_param('s', $_SESSION['alamat_email']);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($res->num_rows > 0) {
         $admin = $res->fetch_assoc();
+        
+        // Ambil data keluarga admin untuk nama lengkap
+        $stmtK = $conn->prepare("SELECT * FROM keluarga WHERE user_id = ? LIMIT 1");
+        $stmtK->bind_param('i', $admin['id']);
+        $stmtK->execute();
+        $resK = $stmtK->get_result();
+        if ($resK->num_rows > 0) {
+            $keluargaAdmin = $resK->fetch_assoc();
+        }
+        $stmtK->close();
     }
+    $stmt->close();
 }
 
-if ($admin) {
-    $adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : 'Admin';
-    $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/admin_photo.jpg';
-}
+$adminName = !empty($keluargaAdmin['nama_lengkap']) ? $keluargaAdmin['nama_lengkap'] : 'Admin';
+$adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/user.png';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -202,6 +194,11 @@ if ($admin) {
       transition: all 0.3s;
     }
 
+    .admin-photo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
+    }
+
     .admin-photo img {
       width: 100%;
       height: 100%;
@@ -217,6 +214,13 @@ if ($admin) {
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s;
+    }
+
+    .admin-name:hover {
+      background: #ff4b4b;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
     }
 
     .sidebar nav a {
@@ -274,12 +278,24 @@ if ($admin) {
       margin-bottom: 20px;
       font-size: 14px;
       font-weight: 500;
+      animation: slideIn 0.3s ease-out;
     }
 
     .alert-error {
       background: #f8d7da;
       color: #721c24;
       border: 1px solid #f5c6cb;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .card {
@@ -405,35 +421,32 @@ if ($admin) {
     <aside class="sidebar">
       <div class="admin-profile">
         <div class="admin-photo" onclick="window.location.href='profil_admin.php'">
-          <img 
-            src="<?php echo e($adminPhoto); ?>" 
-            alt="Admin Photo"
-            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%23bbb\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23666\'%3E👤%3C/text%3E%3C/svg%3E';"
-          >
+          <img src="<?= e($adminPhoto) ?>" alt="Admin Photo">
         </div>
         <div class="admin-name" onclick="window.location.href='profil_admin.php'">
-          <?php echo e($adminName); ?>
+          <?= e($adminName) ?>
         </div>
       </div>
       <nav>
         <a href="dashboardadmin.php">Dashboard</a>
         <a href="datakeluarga.php">Data Keluarga</a>
-        <a href="tambah_admin.php">➕ Tambah Admin</a>
+        <a href="kelola_admin.php">Kelola Admin</a>
+        <a href="permintaanedit.php">Permintaan Edit</a>
         <a href="verifikasi.php" class="active">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
-        <a href="../user/logout.php">Logout</a>
+        <a href="logoutadmin.php">Logout</a>
       </nav>
     </aside>
 
     <div class="content">
       <div class="page-header">
-        <h2>Edit Data Verifikasi</h2>
+        <h2>✏️ Edit Data Verifikasi</h2>
         <p>Ubah informasi data yang telah diverifikasi</p>
       </div>
 
       <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-error">
-          <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+          <?= $_SESSION['error']; unset($_SESSION['error']); ?>
         </div>
       <?php endif; ?>
 
@@ -441,91 +454,62 @@ if ($admin) {
         <form method="POST">
           <div class="form-group">
             <label>Nama Lengkap *</label>
-            <input type="text" name="nama_lengkap" value="<?php echo e($data['nama_lengkap']); ?>" required>
+            <input type="text" name="nama_lengkap" value="<?= e($data['nama_lengkap']) ?>" required>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label>NIK *</label>
-              <input type="text" name="nik" value="<?php echo e($data['nik']); ?>" required maxlength="16">
+              <input type="text" name="nik" value="<?= e($data['nik']) ?>" required maxlength="16">
             </div>
             <div class="form-group">
               <label>No WhatsApp *</label>
-              <input type="text" name="no_wa" value="<?php echo e($data['no_wa']); ?>" required maxlength="15">
+              <input type="text" name="no_wa" id="no_wa" value="<?= e($data['no_wa']) ?>" required placeholder="+6281234567890">
             </div>
           </div>
 
           <div class="form-group">
-            <label>Alamat Lengkap *</label>
-            <textarea name="alamat" required><?php echo e($data['alamat']); ?></textarea>
+            <label>Alamat KTP *</label>
+            <textarea name="alamat" required><?= e($data['alamat']) ?></textarea>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Dapil *</label>
-              <select name="dapil" required>
-                <option value="">-- Pilih Dapil --</option>
-                <option value="Kota Surabaya 1" <?php echo $data['dapil'] === 'Kota Surabaya 1' ? 'selected' : ''; ?>>Kota Surabaya 1</option>
-                <option value="Kota Surabaya 2" <?php echo $data['dapil'] === 'Kota Surabaya 2' ? 'selected' : ''; ?>>Kota Surabaya 2</option>
-                <option value="Kota Surabaya 3" <?php echo $data['dapil'] === 'Kota Surabaya 3' ? 'selected' : ''; ?>>Kota Surabaya 3</option>
-                <option value="Kota Surabaya 4" <?php echo $data['dapil'] === 'Kota Surabaya 4' ? 'selected' : ''; ?>>Kota Surabaya 4</option>
-                <option value="Kota Surabaya 5" <?php echo $data['dapil'] === 'Kota Surabaya 5' ? 'selected' : ''; ?>>Kota Surabaya 5</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Kecamatan *</label>
-              <input type="text" name="kecamatan" value="<?php echo e($data['kecamatan']); ?>" required>
-            </div>
+          <div class="form-group">
+            <label>Alamat Domisili</label>
+            <textarea name="domisili"><?= e($data['domisili'] ?? '') ?></textarea>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label>Jumlah Anggota Keluarga *</label>
-              <input type="number" name="jumlah_anggota" value="<?php echo e($data['jumlah_anggota']); ?>" required min="1">
+              <input type="number" name="jumlah_anggota" value="<?= e($data['jumlah_anggota']) ?>" required min="1">
             </div>
             <div class="form-group">
               <label>Jumlah yang Bekerja *</label>
-              <input type="number" name="jumlah_bekerja" value="<?php echo e($data['jumlah_bekerja']); ?>" required min="0">
+              <input type="number" name="jumlah_bekerja" value="<?= e($data['jumlah_bekerja']) ?>" required min="0">
             </div>
           </div>
 
           <div class="form-group">
             <label>Total Penghasilan Keluarga (Rp) *</label>
-            <input type="number" name="total_penghasilan" value="<?php echo e($data['total_penghasilan']); ?>" required min="0">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Kenal PSI? *</label>
-              <select name="kenal" required>
-                <option value="">-- Pilih --</option>
-                <option value="Ya" <?php echo $data['kenal'] === 'Ya' ? 'selected' : ''; ?>>Ya</option>
-                <option value="Tidak" <?php echo $data['kenal'] === 'Tidak' ? 'selected' : ''; ?>>Tidak</option>
-                <option value="Tidak pernah" <?php echo $data['kenal'] === 'Tidak pernah' ? 'selected' : ''; ?>>Tidak pernah</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Sumber *</label>
-              <input type="text" name="sumber" value="<?php echo e($data['sumber']); ?>" required>
-            </div>
+            <input type="text" name="total_penghasilan" id="total_penghasilan" value="<?= number_format($data['total_penghasilan'], 0, ',', '.') ?>" required placeholder="5.000.000">
           </div>
 
           <div class="form-group">
             <label>Bentuk Bantuan *</label>
             <select name="bantuan" required>
               <option value="">-- Pilih Bentuk Bantuan --</option>
-              <option value="Bantuan Pendidikan" <?php echo $data['bantuan'] === 'Bantuan Pendidikan' ? 'selected' : ''; ?>>📚 Bantuan Pendidikan</option>
-              <option value="Alat Bantu Dengar" <?php echo $data['bantuan'] === 'Alat Bantu Dengar' ? 'selected' : ''; ?>>👂 Alat Bantu Dengar</option>
-              <option value="Kursi Roda" <?php echo $data['bantuan'] === 'Kursi Roda' ? 'selected' : ''; ?>>♿ Kursi Roda</option>
-              <option value="Kesehatan" <?php echo $data['bantuan'] === 'Kesehatan' ? 'selected' : ''; ?>>🏥 Kesehatan</option>
-              <option value="Sembako" <?php echo $data['bantuan'] === 'Sembako' ? 'selected' : ''; ?>>🛒 Sembako</option>
-              <option value="Uang Muka" <?php echo $data['bantuan'] === 'Uang Muka' ? 'selected' : ''; ?>>💰 Bantuan Uang</option>
-              <option value="Lainnya" <?php echo $data['bantuan'] === 'Lainnya' ? 'selected' : ''; ?>>📦 Lainnya</option>
+              <option value="Bantuan Pendidikan" <?= $data['bantuan'] === 'Bantuan Pendidikan' ? 'selected' : '' ?>>📚 Bantuan Pendidikan</option>
+              <option value="Alat Bantu Dengar" <?= $data['bantuan'] === 'Alat Bantu Dengar' ? 'selected' : '' ?>>👂 Alat Bantu Dengar</option>
+              <option value="Kursi Roda" <?= $data['bantuan'] === 'Kursi Roda' ? 'selected' : '' ?>>♿ Kursi Roda</option>
+              <option value="Kesehatan" <?= $data['bantuan'] === 'Kesehatan' ? 'selected' : '' ?>>🏥 Kesehatan</option>
+              <option value="Sembako" <?= $data['bantuan'] === 'Sembako' ? 'selected' : '' ?>>🛒 Sembako</option>
+              <option value="Uang Muka" <?= $data['bantuan'] === 'Uang Muka' ? 'selected' : '' ?>>💰 Bantuan Uang</option>
+              <option value="Lainnya" <?= $data['bantuan'] === 'Lainnya' ? 'selected' : '' ?>>📦 Lainnya</option>
             </select>
           </div>
 
           <div class="btn-group">
-            <button type="button" class="btn btn-secondary" onclick="window.location.href='verifikasi.php'">Batal</button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='verifikasi.php'">✗ Batal</button>
             <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
           </div>
         </form>
@@ -538,5 +522,43 @@ if ($admin) {
       </footer>
     </div>
   </div>
+
+  <script>
+    // Format No WhatsApp dengan +62
+    const noWaInput = document.getElementById('no_wa');
+    
+    noWaInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      
+      if (value.startsWith('0')) {
+        value = '62' + value.substring(1);
+      }
+      
+      if (!value.startsWith('62')) {
+        value = '62' + value;
+      }
+      
+      e.target.value = '+' + value;
+    });
+
+    // Format Total Penghasilan dengan titik pemisah ribuan
+    const penghasilanInput = document.getElementById('total_penghasilan');
+    
+    penghasilanInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      
+      if (value) {
+        value = parseInt(value).toLocaleString('id-ID');
+      }
+      
+      e.target.value = value;
+    });
+
+    // Sebelum submit, hapus titik dari penghasilan
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const penghasilan = document.getElementById('total_penghasilan');
+      penghasilan.value = penghasilan.value.replace(/\./g, '');
+    });
+  </script>
 </body>
 </html>

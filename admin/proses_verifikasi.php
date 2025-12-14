@@ -1,4 +1,5 @@
 <?php
+//admin/proses_verifikasi.php
 session_start();
 include '../koneksi/config.php';
 
@@ -54,34 +55,36 @@ try {
         exit();
     }
     
-    // Tentukan siapa yang memverifikasi (ambil nama lengkap admin)
-// Tentukan siapa yang memverifikasi
-$verified_by = 'Admin';
-
-// Prioritas: ID > Email
-if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
-    $stmt_admin = $conn->prepare("SELECT nama_lengkap FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
-    $stmt_admin->bind_param('i', $_SESSION['id']);
-    $stmt_admin->execute();
-    $admin_result = $stmt_admin->get_result();
+    // 🔥 PERBAIKAN: Ambil nama admin dari tabel KELUARGA, bukan LOGIN
+    $verified_by = 'Admin';
     
-    if ($admin_result->num_rows > 0) {
-        $admin_data = $admin_result->fetch_assoc();
-        $verified_by = !empty($admin_data['nama_lengkap']) ? $admin_data['nama_lengkap'] : 'Admin';
+    if (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
+        // Ambil user_id dari login terlebih dahulu
+        $stmt_login = $conn->prepare("SELECT id FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
+        $stmt_login->bind_param('s', $_SESSION['alamat_email']);
+        $stmt_login->execute();
+        $login_result = $stmt_login->get_result();
+        
+        if ($login_result->num_rows > 0) {
+            $login_data = $login_result->fetch_assoc();
+            $user_id = $login_data['id'];
+            
+            // Ambil nama lengkap dari tabel keluarga berdasarkan user_id
+            $stmt_keluarga = $conn->prepare("SELECT nama_lengkap FROM keluarga WHERE user_id = ? LIMIT 1");
+            $stmt_keluarga->bind_param('i', $user_id);
+            $stmt_keluarga->execute();
+            $keluarga_result = $stmt_keluarga->get_result();
+            
+            if ($keluarga_result->num_rows > 0) {
+                $keluarga_data = $keluarga_result->fetch_assoc();
+                $verified_by = !empty($keluarga_data['nama_lengkap']) ? $keluarga_data['nama_lengkap'] : 'Admin';
+            }
+            $stmt_keluarga->close();
+        }
+        $stmt_login->close();
     }
-} elseif (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
-    $stmt_admin = $conn->prepare("SELECT nama_lengkap FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
-    $stmt_admin->bind_param('s', $_SESSION['alamat_email']);
-    $stmt_admin->execute();
-    $admin_result = $stmt_admin->get_result();
     
-    if ($admin_result->num_rows > 0) {
-        $admin_data = $admin_result->fetch_assoc();
-        $verified_by = !empty($admin_data['nama_lengkap']) ? $admin_data['nama_lengkap'] : 'Admin';
-    }
-}
-    
-    // Insert data ke tabel verifikasi (DENGAN KOLOM BANTUAN)
+    // Insert data ke tabel verifikasi (TANPA dapil, kecamatan, sumber, kenal + DENGAN domisili)
     $stmt_insert = $conn->prepare("
         INSERT INTO verifikasi (
             keluarga_id,
@@ -89,34 +92,31 @@ if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
             nik,
             no_wa,
             alamat,
-            dapil,
-            kecamatan,
+            domisili,
             jumlah_anggota,
             jumlah_bekerja,
             total_penghasilan,
-            kenal,
-            sumber,
             bantuan,
             status_verifikasi,
             verified_at,
             verified_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Terverifikasi', NOW(), ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Terverifikasi', NOW(), ?)
     ");
     
+    // Ambil domisili dari keluarga (atau gunakan alamat jika kosong)
+    $domisili = !empty($data['domisili']) ? $data['domisili'] : $data['alamat'];
+    
     $stmt_insert->bind_param(
-        'issssssiisssss',
+        'isssssiidss',
         $data['id'],
         $data['nama_lengkap'],
         $data['nik'],
         $data['no_wa'],
         $data['alamat'],
-        $data['dapil'],
-        $data['kecamatan'],
+        $domisili,
         $data['jumlah_anggota'],
         $data['jumlah_bekerja'],
         $data['total_penghasilan'],
-        $data['kenal'],
-        $data['sumber'],
         $bentuk_bantuan,
         $verified_by
     );

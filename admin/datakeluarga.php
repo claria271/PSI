@@ -1,4 +1,5 @@
 <?php
+//admin/datakeluarga.php
 session_start();
 include '../koneksi/config.php';
 
@@ -19,25 +20,29 @@ function e($str) {
 // Ambil data admin berdasarkan session
 $admin = null;
 $adminName = 'Admin';
-$adminPhoto = '../assets/image/admin_photo.jpg';
+$adminPhoto = '../assets/image/user.png';
+$keluargaAdmin = null;
 
-// Prioritas: ID > Email
-if (isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
-    $stmt->bind_param('i', $_SESSION['id']);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res->num_rows > 0) {
-        $admin = $res->fetch_assoc();
-    }
-} elseif (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
+// Ambil data login admin
+if (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
     $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
     $stmt->bind_param('s', $_SESSION['alamat_email']);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($res->num_rows > 0) {
         $admin = $res->fetch_assoc();
+        
+        // Ambil data keluarga admin untuk nama lengkap
+        $stmtK = $conn->prepare("SELECT * FROM keluarga WHERE user_id = ? LIMIT 1");
+        $stmtK->bind_param('i', $admin['id']);
+        $stmtK->execute();
+        $resK = $stmtK->get_result();
+        if ($resK->num_rows > 0) {
+            $keluargaAdmin = $resK->fetch_assoc();
+        }
+        $stmtK->close();
     }
+    $stmt->close();
 }
 
 // Jika admin tidak ditemukan, redirect ke login
@@ -48,13 +53,8 @@ if (!$admin) {
 }
 
 // Tentukan nama & foto admin
-$adminName = !empty($admin['nama_lengkap'])
-    ? $admin['nama_lengkap']
-    : (!empty($admin['username']) ? $admin['username'] : 'Admin');
-
-$adminPhoto = !empty($admin['foto'])
-    ? '../uploads/' . $admin['foto']
-    : '../assets/image/admin_photo.jpg';
+$adminName = !empty($keluargaAdmin['nama_lengkap']) ? $keluargaAdmin['nama_lengkap'] : 'Admin';
+$adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/user.png';
 
 // ================== LOGIKA DATA KELUARGA ================== //
 
@@ -73,7 +73,7 @@ if ($search !== '') {
     $conditions[] = "(k.nama_lengkap LIKE '%$safe%' 
                   OR k.nik LIKE '%$safe%' 
                   OR k.no_wa LIKE '%$safe%'
-                  OR l.alamat_email LIKE '%$safe%')"; // cari berdasarkan email akun pengisi
+                  OR l.alamat_email LIKE '%$safe%')";
 }
 
 // Filter UMR berdasarkan UMR PER ORANG
@@ -85,7 +85,7 @@ if ($status_umr === 'Dibawah') {
     $conditions[] = "( (k.total_penghasilan / NULLIF(k.jumlah_anggota,0)) >= $umr )";
 }
 
-// Join dengan tabel verifikasi + login (untuk ambil email akun pengisi)
+// Join dengan tabel verifikasi + login
 $query = "SELECT k.*, 
           v.id as verification_id,
           v.verified_by,
@@ -103,7 +103,12 @@ $query .= " ORDER BY k.created_at DESC";
 
 $result = mysqli_query($conn, $query);
 
-// 🔥 TAMPILKAN PESAN SUCCESS SETELAH VERIFIKASI
+// Hitung total data terverifikasi
+$total_query = "SELECT COUNT(*) as total FROM verifikasi";
+$total_result = mysqli_query($conn, $total_query);
+$total_data = mysqli_fetch_assoc($total_result)['total'];
+
+// Tampilkan pesan dari session
 $successMessage = '';
 if (isset($_SESSION['success'])) {
     $successMessage = $_SESSION['success'];
@@ -401,7 +406,7 @@ if (isset($_SESSION['error'])) {
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1000px;
+      min-width: 1200px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -409,7 +414,7 @@ if (isset($_SESSION['error'])) {
     th, td {
       padding: 10px;
       border: 1px solid #ccc;
-      font-size: 14px;
+      font-size: 13px;
       text-align: left;
       white-space: nowrap;
     }
@@ -468,8 +473,10 @@ if (isset($_SESSION['error'])) {
       border-radius: 5px;
       cursor: pointer;
       margin-right: 4px;
-      font-size: 13px;
+      margin-bottom: 4px;
+      font-size: 12px;
       transition: 0.3s;
+      white-space: nowrap;
     }
 
     .aksi .edit {
@@ -532,6 +539,111 @@ if (isset($_SESSION['error'])) {
     ::-webkit-scrollbar-thumb:hover {
       background: #555;
     }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h3 {
+      margin-bottom: 20px;
+      color: #000;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    .modal-content p {
+      margin-bottom: 20px;
+      color: #666;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .modal-content label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #000;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 15px;
+      background: #f5f5f5;
+      font-family: inherit;
+    }
+
+    .modal-content textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-content select {
+      cursor: pointer;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .modal-buttons button {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-submit {
+      background: #4CAF50;
+      color: #fff;
+    }
+
+    .btn-submit:hover {
+      background: #388E3C;
+    }
+
+    .btn-cancel {
+      background: #9E9E9E;
+      color: #fff;
+    }
+
+    .btn-cancel:hover {
+      background: #757575;
+    }
+
+    .required {
+      color: red;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -558,11 +670,13 @@ if (isset($_SESSION['error'])) {
         </div>
       </div>
       <nav>
-        <a href="dashboardadmin.php">Dashboard</a>
-        <a href="datakeluarga.php" class="active">Data Keluarga</a>
+        <a href="#" class="active">Dashboard</a>
+        <a href="permintaanedit.php">📝 Kelola Edit User</a>
+        <a href="datakeluarga.php">Data Keluarga</a>
         <a href="tambah_admin.php">➕ Tambah Admin</a>
         <a href="verifikasi.php">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
+        <a href="pengaduan_admin.php">Pengaduan</a>
         <a href="logoutadmin.php">Logout</a>
       </nav>
     </aside>
@@ -570,27 +684,27 @@ if (isset($_SESSION['error'])) {
     <!-- CONTENT -->
     <div class="content">
       <div class="page-header">
-        <h2>Data Keluarga</h2>
-        <p>Kelola data keluarga yang telah terdaftar dalam sistem. UMR dihitung per orang: Rp <?php echo number_format(UMR_PERSON, 0, ',', '.'); ?></p>
+        <h2>📋 Data Keluarga</h2>
+        <p>Kelola data keluarga yang telah terdaftar dalam sistem. UMR per orang: Rp <?= number_format(UMR_PERSON, 0, ',', '.') ?></p>
       </div>
 
       <div class="content-scroll">
         <!-- ALERT -->
         <?php if ($successMessage): ?>
           <div class="alert alert-success">
-            <?php echo $successMessage; ?>
+            ✓ <?= $successMessage ?>
           </div>
         <?php endif; ?>
 
         <?php if ($warningMessage): ?>
           <div class="alert alert-warning">
-            <?php echo $warningMessage; ?>
+            ⚠ <?= $warningMessage ?>
           </div>
         <?php endif; ?>
 
         <?php if ($errorMessage): ?>
           <div class="alert alert-error">
-            <?php echo $errorMessage; ?>
+            ✗ <?= $errorMessage ?>
           </div>
         <?php endif; ?>
 
@@ -603,13 +717,13 @@ if (isset($_SESSION['error'])) {
                 type="text"
                 name="search"
                 placeholder="Cari Nama, NIK, No HP, Email"
-                value="<?php echo e($search); ?>"
+                value="<?= e($search) ?>"
               >
 
               <select name="status_umr" onchange="this.form.submit()">
-                <option value=""  <?php echo $status_umr === '' ? 'selected' : ''; ?>>Semua Status</option>
-                <option value="Dibawah" <?php echo $status_umr === 'Dibawah' ? 'selected' : ''; ?>>Dibawah UMR</option>
-                <option value="Diatas"  <?php echo $status_umr === 'Diatas'  ? 'selected' : ''; ?>>Diatas UMR</option>
+                <option value=""  <?= $status_umr === '' ? 'selected' : '' ?>>Semua Status</option>
+                <option value="Dibawah" <?= $status_umr === 'Dibawah' ? 'selected' : '' ?>>Dibawah UMR</option>
+                <option value="Diatas"  <?= $status_umr === 'Diatas'  ? 'selected' : '' ?>>Diatas UMR</option>
               </select>
 
               <button type="submit" style="display:none;"></button>
@@ -624,7 +738,8 @@ if (isset($_SESSION['error'])) {
                   <th>NIK</th>
                   <th>No WA</th>
                   <th>Email Pengisi</th>
-                  <th>Alamat Lengkap</th>
+                  <th>Alamat KTP</th>
+                  <th>Alamat Domisili</th>
                   <th>Jumlah Anggota</th>
                   <th>Jumlah Bekerja</th>
                   <th>Total Penghasilan</th>
@@ -648,42 +763,42 @@ if (isset($_SESSION['error'])) {
                         : "<span class='diatas'>Diatas UMR</span>";
 
                       $isVerified = !empty($row['verification_id']);
-                      $rowClass   = $isVerified ? ' verified' : '';
                     ?>
-                    <tr class="<?php echo $isVerified ? 'verified' : ''; ?>">
+                    <tr class="<?= $isVerified ? 'verified' : '' ?>">
                       <td>
-                        <?php echo e($row['nama_lengkap']); ?>
+                        <?= e($row['nama_lengkap']) ?>
                         <?php if ($isVerified): ?>
                           <span class="verified-badge">✓ Terverifikasi</span>
                         <?php endif; ?>
                       </td>
-                      <td><?php echo e($row['nik']); ?></td>
-                      <td><?php echo e($row['no_wa']); ?></td>
-                      <td><?php echo e($row['email_pengisi']); ?></td>
-                      <td><?php echo e($row['alamat']); ?></td>
-                      <td><?php echo e($row['jumlah_anggota']); ?></td>
-                      <td><?php echo e($row['jumlah_bekerja']); ?></td>
-                      <td><?php echo e(number_format($penghasilan, 0, ',', '.')); ?></td>
-                      <td><?php echo e(number_format($per_orang, 0, ',', '.')); ?></td>
-                      <td><?php echo $kategori; ?></td>
-                      <td><?php echo e($row['created_at']); ?></td>
-                      <td><?php echo e($row['updated_at']); ?></td>
+                      <td><?= e($row['nik']) ?></td>
+                      <td><?= e($row['no_wa']) ?></td>
+                      <td><?= e($row['email_pengisi']) ?></td>
+                      <td><?= e($row['alamat']) ?></td>
+                      <td><?= e($row['domisili'] ?? '-') ?></td>
+                      <td><?= e($row['jumlah_anggota']) ?></td>
+                      <td><?= e($row['jumlah_bekerja']) ?></td>
+                      <td>Rp <?= number_format($penghasilan, 0, ',', '.') ?></td>
+                      <td>Rp <?= number_format($per_orang, 0, ',', '.') ?></td>
+                      <td><?= $kategori ?></td>
+                      <td><?= e($row['created_at']) ?></td>
+                      <td><?= e($row['updated_at']) ?></td>
                       <td class="aksi">
-                        <button class="edit" onclick="window.location.href='editdata.php?id=<?php echo $row['id']; ?>'">Edit</button>
+                        <button class="edit" onclick="window.location.href='editdata.php?id=<?= $row['id'] ?>'">✏️ Edit</button>
                         <button 
                           class="verifikasi" 
-                          onclick="verifikasiData(<?php echo $row['id']; ?>, '<?php echo addslashes($row['nama_lengkap']); ?>')"
-                          <?php echo $isVerified ? 'disabled title="Data sudah diverifikasi"' : ''; ?>
+                          onclick="openModalVerifikasi(<?= $row['id'] ?>, '<?= addslashes($row['nama_lengkap']) ?>')"
+                          <?= $isVerified ? 'disabled title="Data sudah diverifikasi"' : '' ?>
                         >
-                          <?php echo $isVerified ? '✓ Verified' : 'Verifikasi'; ?>
+                          <?= $isVerified ? '✓ Verified' : '✓ Verifikasi' ?>
                         </button>
-                        <button class="hapus" onclick="if(confirm('Yakin hapus data ini?')) window.location.href='hapusdata.php?id=<?php echo $row['id']; ?>'">Hapus</button>
+                        <button class="hapus" onclick="if(confirm('Yakin hapus data <?= addslashes($row['nama_lengkap']) ?>?')) window.location.href='hapusdata.php?id=<?= $row['id'] ?>'">🗑️ Hapus</button>
                       </td>
                     </tr>
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="13" style="text-align:center; padding: 30px;">Tidak ada data ditemukan.</td>
+                    <td colspan="14" style="text-align:center; padding: 30px;">Tidak ada data ditemukan.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
@@ -701,15 +816,76 @@ if (isset($_SESSION['error'])) {
     </div>
   </div>
 
-  <!-- MODAL FORM BANTUAN -->
-  <div id="modalBantuan" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:#fff; padding:30px; border-radius:12px; max-width:500px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-      <h3 style="margin-bottom:20px; color:#000; font-size:20px; text-align:center;">📋 Form Bantuan</h3>
-      <p style="margin-bottom:20px; color:#666; text-align:center; font-size:14px;">Pilih bentuk bantuan yang diberikan untuk: <br><strong id="namaKeluarga"></strong></p>
+  <!-- MODAL VERIFIKASI -->
+  <div id="modalVerifikasi" class="modal">
+    <div class="modal-content">
+      <h3>✅ Verifikasi Data Keluarga</h3>
+      <p>Verifikasi data untuk: <br><strong id="namaKeluarga"></strong></p>
       
-      <form id="formBantuan" method="POST" action="proses_verifikasi.php">
-        <input type="hidden" name="id" id="idKeluarga">
+      <form id="formVerifikasi" method="POST" action="proses_verifikasi.php">
+        <input type="hidden" name="id" id="keluargaId">
         
-        <label style="display:block; margin-bottom:8px; font-weight:600; color:#000;">Bentuk Bantuan:</label>
-        <select name="bentuk_bantuan" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; margin-bottom:20px; background:#f5f5f5;">
+        <label>Bentuk Bantuan: <span class="required">*</span></label>
+        <select name="bentuk_bantuan" id="bentukBantuan" required>
           <option value="">-- Pilih Bentuk Bantuan --</option>
+          <option value="Bantuan Pendidikan">Bantuan Pendidikan</option>
+          <option value="Alat Bantu Dengar">Alat Bantu Dengar</option>
+          <option value="Kursi Roda">Kursi Roda</option>
+          <option value="Kesehatan">Kesehatan</option>
+          <option value="Sembako">Sembako</option>
+          <option value="Uang Muka">Bantuan Uang</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+
+        <div class="modal-buttons">
+          <button type="submit" class="btn-submit">✓ Verifikasi Sekarang</button>
+          <button type="button" class="btn-cancel" onclick="closeModal()">✗ Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openModalVerifikasi(id, nama) {
+      document.getElementById('keluargaId').value = id;
+      document.getElementById('namaKeluarga').textContent = nama;
+      document.getElementById('bentukBantuan').value = '';
+      document.getElementById('modalVerifikasi').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modalVerifikasi').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('modalVerifikasi');
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+
+    // Auto-hide alerts
+    setTimeout(function() {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(function(alert) {
+        alert.style.transition = 'opacity 0.5s';
+        alert.style.opacity = '0';
+        setTimeout(function() {
+          alert.remove();
+        }, 500);
+      });
+    }, 5000);
+
+    // Validate form before submit
+    document.getElementById('formVerifikasi').addEventListener('submit', function(e) {
+      const bantuan = document.getElementById('bentukBantuan').value;
+      if (!bantuan) {
+        e.preventDefault();
+        alert('⚠️ Pilih bentuk bantuan terlebih dahulu!');
+        return false;
+      }
+    });
+  </script>
+</body>
+</html>

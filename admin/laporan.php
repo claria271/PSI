@@ -271,7 +271,7 @@ $res_year   = $conn->query($sql_year);
   </header>
 
   <div class="layout">
-    <aside class="sidebar">
+   <aside class="sidebar">
       <div class="admin-profile">
         <div class="admin-photo" onclick="window.location.href='profil_admin.php'">
           <img 
@@ -285,12 +285,14 @@ $res_year   = $conn->query($sql_year);
         </div>
       </div>
       <nav>
-        <a href="dashboardadmin.php">Dashboard</a>
+        <a href="#" class="active">Dashboard</a>
+        <a href="permintaanedit.php">📝 Kelola Edit User</a>
         <a href="datakeluarga.php">Data Keluarga</a>
         <a href="tambah_admin.php">➕ Tambah Admin</a>
         <a href="verifikasi.php">Hasil Verifikasi</a>
-        <a href="laporan.php" class="active">Laporan</a>
-        <a href="../admin/logoutadmin.php">Logout</a>
+        <a href="laporan.php">Laporan</a>
+        <a href="pengaduan_admin.php">Pengaduan</a>
+        <a href="logoutadmin.php">Logout</a>
       </nav>
     </aside>
 

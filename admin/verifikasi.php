@@ -1,4 +1,5 @@
 <?php
+//admin/verifikasi.php
 session_start();
 include '../koneksi/config.php';
 
@@ -19,32 +20,34 @@ function e($str) {
 // Ambil data admin
 $admin = null;
 $adminName = 'Admin';
-$adminPhoto = '../assets/image/admin_photo.jpg';
+$adminPhoto = '../assets/image/user.png';
+$keluargaAdmin = null;
 
-// Cek session yang tersedia
-if (isset($_SESSION['id'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? LIMIT 1");
-    $stmt->bind_param('i', $_SESSION['id']);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res->num_rows > 0) {
-        $admin = $res->fetch_assoc();
-    }
-} elseif (!empty($_SESSION['alamat_email'])) {
-    $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? LIMIT 1");
+// Ambil data login admin
+if (isset($_SESSION['alamat_email']) && !empty($_SESSION['alamat_email'])) {
+    $stmt = $conn->prepare("SELECT * FROM login WHERE alamat_email = ? AND role = 'admin' LIMIT 1");
     $stmt->bind_param('s', $_SESSION['alamat_email']);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($res->num_rows > 0) {
         $admin = $res->fetch_assoc();
+        
+        // Ambil data keluarga admin untuk nama lengkap
+        $stmtK = $conn->prepare("SELECT * FROM keluarga WHERE user_id = ? LIMIT 1");
+        $stmtK->bind_param('i', $admin['id']);
+        $stmtK->execute();
+        $resK = $stmtK->get_result();
+        if ($resK->num_rows > 0) {
+            $keluargaAdmin = $resK->fetch_assoc();
+        }
+        $stmtK->close();
     }
+    $stmt->close();
 }
 
 // Tentukan nama & foto admin
-if ($admin) {
-    $adminName = !empty($admin['nama_lengkap']) ? $admin['nama_lengkap'] : 'Admin';
-    $adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/admin_photo.jpg';
-}
+$adminName = !empty($keluargaAdmin['nama_lengkap']) ? $keluargaAdmin['nama_lengkap'] : 'Admin';
+$adminPhoto = !empty($admin['foto']) ? '../uploads/' . $admin['foto'] : '../assets/image/user.png';
 
 // UMR per orang
 define('UMR_PERSON', 4725479);
@@ -114,7 +117,6 @@ if (isset($_SESSION['warning'])) {
       flex-direction: column;
     }
 
-    /* === HEADER === */
     header {
       background: linear-gradient(to right, #ffffff, #000000);
       padding: 12px 40px;
@@ -135,19 +137,6 @@ if (isset($_SESSION['warning'])) {
 
     header img {
       height: 40px;
-    }
-
-    nav a {
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: bold;
-      color: #fff;
-      transition: 0.3s;
-    }
-
-    nav a:hover,
-    nav a.active {
-      color: #ff4b4b;
     }
 
     .layout {
@@ -182,6 +171,11 @@ if (isset($_SESSION['warning'])) {
       transition: all 0.3s;
     }
 
+    .admin-photo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
+    }
+
     .admin-photo img {
       width: 100%;
       height: 100%;
@@ -197,6 +191,13 @@ if (isset($_SESSION['warning'])) {
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s;
+    }
+
+    .admin-name:hover {
+      background: #ff4b4b;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
     }
 
     .sidebar nav a {
@@ -259,7 +260,6 @@ if (isset($_SESSION['warning'])) {
       margin-top: 5px;
     }
 
-    /* 🔥 ALERT MESSAGES */
     .alert {
       padding: 15px 20px;
       border-radius: 8px;
@@ -348,7 +348,7 @@ if (isset($_SESSION['warning'])) {
     th, td {
       padding: 10px;
       border: 1px solid #ccc;
-      font-size: 14px;
+      font-size: 13px;
       text-align: left;
       white-space: nowrap;
     }
@@ -375,7 +375,6 @@ if (isset($_SESSION['warning'])) {
       font-weight: 600;
     }
 
-    /* 🔥 BADGE BANTUAN */
     .badge-bantuan {
       display: inline-block;
       padding: 5px 12px;
@@ -386,7 +385,6 @@ if (isset($_SESSION['warning'])) {
       color: white;
     }
 
-    /* 🔥 STYLING UNTUK TOMBOL AKSI */
     .aksi {
       white-space: nowrap;
     }
@@ -397,6 +395,7 @@ if (isset($_SESSION['warning'])) {
       border-radius: 5px;
       cursor: pointer;
       margin-right: 4px;
+      margin-bottom: 4px;
       font-size: 12px;
       font-weight: 600;
       transition: 0.3s;
@@ -462,7 +461,7 @@ if (isset($_SESSION['warning'])) {
   </header>
 
   <div class="layout">
-    <aside class="sidebar">
+  <aside class="sidebar">
       <div class="admin-profile">
         <div class="admin-photo" onclick="window.location.href='profil_admin.php'">
           <img 
@@ -476,33 +475,34 @@ if (isset($_SESSION['warning'])) {
         </div>
       </div>
       <nav>
-        <a href="dashboardadmin.php">Dashboard</a>
+        <a href="#" class="active">Dashboard</a>
+        <a href="permintaanedit.php">📝 Kelola Edit User</a>
         <a href="datakeluarga.php">Data Keluarga</a>
         <a href="tambah_admin.php">➕ Tambah Admin</a>
-        <a href="verifikasi.php" class="active">Hasil Verifikasi</a>
+        <a href="verifikasi.php">Hasil Verifikasi</a>
         <a href="laporan.php">Laporan</a>
-        <a href="../user/logout.php">Logout</a>
+        <a href="pengaduan_admin.php">Pengaduan</a>
+        <a href="logoutadmin.php">Logout</a>
       </nav>
     </aside>
 
     <div class="content">
       <div class="page-header">
-        <h2>Data Terverifikasi</h2>
+        <h2>✅ Data Terverifikasi</h2>
         <p>Daftar data keluarga yang telah diverifikasi oleh admin</p>
-        <span class="stats-badge">Total: <?php echo $total_data; ?> Data</span>
+        <span class="stats-badge">Total: <?= $total_data ?> Data</span>
       </div>
 
       <div class="content-scroll">
-        <!-- 🔥 TAMPILKAN ALERT MESSAGES -->
         <?php if ($successMessage): ?>
           <div class="alert alert-success">
-            <?php echo $successMessage; ?>
+            <?= $successMessage ?>
           </div>
         <?php endif; ?>
 
         <?php if ($warningMessage): ?>
           <div class="alert alert-warning">
-            <?php echo $warningMessage; ?>
+            <?= $warningMessage ?>
           </div>
         <?php endif; ?>
 
@@ -515,18 +515,18 @@ if (isset($_SESSION['warning'])) {
                 type="text"
                 name="search"
                 placeholder="Cari Nama, NIK, No HP"
-                value="<?php echo e($search); ?>"
+                value="<?= e($search) ?>"
               >
 
               <select name="bantuan" onchange="this.form.submit()">
                 <option value="">Semua Bantuan</option>
-                <option value="Bantuan Pendidikan" <?php echo $bantuan_filter === 'Bantuan Pendidikan' ? 'selected' : ''; ?>>Bantuan Pendidikan</option>
-                <option value="Alat Bantu Dengar" <?php echo $bantuan_filter === 'Alat Bantu Dengar' ? 'selected' : ''; ?>>Alat Bantu Dengar</option>
-                <option value="Kursi Roda" <?php echo $bantuan_filter === 'Kursi Roda' ? 'selected' : ''; ?>>Kursi Roda</option>
-                <option value="Kesehatan" <?php echo $bantuan_filter === 'Kesehatan' ? 'selected' : ''; ?>>Kesehatan</option>
-                <option value="Sembako" <?php echo $bantuan_filter === 'Sembako' ? 'selected' : ''; ?>>Sembako</option>
-                <option value="Uang Muka" <?php echo $bantuan_filter === 'Uang Muka' ? 'selected' : ''; ?>>Bantuan Uang</option>
-                <option value="Lainnya" <?php echo $bantuan_filter === 'Lainnya' ? 'selected' : ''; ?>>Lainnya</option>
+                <option value="Bantuan Pendidikan" <?= $bantuan_filter === 'Bantuan Pendidikan' ? 'selected' : '' ?>>Bantuan Pendidikan</option>
+                <option value="Alat Bantu Dengar" <?= $bantuan_filter === 'Alat Bantu Dengar' ? 'selected' : '' ?>>Alat Bantu Dengar</option>
+                <option value="Kursi Roda" <?= $bantuan_filter === 'Kursi Roda' ? 'selected' : '' ?>>Kursi Roda</option>
+                <option value="Kesehatan" <?= $bantuan_filter === 'Kesehatan' ? 'selected' : '' ?>>Kesehatan</option>
+                <option value="Sembako" <?= $bantuan_filter === 'Sembako' ? 'selected' : '' ?>>Sembako</option>
+                <option value="Uang Muka" <?= $bantuan_filter === 'Uang Muka' ? 'selected' : '' ?>>Bantuan Uang</option>
+                <option value="Lainnya" <?= $bantuan_filter === 'Lainnya' ? 'selected' : '' ?>>Lainnya</option>
               </select>
 
               <button type="submit" style="display:none;"></button>
@@ -541,8 +541,10 @@ if (isset($_SESSION['warning'])) {
                   <th>Nama Lengkap</th>
                   <th>NIK</th>
                   <th>No WA</th>
-                  <th>Alamat</th>
+                  <th>Alamat KTP</th>
+                  <th>Domisili</th>
                   <th>Jumlah Anggota</th>
+                  <th>Jumlah Bekerja</th>
                   <th>Total Penghasilan</th>
                   <th>Bantuan</th>
                   <th>Status</th>
@@ -556,26 +558,28 @@ if (isset($_SESSION['warning'])) {
                   <?php $no = 1; ?>
                   <?php while ($row = mysqli_fetch_assoc($result)): ?>
                     <tr>
-                      <td><?php echo $no++; ?></td>
-                      <td><?php echo e($row['nama_lengkap']); ?></td>
-                      <td><?php echo e($row['nik']); ?></td>
-                      <td><?php echo e($row['no_wa']); ?></td>
-                      <td><?php echo e($row['alamat']); ?></td>
-                      <td><?php echo e($row['jumlah_anggota']); ?></td>
-                      <td><?php echo e(number_format($row['total_penghasilan'], 0, ',', '.')); ?></td>
-                      <td><span class="badge-bantuan"><?php echo e($row['bantuan']); ?></span></td>
-                      <td><span class="badge-verified"><?php echo e($row['status_verifikasi']); ?></span></td>
-                      <td><?php echo e($row['verified_by']); ?></td>
-                      <td><?php echo e(date('d/m/Y H:i', strtotime($row['verified_at']))); ?></td>
+                      <td><?= $no++ ?></td>
+                      <td><?= e($row['nama_lengkap']) ?></td>
+                      <td><?= e($row['nik']) ?></td>
+                      <td><?= e($row['no_wa']) ?></td>
+                      <td><?= e($row['alamat']) ?></td>
+                      <td><?= e($row['domisili'] ?? '-') ?></td>
+                      <td><?= e($row['jumlah_anggota']) ?></td>
+                      <td><?= e($row['jumlah_bekerja']) ?></td>
+                      <td>Rp <?= number_format($row['total_penghasilan'], 0, ',', '.') ?></td>
+                      <td><span class="badge-bantuan"><?= e($row['bantuan']) ?></span></td>
+                      <td><span class="badge-verified"><?= e($row['status_verifikasi']) ?></span></td>
+                      <td><?= e($row['verified_by']) ?></td>
+                      <td><?= date('d/m/Y H:i', strtotime($row['verified_at'])) ?></td>
                       <td class="aksi">
-                        <button class="edit" onclick="window.location.href='edit_verifikasi.php?id=<?php echo $row['id']; ?>'">Edit</button>
-                        <button class="hapus" onclick="hapusVerifikasi(<?php echo $row['id']; ?>, '<?php echo addslashes($row['nama_lengkap']); ?>')">Hapus</button>
+                        <button class="edit" onclick="window.location.href='edit_verifikasi.php?id=<?= $row['id'] ?>'">✏️ Edit</button>
+                        <button class="hapus" onclick="hapusVerifikasi(<?= $row['id'] ?>, '<?= addslashes($row['nama_lengkap']) ?>')">🗑️ Hapus</button>
                       </td>
                     </tr>
                   <?php endwhile; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="12" style="text-align:center; padding: 30px;">
+                    <td colspan="14" style="text-align:center; padding: 30px;">
                       Belum ada data yang diverifikasi.
                     </td>
                   </tr>
@@ -595,14 +599,12 @@ if (isset($_SESSION['warning'])) {
   </div>
 
   <script>
-    // 🔥 FUNGSI HAPUS VERIFIKASI
     function hapusVerifikasi(id, nama) {
       if (confirm('Apakah Anda yakin ingin menghapus data verifikasi atas nama:\n\n' + nama + '?\n\n⚠️ Data akan dihapus dari tabel verifikasi, namun tetap ada di tabel keluarga.')) {
         window.location.href = 'hapus_verifikasi.php?id=' + id;
       }
     }
 
-    // 🔥 AUTO-HIDE ALERT SETELAH 5 DETIK
     setTimeout(function() {
       const alerts = document.querySelectorAll('.alert');
       alerts.forEach(function(alert) {

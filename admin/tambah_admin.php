@@ -23,10 +23,7 @@ $modeEdit = false;
 $editData = null;
 
 // Nilai awal form tambah
-$nama_lengkap_add    = '';
-$alamat_lengkap_add  = '';
-$nomor_telepon_add   = '';
-$alamat_email_add    = '';
+$alamat_email_add = '';
 
 // ==== HANDLE POST (TAMBAH / EDIT / HAPUS) ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -34,23 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ========== TAMBAH ADMIN ==========
     if ($aksi === 'tambah') {
-        $nama_lengkap_add   = trim($_POST['nama_lengkap'] ?? '');
-        $alamat_lengkap_add = trim($_POST['alamat_lengkap'] ?? '');
-        $nomor_telepon_add  = trim($_POST['nomor_telepon'] ?? '');
-        $alamat_email_add   = trim($_POST['alamat_email'] ?? '');
-        $password           = $_POST['password'] ?? '';
-        $password2          = $_POST['password_confirm'] ?? '';
+        $alamat_email_add = trim($_POST['alamat_email'] ?? '');
+        $password         = $_POST['password'] ?? '';
+        $password2        = $_POST['password_confirm'] ?? '';
 
         // VALIDASI
-        if ($nama_lengkap_add === '') {
-            $errors[] = 'Nama lengkap wajib diisi.';
-        }
-        if ($alamat_lengkap_add === '') {
-            $errors[] = 'Alamat lengkap wajib diisi.';
-        }
-        if ($nomor_telepon_add === '') {
-            $errors[] = 'Nomor telepon wajib diisi.';
-        }
         if ($alamat_email_add === '') {
             $errors[] = 'Alamat email wajib diisi.';
         } elseif (!filter_var($alamat_email_add, FILTER_VALIDATE_EMAIL)) {
@@ -74,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($res->num_rows > 0) {
                 $errors[] = 'Email sudah digunakan oleh akun lain.';
             }
+            $stmt->close();
         }
 
         // Upload foto (opsional)
@@ -106,55 +92,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $role = 'admin';
 
             $stmt = $conn->prepare("
-                INSERT INTO login (nama_lengkap, alamat_lengkap, nomor_telepon, alamat_email, password, role, foto)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO login (alamat_email, password, role, foto)
+                VALUES (?, ?, ?, ?)
             ");
-            $stmt->bind_param(
-                'sssssss',
-                $nama_lengkap_add,
-                $alamat_lengkap_add,
-                $nomor_telepon_add,
-                $alamat_email_add,
-                $hash,
-                $role,
-                $nama_file_foto
-            );
+            $stmt->bind_param('ssss', $alamat_email_add, $hash, $role, $nama_file_foto);
             $stmt->execute();
+            $stmt->close();
 
             $success = 'Admin baru berhasil ditambahkan.';
-
-            // reset form tambah
-            $nama_lengkap_add   = '';
-            $alamat_lengkap_add = '';
-            $nomor_telepon_add  = '';
-            $alamat_email_add   = '';
+            $alamat_email_add = '';
         }
     }
 
     // ========== UPDATE ADMIN ==========
     elseif ($aksi === 'update') {
-        $id_edit         = (int)($_POST['id'] ?? 0);
-        $nama_lengkap    = trim($_POST['nama_lengkap'] ?? '');
-        $alamat_lengkap  = trim($_POST['alamat_lengkap'] ?? '');
-        $nomor_telepon   = trim($_POST['nomor_telepon'] ?? '');
-        $alamat_email    = trim($_POST['alamat_email'] ?? '');
-        $password        = $_POST['password'] ?? '';
-        $password2       = $_POST['password_confirm'] ?? '';
-        $foto_lama       = $_POST['foto_lama'] ?? '';
+        $id_edit      = (int)($_POST['id'] ?? 0);
+        $alamat_email = trim($_POST['alamat_email'] ?? '');
+        $password     = $_POST['password'] ?? '';
+        $password2    = $_POST['password_confirm'] ?? '';
+        $foto_lama    = $_POST['foto_lama'] ?? '';
 
         if ($id_edit <= 0) {
             $errors[] = 'ID admin tidak valid.';
         }
 
-        if ($nama_lengkap === '') {
-            $errors[] = 'Nama lengkap wajib diisi.';
-        }
-        if ($alamat_lengkap === '') {
-            $errors[] = 'Alamat lengkap wajib diisi.';
-        }
-        if ($nomor_telepon === '') {
-            $errors[] = 'Nomor telepon wajib diisi.';
-        }
         if ($alamat_email === '') {
             $errors[] = 'Alamat email wajib diisi.';
         } elseif (!filter_var($alamat_email, FILTER_VALIDATE_EMAIL)) {
@@ -186,6 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($res->num_rows > 0) {
                 $errors[] = 'Email sudah dipakai akun lain.';
             }
+            $stmt->close();
         }
 
         // Upload foto baru (opsional)
@@ -208,10 +170,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!move_uploaded_file($tmp_name, $tujuan_folder)) {
                         $errors[] = 'Tidak bisa menyimpan file foto di server.';
                     } else {
-                        // kalau mau, bisa hapus foto lama dari folder uploads
-                        // if ($foto_lama && file_exists(__DIR__.'/../uploads/'.$foto_lama)) {
-                        //     unlink(__DIR__.'/../uploads/'.$foto_lama);
-                        // }
                         $nama_file_foto = $nama_file_foto_baru;
                     }
                 }
@@ -224,49 +182,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 $stmt = $conn->prepare("
                     UPDATE login
-                    SET nama_lengkap = ?, alamat_lengkap = ?, nomor_telepon = ?, alamat_email = ?, password = ?, foto = ?
+                    SET alamat_email = ?, password = ?, foto = ?
                     WHERE id = ? AND role = 'admin'
                 ");
-                $stmt->bind_param(
-                    'ssssssi',
-                    $nama_lengkap,
-                    $alamat_lengkap,
-                    $nomor_telepon,
-                    $alamat_email,
-                    $hash,
-                    $nama_file_foto,
-                    $id_edit
-                );
+                $stmt->bind_param('sssi', $alamat_email, $hash, $nama_file_foto, $id_edit);
             } else {
                 $stmt = $conn->prepare("
                     UPDATE login
-                    SET nama_lengkap = ?, alamat_lengkap = ?, nomor_telepon = ?, alamat_email = ?, foto = ?
+                    SET alamat_email = ?, foto = ?
                     WHERE id = ? AND role = 'admin'
                 ");
-                $stmt->bind_param(
-                    'sssssi',
-                    $nama_lengkap,
-                    $alamat_lengkap,
-                    $nomor_telepon,
-                    $alamat_email,
-                    $nama_file_foto,
-                    $id_edit
-                );
+                $stmt->bind_param('ssi', $alamat_email, $nama_file_foto, $id_edit);
             }
             $stmt->execute();
+            $stmt->close();
             $success = 'Data admin berhasil diperbarui.';
         }
 
-        // Supaya form edit tetap muncul dengan data terbaru
+        // Reload data edit
         if ($id_edit > 0) {
             $modeEdit = true;
-            $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
+            $stmt = $conn->prepare("
+                SELECT l.*, k.nama_lengkap, k.alamat, k.no_wa 
+                FROM login l
+                LEFT JOIN keluarga k ON l.id = k.user_id
+                WHERE l.id = ? AND l.role = 'admin' 
+                LIMIT 1
+            ");
             $stmt->bind_param('i', $id_edit);
             $stmt->execute();
             $res = $stmt->get_result();
             if ($res->num_rows > 0) {
                 $editData = $res->fetch_assoc();
             }
+            $stmt->close();
         }
     }
 
@@ -275,12 +224,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id_hapus = (int)($_POST['id'] ?? 0);
 
         if ($id_hapus > 0) {
-            // (opsional) cegah menghapus dirinya sendiri
-            // if (!empty($_SESSION['admin_id']) && $_SESSION['admin_id'] == $id_hapus) { ... }
-
             $stmt = $conn->prepare("DELETE FROM login WHERE id = ? AND role = 'admin'");
             $stmt->bind_param('i', $id_hapus);
             $stmt->execute();
+            $stmt->close();
             $success = 'Admin berhasil dihapus.';
         } else {
             $errors[] = 'ID admin tidak valid untuk dihapus.';
@@ -292,7 +239,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (!$modeEdit && isset($_GET['edit_id'])) {
     $id_edit = (int)$_GET['edit_id'];
     if ($id_edit > 0) {
-        $stmt = $conn->prepare("SELECT * FROM login WHERE id = ? AND role = 'admin' LIMIT 1");
+        $stmt = $conn->prepare("
+            SELECT l.*, k.nama_lengkap, k.alamat, k.no_wa 
+            FROM login l
+            LEFT JOIN keluarga k ON l.id = k.user_id
+            WHERE l.id = ? AND l.role = 'admin' 
+            LIMIT 1
+        ");
         $stmt->bind_param('i', $id_edit);
         $stmt->execute();
         $res = $stmt->get_result();
@@ -300,17 +253,25 @@ if (!$modeEdit && isset($_GET['edit_id'])) {
             $modeEdit = true;
             $editData = $res->fetch_assoc();
         }
+        $stmt->close();
     }
 }
 
-// ==== AMBIL LIST DATA ADMIN ====
+// ==== AMBIL LIST DATA ADMIN dengan JOIN ke keluarga ====
 $listAdmin = [];
-$stmt = $conn->prepare("SELECT id, nama_lengkap, alamat_email, nomor_telepon, foto FROM login WHERE role = 'admin' ORDER BY id DESC");
+$stmt = $conn->prepare("
+    SELECT l.id, l.alamat_email, l.foto, k.nama_lengkap, k.alamat, k.no_wa 
+    FROM login l
+    LEFT JOIN keluarga k ON l.id = k.user_id
+    WHERE l.role = 'admin' 
+    ORDER BY l.id DESC
+");
 $stmt->execute();
 $res = $stmt->get_result();
 while ($row = $res->fetch_assoc()) {
     $listAdmin[] = $row;
 }
+$stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -318,6 +279,7 @@ while ($row = $res->fetch_assoc()) {
   <meta charset="UTF-8">
   <title>Kelola Admin - PSI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -416,7 +378,7 @@ while ($row = $res->fetch_assoc()) {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     th, td {
@@ -429,6 +391,8 @@ while ($row = $res->fetch_assoc()) {
     th {
       background: #f7f7f7;
       font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
     }
 
     tr:nth-child(even) {
@@ -456,6 +420,8 @@ while ($row = $res->fetch_assoc()) {
       font-size: 12px;
       cursor: pointer;
       font-weight: 500;
+      text-decoration: none;
+      display: inline-block;
     }
 
     .btn-edit {
@@ -549,6 +515,32 @@ while ($row = $res->fetch_assoc()) {
       font-size: 12px;
       color: #555;
     }
+
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .admin-detail {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .admin-detail strong {
+      color: #000;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .no-data {
+      color: #999;
+      font-style: italic;
+      font-size: 12px;
+    }
   </style>
   <script>
     function konfirmasiHapus() {
@@ -558,7 +550,7 @@ while ($row = $res->fetch_assoc()) {
 </head>
 <body>
   <header>
-    <h1>Kelola Admin PSI</h1>
+    <h1>🔧 Kelola Admin PSI</h1>
   </header>
 
   <main>
@@ -566,9 +558,14 @@ while ($row = $res->fetch_assoc()) {
       <a href="dashboardadmin.php">← Kembali ke Dashboard</a>
     </div>
 
+    <div class="info-box">
+      ℹ️ <strong>Catatan:</strong> Data nama lengkap, alamat, dan nomor telepon diambil dari tabel keluarga yang terhubung dengan user_id admin.
+    </div>
+
     <?php if ($errors): ?>
       <div class="alert error">
-        <ul>
+        <strong>⚠️ Error:</strong>
+        <ul style="margin-left: 20px; margin-top: 5px;">
           <?php foreach ($errors as $err): ?>
             <li><?= e($err) ?></li>
           <?php endforeach; ?>
@@ -578,14 +575,14 @@ while ($row = $res->fetch_assoc()) {
 
     <?php if ($success): ?>
       <div class="alert success">
-        <?= e($success) ?>
+        ✓ <?= e($success) ?>
       </div>
     <?php endif; ?>
 
     <div class="layout">
       <!-- LIST ADMIN -->
       <div class="card">
-        <h2>Daftar Admin</h2>
+        <h2>📋 Daftar Admin</h2>
         <?php if (count($listAdmin) === 0): ?>
           <p>Belum ada admin terdaftar.</p>
         <?php else: ?>
@@ -594,9 +591,8 @@ while ($row = $res->fetch_assoc()) {
               <tr>
                 <th>ID</th>
                 <th>Foto</th>
-                <th>Nama</th>
                 <th>Email</th>
-                <th>No. Telepon</th>
+                <th>Info Lengkap</th>
                 <th>Aksi</th>
               </tr>
             </thead>
@@ -611,13 +607,26 @@ while ($row = $res->fetch_assoc()) {
                     <div class="foto-thumb"></div>
                   <?php endif; ?>
                 </td>
-                <td><?= e($adm['nama_lengkap']) ?></td>
                 <td><?= e($adm['alamat_email']) ?></td>
-                <td><?= e($adm['nomor_telepon']) ?></td>
+                <td>
+                  <div class="admin-detail">
+                    <?php if (!empty($adm['nama_lengkap'])): ?>
+                      <strong><?= e($adm['nama_lengkap']) ?></strong>
+                      <?php if (!empty($adm['no_wa'])): ?>
+                        <div>📱 <?= e($adm['no_wa']) ?></div>
+                      <?php endif; ?>
+                      <?php if (!empty($adm['alamat'])): ?>
+                        <div>📍 <?= e(substr($adm['alamat'], 0, 50)) ?><?= strlen($adm['alamat']) > 50 ? '...' : '' ?></div>
+                      <?php endif; ?>
+                    <?php else: ?>
+                      <span class="no-data">Belum ada data di tabel keluarga</span>
+                    <?php endif; ?>
+                  </div>
+                </td>
                 <td>
                   <div class="aksi-btn">
                     <a href="?edit_id=<?= e($adm['id']) ?>" class="btn-small btn-edit">Edit</a>
-                    <form method="post" onsubmit="return konfirmasiHapus();">
+                    <form method="post" onsubmit="return konfirmasiHapus();" style="display: inline;">
                       <input type="hidden" name="aksi" value="hapus">
                       <input type="hidden" name="id" value="<?= e($adm['id']) ?>">
                       <button type="submit" class="btn-small btn-delete">Hapus</button>
@@ -634,24 +643,33 @@ while ($row = $res->fetch_assoc()) {
       <!-- FORM TAMBAH / EDIT -->
       <div class="card">
         <?php if ($modeEdit && $editData): ?>
-          <h2>Edit Admin</h2>
+          <h2>✏️ Edit Admin</h2>
+          
+          <?php if (!empty($editData['nama_lengkap'])): ?>
+            <div style="background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px;">
+              <strong>📋 Data dari Tabel Keluarga:</strong><br>
+              <div style="margin-top: 5px;">
+                Nama: <strong><?= e($editData['nama_lengkap']) ?></strong><br>
+                <?php if (!empty($editData['no_wa'])): ?>
+                  No. WA: <strong><?= e($editData['no_wa']) ?></strong><br>
+                <?php endif; ?>
+                <?php if (!empty($editData['alamat'])): ?>
+                  Alamat: <strong><?= e($editData['alamat']) ?></strong>
+                <?php endif; ?>
+              </div>
+            </div>
+          <?php else: ?>
+            <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid #ffc107;">
+              ⚠️ Admin ini belum memiliki data di tabel keluarga. Data lengkap akan muncul setelah admin mengisi profil.
+            </div>
+          <?php endif; ?>
+          
           <form method="post" enctype="multipart/form-data">
             <input type="hidden" name="aksi" value="update">
             <input type="hidden" name="id" value="<?= e($editData['id']) ?>">
             <input type="hidden" name="foto_lama" value="<?= e($editData['foto'] ?? '') ?>">
 
-            <label for="nama_lengkap_edit">Nama Lengkap</label>
-            <input type="text" id="nama_lengkap_edit" name="nama_lengkap"
-                   value="<?= e($editData['nama_lengkap']) ?>" required>
-
-            <label for="alamat_lengkap_edit">Alamat Lengkap</label>
-            <textarea id="alamat_lengkap_edit" name="alamat_lengkap" required><?= e($editData['alamat_lengkap']) ?></textarea>
-
-            <label for="nomor_telepon_edit">Nomor Telepon</label>
-            <input type="text" id="nomor_telepon_edit" name="nomor_telepon"
-                   value="<?= e($editData['nomor_telepon']) ?>" required>
-
-            <label for="alamat_email_edit">Alamat Email</label>
+            <label for="alamat_email_edit">Alamat Email *</label>
             <input type="email" id="alamat_email_edit" name="alamat_email"
                    value="<?= e($editData['alamat_email']) ?>" required>
 
@@ -674,42 +692,35 @@ while ($row = $res->fetch_assoc()) {
             <input type="file" id="foto_edit" name="foto" accept=".jpg,.jpeg,.png">
             <div class="hint">Format: JPG/PNG. Jika dikosongkan, tetap memakai foto lama.</div>
 
-            <button type="submit">Simpan Perubahan</button>
+            <button type="submit">💾 Simpan Perubahan</button>
           </form>
           <div style="margin-top:8px;">
-            <a href="tambah_admin.php" style="font-size:13px;text-decoration:none;color:#000;">← Batal edit / kembali ke mode tambah</a>
+            <a href="kelola_admin.php" style="font-size:13px;text-decoration:none;color:#000;">← Batal edit / kembali ke mode tambah</a>
           </div>
         <?php else: ?>
-          <h2>Tambah Admin Baru</h2>
+          <h2>➕ Tambah Admin Baru</h2>
+          <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px; border-left: 4px solid #ffc107;">
+            ℹ️ Setelah admin dibuat, admin dapat login dan mengisi data lengkap (nama, alamat, telepon) melalui halaman profil user.
+          </div>
           <form method="post" enctype="multipart/form-data">
             <input type="hidden" name="aksi" value="tambah">
 
-            <label for="nama_lengkap_add">Nama Lengkap</label>
-            <input type="text" id="nama_lengkap_add" name="nama_lengkap"
-                   value="<?= e($nama_lengkap_add) ?>" required>
-
-            <label for="alamat_lengkap_add">Alamat Lengkap</label>
-            <textarea id="alamat_lengkap_add" name="alamat_lengkap" required><?= e($alamat_lengkap_add) ?></textarea>
-
-            <label for="nomor_telepon_add">Nomor Telepon</label>
-            <input type="text" id="nomor_telepon_add" name="nomor_telepon"
-                   value="<?= e($nomor_telepon_add) ?>" required>
-
-            <label for="alamat_email_add">Alamat Email</label>
+            <label for="alamat_email_add">Alamat Email *</label>
             <input type="email" id="alamat_email_add" name="alamat_email"
                    value="<?= e($alamat_email_add) ?>" required>
 
-            <label for="password_add">Password</label>
+            <label for="password_add">Password *</label>
             <input type="password" id="password_add" name="password" required>
+            <div class="hint">Minimal 6 karakter</div>
 
-            <label for="password_confirm_add">Konfirmasi Password</label>
+            <label for="password_confirm_add">Konfirmasi Password *</label>
             <input type="password" id="password_confirm_add" name="password_confirm" required>
 
             <label for="foto_add">Foto Profil (opsional)</label>
             <input type="file" id="foto_add" name="foto" accept=".jpg,.jpeg,.png">
             <div class="hint">Format: JPG/PNG. Jika dikosongkan, akan memakai foto default.</div>
 
-            <button type="submit">Simpan Admin</button>
+            <button type="submit">💾 Simpan Admin</button>
           </form>
         <?php endif; ?>
       </div>
