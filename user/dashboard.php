@@ -74,8 +74,8 @@ a{text-decoration:none;color:inherit}
 }
 
 .dash-left img{
-  height:58px; /* LOGO DIBESARKAN DIKIT LAGI */
-  filter:drop-shadow(0 3px 8px rgba(0,0,0,.30));
+  height:62px; /* LOGO DIBESARKAN LAGI */
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
 }
 
 .dash-menu{
