@@ -816,53 +816,7 @@ function formatTanggalIndo($ymd){
   </div>
 </section>
 
-<!-- =========================
-     CV SECTION (SETELAH BERITA)
-========================= -->
-<section class="cv-section" id="cv">
-  <div class="cv-inner">
 
-    <!-- KIRI (FOTO + SOSIAL) -->
-    <div class="cv-photo-card reveal">
-      <div class="cv-photo">
-        <!-- GANTI FOTO INI SESUAI PUNYA KAMU -->
-        <img src="assets/josiah2.png"
-             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=60';"
-             alt="CV Photo">
-      </div>
-
-      <div class="cv-social">
-        <a href="https://www.facebook.com/liem.k.siong?mibextid=LQQJ4d" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-        <a href="https://www.instagram.com/josiahmichael.id/" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-        <a href="https://api.whatsapp.com/send/?phone=%2B6281217501502&text=Hallo+pak+Josiah+Michael.+Ada+yang+ingin+kami+sampaikan+kepada+Bapak.&type=phone_number&app_absent=0" title="Whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
-        <a href="https://www.tiktok.com/@josiahmichael.id" title="Tiktok"><i class="fa-brands fa-tiktok"></i></a>
-      </div>
-    </div>
-
-    <!-- KANAN (TEKS + BUTTON) -->
-    <div class="cv-right reveal delay-2">
-      <h1>I am Professional User<br>Experience Designer</h1>
-
-      <p>
-        I design and develop services for customers specializing creating stylish, modern websites, web services and online stores.
-        My passion is to design digital user experiences.
-      </p>
-      <p>
-        I design and develop services for customers specializing creating stylish, modern websites, web services.
-      </p>
-
-      <div class="cv-actions">
-        <!-- GANTI LINK "My Projects" SESUAI HALAMAN KAMU -->
-        <a href="#projects" class="cv-btn-primary">
-          My Projects
-        </a>
-
-        <!-- TARUH FILE CV DI assets/cv.pdf -->
-        <a href="assets/cv.pdf" class="cv-btn-outline" download>
-          <i class="fa-solid fa-download"></i> Download CV
-        </a>
-      </div>
-    </div>
 
   </div>
 </section>
