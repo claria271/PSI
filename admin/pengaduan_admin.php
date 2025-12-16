@@ -139,25 +139,74 @@ $total = $result->num_rows;
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Poppins',sans-serif;background:#f3f3f3;color:#111827}
 
-    header{
-      background:linear-gradient(to right,#ffffff,#000000);
-      padding:12px 40px;
-      display:flex;align-items:center;justify-content:space-between;
-      position:sticky;top:0;z-index:20;
-      box-shadow:0 2px 10px rgba(0,0,0,.1);
+    /* === HEADER === */
+    header {
+      width: 100%;
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+      padding: 6px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.20);
+      overflow: visible;
     }
-    header img{height:40px}
-    header .right a{
-      color:#fff;text-decoration:none;font-weight:600;
-      background:rgba(255,255,255,.12);
-      padding:8px 12px;border-radius:10px;transition:.2s;
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    header .right a:hover{background:#ff4b4b}
+
+    .nav-logo-image img {
+      height: 5vh;
+      min-height: 50px;
+      max-height: 80px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+      transform: translateY(-6px);
+    }
+
+    /* BACK BUTTON */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: #000000;
+      color: #ffffff;
+      border: 2px solid #dc2626;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.25s;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    }
+
+    .back-btn:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(220, 38, 38, 0.25);
+    }
 
     .wrap{max-width:1150px;margin:28px auto;padding:0 18px}
-    .page-title{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin-bottom:16px;}
+    
+    .page-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:15px;
+      margin-bottom:16px;
+      margin-top: 20px;
+    }
+    
     .page-title h2{font-size:26px;font-weight:800}
     .muted{color:#6b7280;font-size:12px}
+    
     .badge{
       display:inline-flex;align-items:center;gap:8px;
       padding:8px 12px;border-radius:999px;background:#fff;border:1px solid #e5e7eb;
@@ -237,19 +286,23 @@ $total = $result->num_rows;
 
     @media (max-width: 800px){
       .grid{grid-template-columns:1fr}
-      header{padding:12px 18px}
+      header{padding:6px 18px}
+      .nav-logo-image img{ transform: translateY(-5px); }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="left">
-    <img src="../assets/image/logo.png" alt="PSI Logo">
+  <div class="nav-left">
+    <div class="nav-logo-image">
+      <img src="../assets/image/logou.png" alt="Logo">
+    </div>
   </div>
-  <div class="right">
-    <a href="dashboardadmin.php">Kembali</a>
-  </div>
+  
+  <a href="dashboardadmin.php" class="back-btn">
+    <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+  </a>
 </header>
 
 <div class="wrap">
@@ -394,6 +447,8 @@ $total = $result->num_rows;
     </div>
   </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
 
 <script>
   const backdrop = document.getElementById('modalBackdrop');

@@ -218,16 +218,7 @@ $emailTampil= $user['alamat_email'] ?? '';
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI Logo">
-    </div>
-    <nav>
-      <a href="tentang.php">Tentang</a>
-      <a href="kontak.php">Kontak</a>
-      <a href="profil.php">Profil</a>
-    </nav>
-  </header>
+
 
   <div class="container">
     <h2>Edit Profil</h2>
@@ -258,11 +249,7 @@ $emailTampil= $user['alamat_email'] ?? '';
     </form>
   </div>
 
-  <footer>
-    <img src="../assets/image/logodprd.png" alt="dprd Logo">
-    <img src="../assets/image/psiputih.png" alt="PSI Logo">
-    Hak cipta © 2025 - Partai Solidaritas Indonesia
-  </footer>
+
 
   <script>
     document.getElementById('foto').addEventListener('change', function(event) {

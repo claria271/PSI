@@ -27,8 +27,8 @@
     /* NAVBAR GRADIENT */
     header {
       width: 100%;
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 14px 48px;
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+      padding: 6px 48px;            /* ✅ BARIS NAVBAR DIKECILIN */
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -36,16 +36,22 @@
       top: 0;
       z-index: 20;
       box-shadow: 0 4px 18px rgba(15,23,42,0.20);
+      overflow: visible;            /* ✅ Biar logo boleh “keluar” dari bar */
     }
 
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
+    /* ✅ LOGO TETAP BESAR (TIDAK DIUBAH) */
     .nav-logo-image img {
-      height: 34px;
+      height: 62px;                 /* tetap 62px */
+      width: auto;
+      display: block;
+      object-fit: contain;
+      transform: translateY(-6px);  /* ✅ Naik dikit biar bar tetap tipis */
     }
 
     nav {
@@ -54,11 +60,12 @@
     }
 
     nav a {
-      color: white;
+      color: #000000;
       position: relative;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      transition: .25s;
+      font-size: 14px;              /* ✅ teks agak diperkecil biar pas di bar kecil */
+      line-height: 1;
     }
 
     nav a::after {
@@ -67,7 +74,7 @@
       width: 0;
       height: 2px;
       left: 0;
-      bottom: -4px;
+      bottom: -6px;
       background: #dc2626;
       transition: .3s;
     }
@@ -430,16 +437,16 @@
 <header>
   <div class="nav-left">
     <div class="nav-logo-image">
-      <img src="assets/image/logo.png" alt="Logo">
+      <img src="assets/image/logou.png" alt="Logo">
     </div>
-    <div class="nav-brand">Josiah Michael</div>
   </div>
 
   <nav>
     <a href="index.php">Tentang Josiah</a>
-    <a href="index.php#news">Berita</a>
-    <a href="sosmed.php" class="active">Media Sosial</a>
+    <a href="#news">Berita</a>
+    <a href="sosmed.php" class="active">media social</a>
   </nav>
+
 </header>
 
 <!-- HERO SECTION -->

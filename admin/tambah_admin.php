@@ -295,19 +295,42 @@ $stmt->close();
       flex-direction: column;
     }
 
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 12px 30px;
-      color: #fff;
+    /* === HEADER === */
+  header {
+      width: 100%;
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+      padding: 6px 48px;            /* ✅ BARIS NAVBAR DIKECILIN */
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.20);
+      overflow: visible;            /* ✅ Biar logo boleh “keluar” dari bar */
+    }
+   /* ✅ LOGO TETAP BESAR (TIDAK DIUBAH) */
+    .nav-logo-image img {
+      height: 62px;                 /* tetap 62px */
+      width: auto;
+      display: block;
+      object-fit: contain;
+      transform: translateY(-6px);  /* ✅ Naik dikit biar bar tetap tipis */
+    }
+   nav a {
+      color: #000000;
+      position: relative;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;              /* ✅ teks agak diperkecil biar pas di bar kecil */
+      line-height: 1;
     }
 
-    header h1 {
-      font-size: 20px;
-      font-weight: 600;
+    nav a:hover::after,
+    nav a.active::after {
+      width: 100%;
     }
+
 
     main {
       flex: 1;
@@ -549,9 +572,15 @@ $stmt->close();
   </script>
 </head>
 <body>
-  <header>
-    <h1>🔧 Kelola Admin PSI</h1>
-  </header>
+ <header>
+  <div class="nav-left">
+    <div class="nav-logo-image">
+      <img src="../assets/image/logou.png" alt="Logo">
+    </div>
+  </div>
+
+
+</header>
 
   <main>
     <div class="top-actions">
@@ -727,8 +756,6 @@ $stmt->close();
     </div>
   </main>
 
-  <footer>
-    &copy; <?= date('Y') ?> PSI - Panel Admin
-  </footer>
+
 </body>
 </html>

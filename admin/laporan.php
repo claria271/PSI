@@ -126,30 +126,41 @@ $res_year   = $conn->query($sql_year);
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Poppins',sans-serif;background:#f5f6f8;color:#222}
     /* === HEADER === */
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 12px 40px;
+    /* === HEADER === */
+  header {
+      width: 100%;
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+      padding: 6px 48px;            /* ✅ BARIS NAVBAR DIKECILIN */
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       position: sticky;
       top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 20;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.20);
+      overflow: visible;            /* ✅ Biar logo boleh “keluar” dari bar */
+    }
+   /* ✅ LOGO TETAP BESAR (TIDAK DIUBAH) */
+    .nav-logo-image img {
+      height: 62px;                 /* tetap 62px */
+      width: auto;
+      display: block;
+      object-fit: contain;
+      transform: translateY(-6px);  /* ✅ Naik dikit biar bar tetap tipis */
+    }
+   nav a {
+      color: #000000;
+      position: relative;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;              /* ✅ teks agak diperkecil biar pas di bar kecil */
+      line-height: 1;
     }
 
-    header .logo { display:flex; align-items:center; gap:10px; }
-    header img { height: 40px; }
-
-    nav a {
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: bold;
-      color: #fff;
-      transition: 0.3s;
+    nav a:hover::after,
+    nav a.active::after {
+      width: 100%;
     }
-
-    nav a:hover, nav a.active { color: #ff4b4b; }
 
     .layout{display:flex;min-height:calc(100vh - 84px)}
     /* === SIDEBAR === */
@@ -207,13 +218,15 @@ $res_year   = $conn->query($sql_year);
   </style>
 </head>
 <body>
-  <header>
-    <div><img src="../assets/image/logo.png" alt="PSI Logo"></div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="text-align:right;color:#fff;font-weight:600"><?php echo e($adminName); ?></div>
-      <div style="width:44px;height:44px;border-radius:8px;overflow:hidden"><img src="<?php echo e($adminPhoto); ?>" alt="admin"></div>
+ <header>
+  <div class="nav-left">
+    <div class="nav-logo-image">
+      <img src="../assets/image/logou.png" alt="Logo">
     </div>
-  </header>
+  </div>
+
+
+</header>
 
   <div class="layout">
    <aside class="sidebar">
@@ -230,12 +243,12 @@ $res_year   = $conn->query($sql_year);
         </div>
       </div>
       <nav>
-        <a href="#" class="active">Dashboard</a>
+        <a href="dashboardadmin.php" >Dashboard</a>
         <a href="permintaanedit.php">📝 Kelola Edit User</a>
         <a href="datakeluarga.php">Data Keluarga</a>
         <a href="tambah_admin.php">➕ Tambah Admin</a>
         <a href="verifikasi.php">Hasil Verifikasi</a>
-        <a href="laporan.php">Laporan</a>
+        <a href="laporan.php" class="active">Laporan</a>
         <a href="pengaduan_admin.php">Pengaduan</a>
         <a href="logoutadmin.php">Logout</a>
       </nav>
@@ -454,13 +467,6 @@ $res_year   = $conn->query($sql_year);
         </div>
       </div>
 
-      <footer>
-        <img src="../assets/image/logodprd.png" alt="DPRD Logo"
-             style="height:20px;margin-right:8px;filter:brightness(0) invert(1)">
-        <img src="../assets/image/psiputih.png" alt="PSI Logo"
-             style="height:20px;filter:brightness(0) invert(1)">
-        &nbsp; Hak cipta © <?php echo date('Y'); ?> - Partai Solidaritas Indonesia
-      </footer>
 
     </main>
   </div>

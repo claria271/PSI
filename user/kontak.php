@@ -136,22 +136,48 @@
       background: #ff4b4b;
     }
 
-    /* === Footer === */
-    footer {
-      margin-top: 60px;
-      padding: 15px 5%;
-      text-align: center;
-      background: linear-gradient(to right, #ffffff, #000000);
-      font-size: 14px;
-      color: #fff;
-      border-top: 1px solid #ccc;
+    /* FOOTER */
+    .footer {
+      padding: 40px 40px;
+      background: linear-gradient(to right, #ffffff, #f3f4f6);
+      border-top: 1px solid rgba(15,23,42,0.08);
     }
 
-    footer img {
-      height: 20px;
-      vertical-align: middle;
-      margin-left: 5px;
-      filter: brightness(0) invert(1);
+    .footer-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .footer-text {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+
+    .footer-social {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .footer-social a {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(220,38,38,0.08);
+      color: #dc2626;
+      transition: all 0.3s;
+      border: 1px solid rgba(220,38,38,0.14);
+    }
+
+    .footer-social a:hover {
+      background: #dc2626;
+      color: white;
+      transform: translateY(-2px);
     }
 
     @media (max-width: 768px) {
@@ -226,11 +252,7 @@
   </div>
 
   <!-- Footer -->
-  <footer>
-    <img src="../assets/image/logodprd.png" alt="Logo DPRD">
-    <img src="../assets/image/psiputih.png" alt="Logo PSI">
-    Hak cipta © 2025 - Partai Solidaritas Indonesia
-  </footer>
+
 
 </body>
 </html>

@@ -571,15 +571,15 @@ function formatTanggalIndo($ymd){
       border-radius: 10px;
       display: grid;
       place-items: center;
-<<<<<<< HEAD
+
       color: #7c3aed;
       background: rgba(124,58,237,.08);
       border: 1px solid rgba(124,58,237,.14);
-=======
+
       color: #dc2626; /* merah */
       background: rgba(220,38,38,.08);
       border: 1px solid rgba(220,38,38,.14);
->>>>>>> f67bf6c059cdcb60b819f90d1e311141957c523e
+
       transition: .25s;
       font-weight: 800;
     }
@@ -616,11 +616,11 @@ function formatTanggalIndo($ymd){
     .cv-btn-primary{
       padding: 14px 26px;
       border-radius: 10px;
-<<<<<<< HEAD
+
       background: #7c3aed;
-=======
+
       background: #000000; /* hitam */
->>>>>>> f67bf6c059cdcb60b819f90d1e311141957c523e
+
       color: #ffffff;
       font-weight: 800;
       border: 2px solid #dc2626; /* border merah */
@@ -656,7 +656,49 @@ function formatTanggalIndo($ymd){
       border-color: rgba(124,58,237,.35);
       background: rgba(124,58,237,.06);
     }
+    /* FOOTER */
+    .footer {
+      padding: 40px 40px;
+      background: linear-gradient(to right, #ffffff, #f3f4f6);
+      border-top: 1px solid rgba(15,23,42,0.08);
+    }
 
+    .footer-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .footer-text {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+
+    .footer-social {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .footer-social a {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(220,38,38,0.08);
+      color: #dc2626;
+      transition: all 0.3s;
+      border: 1px solid rgba(220,38,38,0.14);
+    }
+
+    .footer-social a:hover {
+      background: #dc2626;
+      color: white;
+      transform: translateY(-2px);
+    }
     @media (max-width: 1100px){
       .news-grid{ grid-template-columns: repeat(2, 1fr); }
       .cv-inner{ grid-template-columns: 1fr; gap: 40px; }
@@ -691,12 +733,7 @@ function formatTanggalIndo($ymd){
   <nav>
     <a class="active">Tentang Josiah</a>
     <a href="#news">Berita</a>
-<<<<<<< HEAD
-    <a href="kontakjosiah.php">Kontak</a>
-=======
     <a href="sosmed.php">media social</a>
-    
->>>>>>> f67bf6c059cdcb60b819f90d1e311141957c523e
   </nav>
 
 </header>
@@ -830,55 +867,32 @@ function formatTanggalIndo($ymd){
 
   </div>
 </section>
-
-<<<<<<< HEAD
-<!-- =========================
-     CV SECTION
-========================= -->
-<section class="cv-section" id="cv">
-  <div class="cv-inner">
-
-    <div class="cv-photo-card reveal">
-      <div class="cv-photo">
-        <img src="assets/josiah2.png"
-             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=60';"
-             alt="CV Photo">
-      </div>
-
-      <div class="cv-social">
-        <a href="#" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-        <a href="#" title="Dribbble"><i class="fa-solid fa-basketball"></i></a>
-        <a href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-        <a href="#" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-        <a href="#" title="Behance"><i class="fa-brands fa-behance"></i></a>
-      </div>
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-text">
+      © 2024 Josiah Michael - Ketua Fraksi PSI Surabaya
     </div>
-
-    <div class="cv-right reveal delay-2">
-      <h1>I am Professional User<br>Experience Designer</h1>
-
-      <p>
-        I design and develop services for customers specializing creating stylish, modern websites, web services and online stores.
-        My passion is to design digital user experiences.
-      </p>
-      <p>
-        I design and develop services for customers specializing creating stylish, modern websites, web services.
-      </p>
-
-      <div class="cv-actions">
-        <a href="#projects" class="cv-btn-primary">My Projects</a>
-
-        <a href="assets/cv.pdf" class="cv-btn-outline" download>
-          <i class="fa-solid fa-download"></i> Download CV
-        </a>
-      </div>
+    <div class="footer-text">
+      Melayani dengan Hati untuk Kemajuan Surabaya
     </div>
-=======
-
->>>>>>> f67bf6c059cdcb60b819f90d1e311141957c523e
-
+    
+    <div class="footer-social">
+      <a href="https://www.facebook.com/liem.k.siong?mibextid=LQQJ4d" target="_blank" rel="noopener" title="Facebook">
+        <i class="fa-brands fa-facebook-f"></i>
+      </a>
+      <a href="https://www.instagram.com/josiahmichael.id/" target="_blank" rel="noopener" title="Instagram">
+        <i class="fa-brands fa-instagram"></i>
+      </a>
+      <a href="https://api.whatsapp.com/send/?phone=%2B6281217501502" target="_blank" rel="noopener" title="WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+      </a>
+      <a href="https://www.tiktok.com/@josiahmichael.id" target="_blank" rel="noopener" title="TikTok">
+        <i class="fa-brands fa-tiktok"></i>
+      </a>
+    </div>
   </div>
-</section>
+</footer>
 
 <script>
   const reveals = document.querySelectorAll('.reveal');

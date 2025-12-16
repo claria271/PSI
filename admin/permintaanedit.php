@@ -75,15 +75,42 @@ $stats = [
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body { background: #f5f5f5; color: #222; }
     
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 15px 40px;
+      /* === HEADER === */
+  header {
+      width: 100%;
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+      padding: 6px 48px;            /* ✅ BARIS NAVBAR DIKECILIN */
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.20);
+      overflow: visible;            /* ✅ Biar logo boleh “keluar” dari bar */
     }
-    header .logo img { height: 40px; }
+   /* ✅ LOGO TETAP BESAR (TIDAK DIUBAH) */
+    .nav-logo-image img {
+      height: 62px;                 /* tetap 62px */
+      width: auto;
+      display: block;
+      object-fit: contain;
+      transform: translateY(-6px);  /* ✅ Naik dikit biar bar tetap tipis */
+    }
+   nav a {
+      color: #000000;
+      position: relative;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;              /* ✅ teks agak diperkecil biar pas di bar kecil */
+      line-height: 1;
+    }
+
+    nav a:hover::after,
+    nav a.active::after {
+      width: 100%;
+    }
+
     header .admin-info {
       color: #fff;
       font-size: 14px;
@@ -418,12 +445,17 @@ $stats = [
 </head>
 <body>
   <header>
-    <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI Logo">
+     
+  <div class="nav-left">
+    <div class="nav-logo-image">
+      <img src="../assets/image/logou.png" alt="Logo">
     </div>
+  
+
     <div class="admin-info">
       👤 Admin: <?= e($adminEmail) ?>
     </div>
+  </div>
   </header>
   
   <div class="container">
@@ -594,10 +626,5 @@ $stats = [
     </div>
   </div>
   
-  <footer>
-    <img src="../assets/image/logodprd.png" alt="DPRD Logo">
-    <img src="../assets/image/psiputih.png" alt="PSI Logo">
-    Hak cipta © 2025 - Partai Solidaritas Indonesia
-  </footer>
 </body>
 </html>
