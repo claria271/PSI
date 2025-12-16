@@ -53,7 +53,7 @@ function formatTanggalIndo($ymd){
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Brooklyn - Portfolio</title>
+  <title>JOSIAH MICHAEL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -569,16 +569,16 @@ function formatTanggalIndo($ymd){
       border-radius: 10px;
       display: grid;
       place-items: center;
-      color: #7c3aed; /* ungu seperti gambar */
-      background: rgba(124,58,237,.08);
-      border: 1px solid rgba(124,58,237,.14);
+      color: #dc2626; /* merah */
+      background: rgba(220,38,38,.08);
+      border: 1px solid rgba(220,38,38,.14);
       transition: .25s;
       font-weight: 800;
     }
     .cv-social a:hover{
       transform: translateY(-2px);
-      background: rgba(124,58,237,.14);
-      border-color: rgba(124,58,237,.24);
+      background: rgba(220,38,38,.14);
+      border-color: rgba(220,38,38,.24);
     }
 
     .cv-right h1{
@@ -608,11 +608,11 @@ function formatTanggalIndo($ymd){
     .cv-btn-primary{
       padding: 14px 26px;
       border-radius: 10px;
-      background: #7c3aed; /* ungu */
+      background: #000000; /* hitam */
       color: #ffffff;
       font-weight: 800;
-      border: 1px solid rgba(124,58,237,.35);
-      box-shadow: 0 14px 28px rgba(124,58,237,.22);
+      border: 2px solid #dc2626; /* border merah */
+      box-shadow: 0 14px 28px rgba(220,38,38,.22);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -621,8 +621,8 @@ function formatTanggalIndo($ymd){
     }
     .cv-btn-primary:hover{
       transform: translateY(-2px);
-      background: #6d28d9;
-      box-shadow: 0 18px 36px rgba(124,58,237,.28);
+      background: #1a1a1a;
+      box-shadow: 0 18px 36px rgba(220,38,38,.28);
     }
 
     .cv-btn-outline{
@@ -680,11 +680,10 @@ function formatTanggalIndo($ymd){
   <nav>
     <a class="active">Tentang Josiah</a>
     <a href="#news">Berita</a>
-    <a>Case Studies</a>
-    <a>About</a>
-    <a>Resources</a>
-    <a>Contact</a>
+    <a href="sosmed.php">media social</a>
+    
   </nav>
+
 </header>
 
 <section class="hero">
@@ -833,11 +832,10 @@ function formatTanggalIndo($ymd){
       </div>
 
       <div class="cv-social">
-        <a href="#" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-        <a href="#" title="Dribbble"><i class="fa-solid fa-basketball"></i></a>
-        <a href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-        <a href="#" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-        <a href="#" title="Behance"><i class="fa-brands fa-behance"></i></a>
+        <a href="https://www.facebook.com/liem.k.siong?mibextid=LQQJ4d" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://www.instagram.com/josiahmichael.id/" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://api.whatsapp.com/send/?phone=%2B6281217501502&text=Hallo+pak+Josiah+Michael.+Ada+yang+ingin+kami+sampaikan+kepada+Bapak.&type=phone_number&app_absent=0" title="Whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+        <a href="https://www.tiktok.com/@josiahmichael.id" title="Tiktok"><i class="fa-brands fa-tiktok"></i></a>
       </div>
     </div>
 
