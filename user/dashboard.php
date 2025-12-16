@@ -1,441 +1,265 @@
 <?php
-
 // user/dashboard.php
-session_start();
-include '../koneksi/config.php';
+require_once __DIR__ . '/../koneksi/config.php';
 
-// Query untuk menghitung total data terverifikasi
-$queryVerifikasi = "SELECT COUNT(*) as total FROM verifikasi";
-$resultVerifikasi = mysqli_query($conn, $queryVerifikasi);
-$totalVerifikasi = mysqli_fetch_assoc($resultVerifikasi)['total'];
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn->set_charset('utf8mb4');
 
-// Query untuk data per dapil (opsional, untuk breakdown)
-//$queryPerDapil = "SELECT dapil, COUNT(*) as total 
-                  //FROM verifikasi 
-                  //WHERE dapil IS NOT NULL AND dapil != ''
-                  //GROUP BY dapil 
-                  //ORDER BY dapil";
-//$resultPerDapil = mysqli_query($conn, $queryPerDapil);
+function e($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+
+// ==========================
+// AMBIL DATA BERITA (PUBLISH)
+// ==========================
+$beritaList = [];
+try {
+  $stmt = $conn->prepare("
+    SELECT id, judul, ringkasan, link_berita, gambar, tanggal
+    FROM berita
+    WHERE status = 'publish'
+    ORDER BY tanggal DESC, id DESC
+    LIMIT 12
+  ");
+  $stmt->execute();
+  $res = $stmt->get_result();
+  while ($row = $res->fetch_assoc()) {
+    $beritaList[] = $row;
+  }
+} catch (Throwable $e) {
+  $beritaList = [];
+}
+
+// Lokasi gambar
+$uploadDirUrl = '../uploads/berita/';
+$fallbackImg  = 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1400&q=60';
+
+function formatTanggalIndo($ymd){
+  if (!$ymd) return '';
+  $bulan = [
+    1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
+    7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+  ];
+  $ts = strtotime($ymd);
+  if (!$ts) return e($ymd);
+  return date('d',$ts).' '.($bulan[(int)date('m',$ts)]).' '.date('Y',$ts);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>PSI - Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Dashboard</title>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #ffffff;
-      color: #000000;
-      line-height: 1.6;
-    }
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',sans-serif;background:#fff;color:#111827}
+a{text-decoration:none;color:inherit}
 
-    /* === HEADER === */
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 12px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    header img {
-      height: 40px;
-    }
-
-    nav a {
-      margin-left: 20px;
-      color: #fff;
-      text-decoration: none;
-      font-weight: 600;
-      transition: 0.3s;
-    }
-
-    nav a:hover,
-    nav a.active {
-      color: #ff4b4b;
-    }
-
-
-    /* HERO */
-    .hero {
-      width: 100%;
-      height: 420px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .hero-slide {
-      position: absolute;
-      width: 100%;
-      height: 420px;
-      top: 0;
-      left: 0;
-      opacity: 0;
-      background-size: cover;
-      background-position: center;
-      transition: opacity 1.5s ease-in-out;
-    }
-
-    .hero-slide.active {
-      opacity: 1;
-    }
-
-    /* TOP TITLE */
-    .top-content {
-      max-width: 90%;
-      margin: 25px auto;
-    }
-
-    .underline {
-      width: 100%;
-      height: 5px;
-      background: #ff0000;
-      margin-top: 8px;
-    }
-/* === STATS SECTION (HITAM-PUTIH-MERAH) === */
-.stats-section {
-  width: 100%;
-  margin: 0;
-  padding: 80px 0;
-  background: #000000; /* HITAM */
-  position: relative;
-  overflow: hidden;
+/* =======================
+   NAVBAR
+======================= */
+.dash-navbar{
+  height:68px;
+  padding:0 44px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(to right,#000000 0%,#5b5b5b 45%,#ffffff 100%);
+  position:sticky;
+  top:0;
+  z-index:50;
+  box-shadow:0 10px 28px rgba(0,0,0,.20);
 }
 
-/* Glow dekor merah */
-.stats-section::before,
-.stats-section::after {
-  content: '';
-  position: absolute;
-  width: 450px;
-  height: 450px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,0,0,0.15) 0%, transparent 70%);
-  z-index: 1;
-}
-.stats-section::before {
-  top: -200px;
-  right: -100px;
-}
-.stats-section::after {
-  bottom: -200px;
-  left: -100px;
+.dash-left img{
+  height:58px; /* LOGO DIBESARKAN DIKIT LAGI */
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.30));
 }
 
-.stats-inner {
-  max-width: 90%;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
+.dash-menu{
+  display:flex;
+  gap:30px;
 }
 
-/* JUDUL & SUBTITLE */
-.stats-section h2 {
-  font-size: 36px;
-  color: #ffffff;   /* PUTIH */
-  font-weight: 800;
-  text-align: center;
+.dash-menu a{
+  color:#000000;
+  font-weight:600;
+  font-size:15px;
+  position:relative;
+  padding-bottom:6px;
 }
 
-.stats-section .subtitle {
-  font-size: 17px;
-  color: #e0e0e0;  /* ABU PUTIH */
-  text-align: center;
-  margin-bottom: 50px;
+.dash-menu a::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:0;
+  width:0;
+  height:2px;
+  background:#dc2626;
+  transition:.25s;
 }
 
-/* KOTAK STATISTIK */
-.stats-container {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
+.dash-menu a:hover::after,
+.dash-menu a.active::after{
+  width:100%;
 }
 
-.stat-item {
-  background: #111111;       /* HITAM tua */
-  border-radius: 24px;
-  padding: 50px 60px;
-  width: 100%;
-  text-align: center;
-  border: 2px solid #ff0000; /* MERAH */
-  box-shadow: 0 0 30px rgba(255, 0, 0, 0.25);
-  position: relative;
-  transition: 0.4s;
+.dash-menu a.active{
+  color:#dc2626;
 }
 
-.stat-item:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 0 50px rgba(255, 0, 0, 0.45);
+/* =======================
+   CONTENT
+======================= */
+.wrap{
+  max-width:1200px;
+  margin:30px auto;
+  padding:0 20px;
 }
 
-/* ICON BOX */
-.stat-icon-box {
-  width: 80px;
-  height: 80px;
-  border-radius: 16px;
-  background: #ff000015;
-  border: 2px solid #ff0000;
-  margin: 0 auto 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.head h2{
+  font-size:28px;
+  font-weight:800;
 }
 
-.stat-icon {
-  font-size: 42px;
+.muted{
+  margin-top:6px;
+  font-size:13px;
+  color:#6b7280;
+  max-width:720px;
 }
 
-/* LABEL */
-.stat-label {
-  font-size: 16px;
-  color: #ffffff;
-  letter-spacing: 2px;
+/* =======================
+   NEWS GRID
+======================= */
+.news-grid{
+  margin-top:24px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:22px;
 }
 
-/* ANGKA BESAR */
-.stat-number {
-  font-size: 72px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #ffffff 0%, #ffdddd 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.news-item{
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(15,23,42,.10);
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
 }
 
-.stat-number::after {
-  content: '+';
-  position: absolute;
-  right: -35px;
-  top: 0;
-  font-size: 48px;
-  color: #ff0000; /* MERAH */
+.thumb{background:#000}
+.thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
 
-/* DESKRIPSI */
-.stat-desc {
-  font-size: 15px;
-  color: #bbbbbb;
+.content{
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
-/* BADGE */
-.stat-change {
-  background: #ff000020;
-  color: #ff0000;
-  border: 1px solid #ff4b4b;
-  padding: 10px 22px;
-  border-radius: 50px;
-  display: inline-flex;
-  gap: 8px;
-  font-weight: 600;
+.news-date{
+  font-size:12px;
+  font-weight:700;
+  color:#6b7280;
 }
 
-.stats-badge {
-  background: #ffffff;
-  color: #000000;
-  border: 2px solid #ff0000;
-  padding: 12px 28px;
-  border-radius: 50px;
-  margin-top: 40px;
-  font-weight: 700;
-  box-shadow: 0 4px 15px rgba(255,0,0,0.3);
+.news-title{
+  font-size:22px;
+  font-weight:800;
+  line-height:1.3;
 }
 
-    /* === ROW OF TWO BOXES === */
-    .section-row {
-      max-width: 90%;
-      margin: 30px auto;
-      display: flex;
-      gap: 25px;
-    }
+.news-desc{
+  font-size:14px;
+  line-height:1.8;
+  color:#4b5563;
+}
 
-    .section-box {
-      background: #ffffff;
-      border: 2px solid #000000;
-      border-radius: 12px;
-      padding: 25px;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 25px; /* space between image & text */
-    }
+.learnmore{
+  margin-top:6px;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  font-weight:800;
+  color:#0f172a;
+  transition:.2s;
+}
+.learnmore:hover{
+  color:#dc2626;
+  transform:translateX(3px);
+}
 
-    /* IMAGE ON LEFT */
-    .circle-img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: #d9d9d9;
-      flex-shrink: 0;
-    }
+.empty{
+  grid-column:1/-1;
+  padding:18px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#fafafa;
+  color:#6b7280;
+  font-weight:700;
+}
 
-    .section-box p {
-      text-align: justify;
-      margin: 0;
-    }
-
-    /* BOTTOM BOX */
-    .bottom-box {
-      max-width: 90%;
-      margin: 40px auto;
-      background: #f2f2f2;
-      border-radius: 12px;
-      padding: 25px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      border-left: 6px solid #ff0000;
-    }
-
-    .bottom-text {
-      flex: 1;
-      text-align: justify;
-    }
-
-    .bottom-logo {
-      height: 28px;
-      flex-shrink: 0;
-    }
-
-    footer {
-      margin-top: 40px;
-      padding: 15px;
-      background: #000000;
-      text-align: center;
-      border-top: 2px solid #ff0000;
-      color: #ffffff;
-    }
-
-    footer img {
-      height: 20px;
-      filter: brightness(0) invert(1);
-      margin: 0 5px;
-    }
-
-    /* RESPONSIVE */
-    @media(max-width: 768px) {
-      .section-row {
-        flex-direction: column;
-      }
-      .section-box {
-        flex-direction: column;
-        text-align: center;
-      }
-    }
-
-  </style>
+@media(max-width:980px){
+  .news-grid{grid-template-columns:1fr}
+  .news-item{grid-template-columns:1fr}
+}
+</style>
 </head>
 
 <body>
 
-  <header>
-    <img src="../assets/image/logo.png" alt="PSI Logo">
-    <nav>
-      <a href="dashboard.php" class="active">Dashboard</a>
-      <a href="kontak.php">Kontak</a>
-      <a href="profil.php">Profil</a>
-    </nav>
-  </header>
-
-  <!-- HERO -->
-<section class="hero">
-  <div class="hero-slide active" style="background-image: url('../assets/image/index.jpeg');"></div>
-  <div class="hero-slide" style="background-image: url('../assets/image/index1.jpeg');"></div>
-  <div class="hero-slide" style="background-image: url('../assets/image/index2.jpeg');"></div>
-</section>
-
-<!-- 🔥 SECTION STATISTIK BARU -->
-<section class="stats-section">
-  <div class="stats-inner">
-    <h2>Jumlah Keluarga yang Telah Dibantu oleh Tim Kami</h2>
-    <p class="subtitle">Data Real-Time Keluarga yang Telah Terverifikasi dan Menerima Bantuan dari PSI</p>
-    
-    <div class="stats-container">
-      <div class="stat-item">
-        <div class="stat-icon-box">
-          <div class="stat-icon">👨‍👩‍👧‍👦</div>
-        </div>
-        <div class="stat-label">Total Keluarga Terbantu</div>
-        <div class="stat-number-wrapper">
-          <div class="stat-number"><?php echo number_format($totalVerifikasi, 0, ',', '.'); ?></div>
-        </div>
-        <div class="stat-desc">
-          Keluarga yang telah menerima bantuan dan pendampingan dari tim PSI
-        </div>
-        <div class="stat-change">Terverifikasi & Tervalidasi</div>
-      </div>
-    </div>
-
-    <center>
-      <div class="stats-badge">
-        Data Diperbarui Secara Real-Time
-      </div>
-    </center>
+<header class="dash-navbar">
+  <div class="dash-left">
+    <img src="../assets/image/logou.png" alt="PSI Logo">
   </div>
-</section>
-  
-</section>
-<div class="top-content">
-  <h1>PSI Peduli - Hadir Untuk Melayani Masyarakat</h1>
-  <div class="underline"></div>
+
+  <nav class="dash-menu">
+    <a href="dashboard.php" class="active">Beranda</a>
+    <a href="kontak.php">Kontak</a>
+    <a href="profil.php">Profil</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="head">
+    <h2>Berita Terbaru</h2>
+    <div class="muted">
+      Menampilkan berita dengan status <b>publish</b>.  
+      Tombol <b>Learn More</b> menuju link berita.
+    </div>
+  </div>
+
+  <div class="news-grid">
+    <?php if($beritaList): foreach($beritaList as $b): 
+      $img = $b['gambar'] ? $uploadDirUrl.rawurlencode($b['gambar']) : $fallbackImg;
+      $ring = mb_substr($b['ringkasan'],0,180).(mb_strlen($b['ringkasan'])>180?'...':'');
+    ?>
+      <article class="news-item">
+        <div class="thumb">
+          <img src="<?=e($img)?>" onerror="this.src='<?=e($fallbackImg)?>'">
+        </div>
+        <div class="content">
+          <div class="news-date"><?=formatTanggalIndo($b['tanggal'])?></div>
+          <div class="news-title"><?=e($b['judul'])?></div>
+          <div class="news-desc"><?=e($ring)?></div>
+          <a class="learnmore" href="<?=e($b['link_berita'])?>" target="_blank">
+            Learn More →
+          </a>
+        </div>
+      </article>
+    <?php endforeach; else: ?>
+      <div class="empty">Belum ada berita publish.</div>
+    <?php endif; ?>
+  </div>
 </div>
-
-  <!-- ✅ TWO BOXES SIDE BY SIDE WITH IMAGE LEFT -->
-  <div class="section-row">
-
-    <div class="section-box">
-      <div class="circle-img"></div>
-      <p>
-        Kita percaya, solidaritas bukan sekadar kata. Melalui program bantuan dana sosial,
-        PSI berupaya meringankan beban masyarakat yang membutuhkan dengan proses terbuka,
-        cepat, dan tanpa diskriminasi.
-      </p>
-    </div>
-
-    <div class="section-box">
-      <div class="circle-img"></div>
-      <p>
-        Sebagai bagian dari komitmen untuk mendukung masyarakat, PSI menghadirkan program bantuan sosial
-        yang dikelola dengan prinsip keterbukaan, keadilan, dan akuntabilitas. Melalui sistem pendataan
-        yang terintegrasi, kami memastikan bantuan tepat sasaran dan bermanfaat.
-      </p>
-    </div>
-
-  </div>
-
-  <!-- BOTTOM BOX -->
-  <section class="bottom-box">
-    <div class="bottom-text">
-      PSI meyakini bahwa solidaritas adalah kekuatan utama dalam membangun kehidupan yang lebih baik
-      bagi masyarakat. Melalui program bantuan sosial, PSI berkomitmen untuk hadir dengan cara yang
-      terbuka, adil, dan tanpa diskriminasi.
-    </div>
-    <img src="../assets/image/psiputih.png" class="bottom-logo" alt="PSI Logo">
-  </section>
-
-  <footer>
-    <img src="../assets/image/logodprd.png" alt="DPRD Logo">
-    <img src="../assets/image/psiputih.png" alt="PSI Logo">
-    Hak cipta © 2025 - Partai Solidaritas Indonesia
-  </footer>
-
-  <script>
-    const slides = document.querySelectorAll('.hero-slide');
-    let current = 0;
-
-    setInterval(() => {
-      slides[current].classList.remove('active');
-      current = (current + 1) % slides.length;
-      slides[current].classList.add('active');
-    }, 4000);
-  </script>
 
 </body>
 </html>

@@ -423,7 +423,6 @@ $stats = [
     </div>
     <div class="admin-info">
       👤 Admin: <?= e($adminEmail) ?>
-      <a href="dashboardadmin.php">← Kembali</a>
     </div>
   </header>
   

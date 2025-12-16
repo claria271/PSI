@@ -74,11 +74,11 @@ function formatTanggalIndo($ymd){
 
     a { text-decoration: none; color: inherit; }
 
-    /* NAVBAR GRADIENT */
+    /* ================= NAVBAR (SMALL BAR, BIG LOGO) ================= */
     header {
       width: 100%;
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 14px 48px;
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+      padding: 6px 48px;            /* ✅ BARIS NAVBAR DIKECILIN */
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -86,16 +86,22 @@ function formatTanggalIndo($ymd){
       top: 0;
       z-index: 20;
       box-shadow: 0 4px 18px rgba(15,23,42,0.20);
+      overflow: visible;            /* ✅ Biar logo boleh “keluar” dari bar */
     }
 
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
+    /* ✅ LOGO TETAP BESAR (TIDAK DIUBAH) */
     .nav-logo-image img {
-      height: 34px;
+      height: 62px;                 /* tetap 62px */
+      width: auto;
+      display: block;
+      object-fit: contain;
+      transform: translateY(-6px);  /* ✅ Naik dikit biar bar tetap tipis */
     }
 
     nav {
@@ -104,10 +110,12 @@ function formatTanggalIndo($ymd){
     }
 
     nav a {
-      color: white;
+      color: #000000;
       position: relative;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
+      font-size: 14px;              /* ✅ teks agak diperkecil biar pas di bar kecil */
+      line-height: 1;
     }
 
     nav a::after {
@@ -116,7 +124,7 @@ function formatTanggalIndo($ymd){
       width: 0;
       height: 2px;
       left: 0;
-      bottom: -4px;
+      bottom: -6px;
       background: #dc2626;
       transition: .3s;
     }
@@ -288,7 +296,7 @@ function formatTanggalIndo($ymd){
     }
 
     /* =========================================================
-       NEWS SECTION (NYAMBUNG DI BAWAH HERO)
+       NEWS SECTION
     ========================================================= */
     .news-section {
       position: relative;
@@ -490,9 +498,6 @@ function formatTanggalIndo($ymd){
       transform: translateY(-1px);
     }
 
-    /* =========================================================
-       SCROLL REVEAL EFFECT
-    ========================================================= */
     .reveal{
       opacity: 0;
       transform: translateY(18px);
@@ -508,9 +513,6 @@ function formatTanggalIndo($ymd){
     .reveal.delay-3{ transition-delay: .24s; }
     .reveal.delay-4{ transition-delay: .32s; }
 
-    /* =========================================================
-       CV SECTION (SETELAH BERITA) - MIRIP GAMBAR
-    ========================================================= */
     .cv-section{
       padding: 90px 40px 110px;
       background: #ffffff;
@@ -569,7 +571,7 @@ function formatTanggalIndo($ymd){
       border-radius: 10px;
       display: grid;
       place-items: center;
-      color: #7c3aed; /* ungu seperti gambar */
+      color: #7c3aed;
       background: rgba(124,58,237,.08);
       border: 1px solid rgba(124,58,237,.14);
       transition: .25s;
@@ -608,7 +610,7 @@ function formatTanggalIndo($ymd){
     .cv-btn-primary{
       padding: 14px 26px;
       border-radius: 10px;
-      background: #7c3aed; /* ungu */
+      background: #7c3aed;
       color: #ffffff;
       font-weight: 800;
       border: 1px solid rgba(124,58,237,.35);
@@ -645,7 +647,6 @@ function formatTanggalIndo($ymd){
       background: rgba(124,58,237,.06);
     }
 
-    /* RESPONSIVE */
     @media (max-width: 1100px){
       .news-grid{ grid-template-columns: repeat(2, 1fr); }
       .cv-inner{ grid-template-columns: 1fr; gap: 40px; }
@@ -653,7 +654,8 @@ function formatTanggalIndo($ymd){
       .cv-right h1{ font-size: 40px; }
     }
     @media (max-width: 650px){
-      header{ padding: 14px 18px; }
+      header{ padding: 6px 18px; }  /* ✅ tetep tipis di HP */
+      .nav-logo-image img{ transform: translateY(-5px); } /* ✅ rapihin di HP */
       .hero{ padding: 20px 18px 80px; }
       .news-section{ padding: 55px 18px 80px; }
       .news-grid{ grid-template-columns: 1fr; }
@@ -672,18 +674,14 @@ function formatTanggalIndo($ymd){
 <header>
   <div class="nav-left">
     <div class="nav-logo-image">
-      <img src="assets/image/logo.png">
+      <img src="assets/image/logou.png" alt="Logo">
     </div>
-    <div class="nav-brand">Josiah Michael</div>
   </div>
 
   <nav>
     <a class="active">Tentang Josiah</a>
     <a href="#news">Berita</a>
-    <a>Case Studies</a>
-    <a>About</a>
-    <a>Resources</a>
-    <a>Contact</a>
+    <a href="kontakjosiah.php">Kontak</a>
   </nav>
 </header>
 
@@ -745,7 +743,7 @@ function formatTanggalIndo($ymd){
 </section>
 
 <!-- =========================
-     NEWS SECTION (DI BAWAH HERO)
+     NEWS SECTION
 ========================= -->
 <section class="news-section" id="news">
   <div class="news-inner">
@@ -818,15 +816,13 @@ function formatTanggalIndo($ymd){
 </section>
 
 <!-- =========================
-     CV SECTION (SETELAH BERITA)
+     CV SECTION
 ========================= -->
 <section class="cv-section" id="cv">
   <div class="cv-inner">
 
-    <!-- KIRI (FOTO + SOSIAL) -->
     <div class="cv-photo-card reveal">
       <div class="cv-photo">
-        <!-- GANTI FOTO INI SESUAI PUNYA KAMU -->
         <img src="assets/josiah2.png"
              onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=60';"
              alt="CV Photo">
@@ -841,7 +837,6 @@ function formatTanggalIndo($ymd){
       </div>
     </div>
 
-    <!-- KANAN (TEKS + BUTTON) -->
     <div class="cv-right reveal delay-2">
       <h1>I am Professional User<br>Experience Designer</h1>
 
@@ -854,12 +849,8 @@ function formatTanggalIndo($ymd){
       </p>
 
       <div class="cv-actions">
-        <!-- GANTI LINK "My Projects" SESUAI HALAMAN KAMU -->
-        <a href="#projects" class="cv-btn-primary">
-          My Projects
-        </a>
+        <a href="#projects" class="cv-btn-primary">My Projects</a>
 
-        <!-- TARUH FILE CV DI assets/cv.pdf -->
         <a href="assets/cv.pdf" class="cv-btn-outline" download>
           <i class="fa-solid fa-download"></i> Download CV
         </a>
@@ -870,7 +861,6 @@ function formatTanggalIndo($ymd){
 </section>
 
 <script>
-  // Scroll reveal pakai IntersectionObserver (lebih halus & ringan)
   const reveals = document.querySelectorAll('.reveal');
 
   const io = new IntersectionObserver((entries) => {
