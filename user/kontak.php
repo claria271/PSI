@@ -5,173 +5,197 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PSI - Kontak</title>
 
-  <!-- Tambahkan Font Awesome untuk ikon -->
+  <!-- Google Font Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-    body {
-      background: #f2f2f2;
-      color: #000;
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+    body{background:#f2f2f2;color:#000}
+    a{text-decoration:none;color:inherit}
+
+    /* =======================
+       NAVBAR (SAMA KAYAK DASHBOARD)
+    ======================= */
+    .dash-navbar{
+      height:68px;
+      padding:0 44px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:linear-gradient(to right,#000000 0%,#5b5b5b 45%,#ffffff 100%);
+      position:sticky;
+      top:0;
+      z-index:50;
+      box-shadow:0 10px 28px rgba(0,0,0,.20);
     }
 
-    /* === HEADER === */
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 12px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .dash-left img{
+      height:62px; /* LOGO BESAR */
+      filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
     }
 
-    header img {
-      height: 40px;
+    .dash-menu{
+      display:flex;
+      gap:30px;
     }
 
-    nav a {
-      margin-left: 20px;
-      color: #fff;
-      text-decoration: none;
-      font-weight: 600;
-      transition: 0.3s;
+    .dash-menu a{
+      color:#000000; /* TEKS KANAN HITAM */
+      font-weight:600;
+      font-size:15px;
+      position:relative;
+      padding-bottom:6px;
     }
 
-    nav a:hover,
-    nav a.active {
-      color: #ff4b4b;
+    .dash-menu a::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:0;
+      height:2px;
+      background:#dc2626;
+      transition:.25s;
+    }
+
+    .dash-menu a:hover::after,
+    .dash-menu a.active::after{
+      width:100%;
+    }
+
+    .dash-menu a.active{
+      color:#dc2626;
     }
 
     /* === Container Utama === */
-    .container {
-      max-width: 1000px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 8px;
-      padding: 30px 40px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    .container{
+      max-width:1000px;
+      margin:40px auto;
+      background:#fff;
+      border-radius:8px;
+      padding:30px 40px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
     }
 
-    .title {
-      font-size: 22px;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 25px;
+    .title{
+      font-size:22px;
+      font-weight:800;
+      color:#333;
+      margin-bottom:25px;
     }
 
-    .content {
-      display: flex;
-      gap: 30px;
-      flex-wrap: wrap;
-      align-items: flex-start;
+    .content{
+      display:flex;
+      gap:30px;
+      flex-wrap:wrap;
+      align-items:flex-start;
     }
 
     /* === Map === */
-    .map {
-      flex: 1;
-      min-width: 350px;
-      height: 250px;
-      border-radius: 8px;
-      overflow: hidden;
+    .map{
+      flex:1;
+      min-width:350px;
+      height:250px;
+      border-radius:8px;
+      overflow:hidden;
     }
 
-    .map iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
+    .map iframe{
+      width:100%;
+      height:100%;
+      border:0;
     }
 
     /* === Info Kontak === */
-    .info {
-      flex: 1;
-      min-width: 300px;
+    .info{
+      flex:1;
+      min-width:300px;
     }
 
-    .info p {
-      margin-bottom: 8px;
-      font-size: 16px;
-      color: #333;
+    .info p{
+      margin-bottom:8px;
+      font-size:16px;
+      color:#333;
     }
 
     /* Kotak PSI.id */
-    .web-box {
-      background: #d9d9d9;
-      color: #555;
-      padding: 12px 15px;
-      margin-top: 20px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 16px;
-      display: inline-block;
+    .web-box{
+      background:#d9d9d9;
+      color:#555;
+      padding:12px 15px;
+      margin-top:20px;
+      border-radius:6px;
+      font-weight:700;
+      font-size:16px;
+      display:inline-block;
     }
 
     /* === Ikon Sosial Media === */
-    .social-icons {
-      margin-top: 20px;
-      display: flex;
-      gap: 12px;
+    .social-icons{
+      margin-top:20px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
     }
 
-    .social-icons a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #333;
-      color: #fff;
-      font-size: 18px;
-      text-decoration: none;
-      transition: 0.3s;
+    .social-icons a{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      background:#333;
+      color:#fff;
+      font-size:18px;
+      transition:.3s;
     }
 
-    .social-icons a:hover {
-      background: #ff4b4b;
+    .social-icons a:hover{
+      background:#ff4b4b;
     }
 
     /* === Footer === */
-    footer {
-      margin-top: 60px;
-      padding: 15px 5%;
-      text-align: center;
-      background: linear-gradient(to right, #ffffff, #000000);
-      font-size: 14px;
-      color: #fff;
-      border-top: 1px solid #ccc;
+    footer{
+      margin-top:60px;
+      padding:15px 5%;
+      text-align:center;
+      background:linear-gradient(to right,#ffffff,#000000);
+      font-size:14px;
+      color:#fff;
+      border-top:1px solid #ccc;
     }
 
-    footer img {
-      height: 20px;
-      vertical-align: middle;
-      margin-left: 5px;
-      filter: brightness(0) invert(1);
+    footer img{
+      height:20px;
+      vertical-align:middle;
+      margin-left:5px;
+      filter:brightness(0) invert(1);
     }
 
-    @media (max-width: 768px) {
-      .content {
-        flex-direction: column;
-      }
-      .map {
-        height: 220px;
-      }
+    @media (max-width:768px){
+      .content{flex-direction:column}
+      .map{height:220px;min-width:100%}
+      .dash-navbar{padding:0 18px}
+      .dash-menu{gap:18px}
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI Logo">
+  <!-- NAVBAR -->
+  <header class="dash-navbar">
+    <div class="dash-left">
+      <img src="../assets/image/logou.png" alt="PSI Logo">
     </div>
-    <nav>
+
+    <nav class="dash-menu">
       <a href="dashboard.php">Beranda</a>
       <a href="kontak.php" class="active">Kontak</a>
       <a href="profil.php">Profil</a>
@@ -200,23 +224,18 @@
         <div class="web-box">www.psi.id</div>
 
         <div class="social-icons">
-          <!-- LinkedIn -->
           <a href="" target="_blank" title="LinkedIn PSI">
             <i class="fab fa-linkedin-in"></i>
           </a>
-          <!-- Email -->
           <a href="mailto:fraksipsisurabaya@gmail.com" title="Kirim Email">
             <i class="fas fa-envelope"></i>
           </a>
-          <!-- WhatsApp -->
           <a href="https://wa.me/6282201024055" target="_blank" title="Chat WhatsApp">
             <i class="fab fa-whatsapp"></i>
           </a>
-          <!-- Telepon -->
           <a href="tel:+6282201024055" title="Hubungi via Telepon">
             <i class="fas fa-phone"></i>
           </a>
-          <!-- Facebook (ini yang kamu minta) -->
           <a href="https://www.facebook.com/share/17LizCopS2/?mibextid=wwXIfr" target="_blank" title="Kunjungi Facebook PSI Surabaya">
             <i class="fab fa-facebook-f"></i>
           </a>

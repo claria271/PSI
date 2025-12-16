@@ -53,7 +53,7 @@ if ($hasUserIdCol && !empty($user['id'])) {
     $stmtK->bind_param('s', $email);
     $stmtK->execute();
     $kelRes = $stmtK->get_result();
-    $keluarga = $kelRes->fetch_assoc();
+    $keluarga = $stmtK->get_result()->fetch_assoc();
     $stmtK->close();
   }
 }
@@ -96,28 +96,68 @@ if (!empty($keluarga['no_wa'])) {
   <meta charset="UTF-8">
   <title>Profil Pengguna</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Google Font Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body { background: #fff; color: #222; }
+    a { text-decoration: none; color: inherit; }
 
-    header {
-      background: linear-gradient(to right, #ffffff, #000000);
-      padding: 12px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    /* =======================
+       NAVBAR (SAMA KAYAK KONTAK)
+    ======================= */
+    .dash-navbar{
+      height:68px;
+      padding:0 44px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:linear-gradient(to right,#000000 0%,#5b5b5b 45%,#ffffff 100%);
+      position:sticky;
+      top:0;
+      z-index:50;
+      box-shadow:0 10px 28px rgba(0,0,0,.20);
     }
-    header img { height: 40px; }
-    nav a {
-      margin-left: 20px;
-      color: #fff;
-      text-decoration: none;
-      font-weight: 600;
-      transition: 0.3s;
+    .dash-left img{
+      height:64px; /* LOGO LEBIH BESAR */
+      filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
     }
-    nav a:hover,
-    nav a.active { color: #ff4b4b; }
+    .dash-menu{
+      display:flex;
+      gap:30px;
+    }
+    .dash-menu a{
+      color:#000000; /* TEKS KANAN HITAM */
+      font-weight:600;
+      font-size:15px;
+      position:relative;
+      padding-bottom:6px;
+    }
+    .dash-menu a::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:0;
+      height:2px;
+      background:#dc2626;
+      transition:.25s;
+    }
+    .dash-menu a:hover::after,
+    .dash-menu a.active::after{
+      width:100%;
+    }
+    .dash-menu a.active{ color:#dc2626; }
 
+    @media (max-width:768px){
+      .dash-navbar{padding:0 18px}
+      .dash-menu{gap:18px}
+      .dash-left img{height:58px;}
+    }
+
+    /* ====== PROFIL (ASLI MU, TETAP) ====== */
     .profile-section {
       background-color: #111;
       background-image:
@@ -211,13 +251,8 @@ if (!empty($keluarga['no_wa'])) {
       overflow: hidden;
       transition: max-height 0.3s ease-out;
     }
-    .section-content.open {
-      max-height: 2000px;
-    }
-
-    .section-body {
-      padding: 24px;
-    }
+    .section-content.open { max-height: 2000px; }
+    .section-body { padding: 24px; }
 
     .info-box {
       background: #fff3cd;
@@ -229,11 +264,7 @@ if (!empty($keluarga['no_wa'])) {
       font-size: 14px;
     }
     .info-box strong { color: #664d03; }
-    .info-box.success {
-      background: #d1fae5;
-      border-color: #10b981;
-      color: #065f46;
-    }
+    .info-box.success { background: #d1fae5; border-color: #10b981; color: #065f46; }
 
     .pending-badge {
       display: inline-block;
@@ -254,12 +285,8 @@ if (!empty($keluarga['no_wa'])) {
       margin-bottom: 20px;
     }
     @media (max-width: 640px) { .data-grid { grid-template-columns: 1fr; } }
-    
-    .data-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+
+    .data-item { display: flex; flex-direction: column; gap: 4px; }
     .data-label {
       font-size: 12px;
       font-weight: 600;
@@ -267,31 +294,17 @@ if (!empty($keluarga['no_wa'])) {
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .data-value {
-      font-size: 15px;
-      color: #111;
-    }
+    .data-value { font-size: 15px; color: #111; }
 
-    .form-container {
-      padding: 0;
-    }
     label { font-weight: 600; display: block; margin-top: 10px; }
     input, textarea, select {
       width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px;
       background: #fff; color: #111;
     }
-    input:disabled, textarea:disabled {
-      background: #f3f4f6;
-      cursor: not-allowed;
-    }
+    input:disabled, textarea:disabled { background: #f3f4f6; cursor: not-allowed; }
     textarea { resize: none; height: 90px; }
-    
-    .phone-input-wrapper {
-      display: flex;
-      gap: 10px;
-      align-items: stretch;
-      margin-bottom: 15px;
-    }
+
+    .phone-input-wrapper { display: flex; gap: 10px; align-items: stretch; margin-bottom: 15px; }
     .phone-prefix {
       width: 80px;
       background: #e0e0e0;
@@ -305,10 +318,7 @@ if (!empty($keluarga['no_wa'])) {
       align-items: center;
       justify-content: center;
     }
-    .phone-input {
-      flex: 1;
-      margin-bottom: 0 !important;
-    }
+    .phone-input { flex: 1; margin-bottom: 0 !important; }
     .phone-status {
       display: block;
       font-size: 12px;
@@ -317,17 +327,14 @@ if (!empty($keluarga['no_wa'])) {
       margin-bottom: 15px;
       transition: color 0.3s ease;
     }
-    
+
     .btn-save {
       width: 100%; padding: 12px; background: #3b82f6; color: #fff; border: none; border-radius: 8px;
       cursor: pointer; font-weight: 600; transition: 0.3s;
     }
     .btn-save:hover { background: #2563eb; }
-    .btn-save:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-    }
-    
+    .btn-save:disabled { background: #9ca3af; cursor: not-allowed; }
+
     .btn-request {
       width: 100%; padding: 12px; background: #f59e0b; color: #fff; border: none; border-radius: 8px;
       cursor: pointer; font-weight: 600; transition: 0.3s; margin-bottom: 15px;
@@ -346,10 +353,7 @@ if (!empty($keluarga['no_wa'])) {
       background-color: rgba(0,0,0,0.5);
       animation: fadeIn 0.3s;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .modal-content {
       background-color: #fff;
       margin: 10% auto;
@@ -361,26 +365,10 @@ if (!empty($keluarga['no_wa'])) {
       animation: slideDown 0.3s;
       box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     }
-    @keyframes slideDown {
-      from { transform: translateY(-50px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .modal-icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-    }
-    .modal-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #111;
-      margin-bottom: 12px;
-    }
-    .modal-text {
-      font-size: 15px;
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 25px;
-    }
+    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-icon { font-size: 64px; margin-bottom: 20px; }
+    .modal-title { font-size: 24px; font-weight: 700; color: #111; margin-bottom: 12px; }
+    .modal-text { font-size: 15px; color: #666; line-height: 1.6; margin-bottom: 25px; }
     .modal-btn {
       padding: 12px 32px;
       background: #3b82f6;
@@ -392,25 +380,19 @@ if (!empty($keluarga['no_wa'])) {
       cursor: pointer;
       transition: 0.3s;
     }
-    .modal-btn:hover {
-      background: #2563eb;
-      transform: translateY(-2px);
-    }
-    .modal-btn.warning {
-      background: #f59e0b;
-    }
-    .modal-btn.warning:hover {
-      background: #d97706;
-    }
+    .modal-btn:hover { background: #2563eb; transform: translateY(-2px); }
+    .modal-btn.warning { background: #f59e0b; }
+    .modal-btn.warning:hover { background: #d97706; }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo">
-      <img src="../assets/image/logo.png" alt="PSI Logo">
+  <!-- NAVBAR BARU (SAMA KAYAK KONTAK) -->
+  <header class="dash-navbar">
+    <div class="dash-left">
+      <img src="../assets/image/logou.png" alt="PSI Logo">
     </div>
-    <nav>
+    <nav class="dash-menu">
       <a href="dashboard.php">Beranda</a>
       <a href="kontak.php">Kontak</a>
       <a href="profil.php" class="active">Profil</a>
@@ -488,7 +470,7 @@ if (!empty($keluarga['no_wa'])) {
           <div class="info-box">
             <strong>ℹ️ Informasi:</strong> Anda belum memiliki data keluarga. Silakan isi formulir di bawah untuk menambahkan data baru.
           </div>
-          
+
           <form action="update_data.php" method="POST" id="profilForm">
             <label>Nama Lengkap <span style="color: red;">*</span></label>
             <input type="text" name="nama_lengkap" required>
@@ -499,12 +481,12 @@ if (!empty($keluarga['no_wa'])) {
             <label>No WhatsApp <span style="color: red;">*</span></label>
             <div class="phone-input-wrapper">
               <div class="phone-prefix">+62</div>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 id="no_wa_input"
-                name="no_wa_display" 
+                name="no_wa_display"
                 class="phone-input"
-                placeholder="8123456789" 
+                placeholder="8123456789"
                 maxlength="13"
                 required
               >
@@ -529,9 +511,8 @@ if (!empty($keluarga['no_wa'])) {
 
             <button type="submit" class="btn-save">➕ Tambah Data Baru</button>
           </form>
-          
+
         <?php else: ?>
-          <!-- Tampilan Data -->
           <div class="data-grid">
             <div class="data-item">
               <span class="data-label">Nama Lengkap</span>
@@ -569,9 +550,8 @@ if (!empty($keluarga['no_wa'])) {
 
           <hr style="margin: 24px 0; border: none; border-top: 1px solid #e0e0e0;">
 
-          <!-- Form Edit -->
           <h4 style="margin-bottom: 16px; color: #333;">✏️ Edit Data Keluarga</h4>
-          
+
           <?php if ($canEdit): ?>
             <div class="info-box success">
               <strong>✓ Izin Edit Aktif:</strong> Admin telah menyetujui permintaan Anda. Silakan edit data sekarang!
@@ -588,7 +568,7 @@ if (!empty($keluarga['no_wa'])) {
               📤 Minta Izin Edit ke Admin
             </button>
           <?php endif; ?>
-          
+
           <form action="update_data.php" method="POST" id="profilFormEdit">
             <input type="hidden" name="id" value="<?= (int)$keluarga['id'] ?>">
             <input type="hidden" name="is_edit" value="1">
@@ -602,12 +582,12 @@ if (!empty($keluarga['no_wa'])) {
             <label>No WhatsApp <span style="color: red;">*</span></label>
             <div class="phone-input-wrapper">
               <div class="phone-prefix">+62</div>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 id="no_wa_input_edit"
-                name="no_wa_display" 
+                name="no_wa_display"
                 class="phone-input"
-                placeholder="8123456789" 
+                placeholder="8123456789"
                 maxlength="13"
                 value="<?= htmlspecialchars($noWaDisplay) ?>"
                 <?= $canEdit ? '' : 'disabled' ?>
@@ -641,7 +621,6 @@ if (!empty($keluarga['no_wa'])) {
     </div>
   </div>
 
-  <!-- Modal Request Edit -->
   <div id="requestModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon">🔒</div>
@@ -655,7 +634,6 @@ if (!empty($keluarga['no_wa'])) {
     </div>
   </div>
 
-  <!-- Modal Pending -->
   <div id="pendingModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon">⏳</div>
@@ -668,7 +646,6 @@ if (!empty($keluarga['no_wa'])) {
     </div>
   </div>
 
-  <!-- Modal Approved -->
   <div id="approvedModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon">✅</div>
@@ -698,10 +675,8 @@ if (!empty($keluarga['no_wa'])) {
 
     function handleSectionClick() {
       <?php if ($keluarga && !$canEdit && !$hasPendingEdit): ?>
-        // Jika ada data tapi belum request, tampilkan modal request
         document.getElementById('requestModal').style.display = 'block';
       <?php else: ?>
-        // Jika tidak ada data atau sudah request/approved, toggle biasa
         toggleSection();
       <?php endif; ?>
     }
@@ -715,19 +690,16 @@ if (!empty($keluarga['no_wa'])) {
     }
 
     function submitRequest() {
-      // Kirim request via AJAX atau form
       window.location.href = 'request_edit.php';
     }
 
     function closePendingModal() {
       document.getElementById('pendingModal').style.display = 'none';
-      // Tetap bisa toggle section untuk melihat data
       toggleSection();
     }
 
     function closeApprovedModal() {
       document.getElementById('approvedModal').style.display = 'none';
-      // Auto open section untuk edit
       const content = document.getElementById('sectionContent');
       const chevron = document.getElementById('chevron');
       if (!content.classList.contains('open')) {
@@ -736,7 +708,6 @@ if (!empty($keluarga['no_wa'])) {
       }
     }
 
-    // Show appropriate modal based on URL parameters
     <?php if (isset($_GET['status'])): ?>
       <?php if ($_GET['status'] === 'request_sent' || $_GET['status'] === 'pending_approval'): ?>
         document.getElementById('pendingModal').style.display = 'block';
@@ -745,7 +716,6 @@ if (!empty($keluarga['no_wa'])) {
       <?php endif; ?>
     <?php endif; ?>
 
-    // Phone input handlers
     function setupPhoneInput(inputId, hiddenId, statusId) {
       const phoneInput = document.getElementById(inputId);
       const phoneHidden = document.getElementById(hiddenId);
@@ -753,9 +723,9 @@ if (!empty($keluarga['no_wa'])) {
 
       if (!phoneInput) return;
 
-      phoneInput.addEventListener('input', function(e) {
+      phoneInput.addEventListener('input', function() {
         let value = this.value.replace(/\D/g, "");
-        
+
         if (value.startsWith('0')) value = value.substring(1);
         if (value.startsWith('62')) value = value.substring(2);
 
@@ -764,7 +734,7 @@ if (!empty($keluarga['no_wa'])) {
         if (value.length > 0) {
           const fullNumber = '+62' + value;
           phoneHidden.value = fullNumber;
-          
+
           if (value.length >= 10) {
             this.style.borderColor = '#22c55e';
             phoneStatus.style.color = '#22c55e';
