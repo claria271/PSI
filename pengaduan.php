@@ -91,23 +91,65 @@ body {
   background: #f2f2f2;
 }
 
-header {
-  background: linear-gradient(to right, #bfbfbf, #000);
-  padding: 15px 30px;
-  color: #fff;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    /* ================= NAVBAR (SMALL BAR, BIG LOGO) ================= */
+    header {
+      width: 100%;
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+      padding: 6px 48px;            /* ✅ BARIS NAVBAR DIKECILIN */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.20);
+      overflow: visible;            /* ✅ Biar logo boleh “keluar” dari bar */
+    }
 
-header img { height: 40px; }
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-header nav a {
-  color: #fff;
-  margin-left: 20px;
-  text-decoration: none;
-  font-weight: 500;
-}
+    /* ✅ LOGO TETAP BESAR (TIDAK DIUBAH) */
+    .nav-logo-image img {
+      height: 62px;                 /* tetap 62px */
+      width: auto;
+      display: block;
+      object-fit: contain;
+      transform: translateY(-6px);  /* ✅ Naik dikit biar bar tetap tipis */
+    }
+
+    nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    nav a {
+      color: #000000;
+      position: relative;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;              /* ✅ teks agak diperkecil biar pas di bar kecil */
+      line-height: 1;
+    }
+
+    nav a::after {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 2px;
+      left: 0;
+      bottom: -6px;
+      background: #dc2626;
+      transition: .3s;
+    }
+
+    nav a:hover::after,
+    nav a.active::after {
+      width: 100%;
+    }
 
 .container {
   max-width: 600px;
@@ -186,16 +228,29 @@ button:hover {
   border-radius: 6px;
   margin-bottom: 15px;
 }
+  @media (max-width: 650px){
+      header{ padding: 6px 18px; }  /* ✅ tetep tipis di HP */
+      .nav-logo-image img{ transform: translateY(-5px); } /* ✅ rapihin di HP */
+      .hero{ padding: 20px 18px 80px; }
+      .news-section{ padding: 55px 18px 80px; }
+      .news-grid{ grid-template-columns: 1fr; }
+      nav{ display:none; }
+    }
 </style>
 </head>
 <body>
-
 <header>
-  <img src="assets/image/logo.png" alt="PSI">
+  <div class="nav-left">
+    <div class="nav-logo-image">
+      <img src="assets/image/logou.png" alt="Logo">
+    </div>
+  </div>
+
   <nav>
-    <a href="#">Beranda</a>
-    <a href="#">Profil</a>
+    <a href="index.php">Tentang Josiah</a>
+    <a href="sosmed.php">media social</a>
   </nav>
+
 </header>
 
 <div class="container">

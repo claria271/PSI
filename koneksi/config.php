@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $user = "root"; // default XAMPP
-$pass = "root";     // default kosong
+$pass = "";     // default kosong
 $db   = "web_psi";
 
 $conn = new mysqli($host, $user, $pass, $db);
