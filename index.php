@@ -7,9 +7,6 @@ $conn->set_charset('utf8mb4');
 
 function e($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
-// ==========================
-// AMBIL DATA BERITA (PUBLISH)
-// ==========================
 $beritaList = [];
 try {
   $stmt = $conn->prepare("
@@ -255,11 +252,19 @@ function formatTanggalIndo($ymd){
       z-index: 2;
     }
 
-    .hero-title-under {
-      margin-top: -20px;
+    /* ✅ TEKS BAWAH FOTO (STACK ATAS-BAWAH, FORMAT SAMA) */
+    .hero-title-stack {
+      margin-top: -22px;
       margin-left: 45px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hero-title-stack div {
       font-size: 18px;
       font-weight: 700;
+      color: #111827;
     }
 
     /* KANAN */
@@ -576,7 +581,7 @@ function formatTanggalIndo($ymd){
       background: rgba(124,58,237,.08);
       border: 1px solid rgba(124,58,237,.14);
 
-      color: #dc2626; /* merah */
+      color: #dc2626;
       background: rgba(220,38,38,.08);
       border: 1px solid rgba(220,38,38,.14);
 
@@ -616,14 +621,10 @@ function formatTanggalIndo($ymd){
     .cv-btn-primary{
       padding: 14px 26px;
       border-radius: 10px;
-
-      background: #7c3aed;
-
-      background: #000000; /* hitam */
-
+      background: #000000;
       color: #ffffff;
       font-weight: 800;
-      border: 2px solid #dc2626; /* border merah */
+      border: 2px solid #dc2626;
       box-shadow: 0 14px 28px rgba(220,38,38,.22);
       cursor: pointer;
       display: inline-flex;
@@ -656,6 +657,7 @@ function formatTanggalIndo($ymd){
       border-color: rgba(124,58,237,.35);
       background: rgba(124,58,237,.06);
     }
+
     /* FOOTER */
     .footer {
       padding: 40px 40px;
@@ -699,6 +701,7 @@ function formatTanggalIndo($ymd){
       color: white;
       transform: translateY(-2px);
     }
+
     @media (max-width: 1100px){
       .news-grid{ grid-template-columns: repeat(2, 1fr); }
       .cv-inner{ grid-template-columns: 1fr; gap: 40px; }
@@ -706,8 +709,8 @@ function formatTanggalIndo($ymd){
       .cv-right h1{ font-size: 40px; }
     }
     @media (max-width: 650px){
-      header{ padding: 6px 18px; }  /* ✅ tetep tipis di HP */
-      .nav-logo-image img{ transform: translateY(-5px); } /* ✅ rapihin di HP */
+      header{ padding: 6px 18px; }
+      .nav-logo-image img{ transform: translateY(-5px); }
       .hero{ padding: 20px 18px 80px; }
       .news-section{ padding: 55px 18px 80px; }
       .news-grid{ grid-template-columns: 1fr; }
@@ -733,9 +736,8 @@ function formatTanggalIndo($ymd){
   <nav>
     <a class="active">Tentang Josiah</a>
     <a href="#news">Berita</a>
-    <a href="sosmed.php">media social</a>
+    <a href="sosmed.php">Media Sosial</a>
   </nav>
-
 </header>
 
 <section class="hero">
@@ -750,13 +752,10 @@ function formatTanggalIndo($ymd){
       <div class="tag">JOSIAH MICHAEL</div>
 
       <h2>
-         Ketua Fraksi Partai Solidaritas Indonesia (PSI).
+         Ketua Fraksi Partai Solidaritas Indonesia (PSI) DPRD Kota Surabaya.
       </h2>
 
       <p>yang menjabat sebagai Anggota Dewan Perwakilan Rakyat.</p>
-      <p>DPRD Kota Surabaya, di mana ia dikenal vokal.</p>
-      <p>dalam mengawal isu-isu lokal seperti pertanahan eigendom verponding.</p>
-      <p>dan pembangunan wilayah Surabaya Barat.</p>
 
       <div class="hero-left-buttons">
         <a href="login.php"><button class="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Login</button></a>
@@ -770,44 +769,26 @@ function formatTanggalIndo($ymd){
     <div class="hero-photo-wrapper">
       <div class="photo-bg-blur"></div>
       <img src="assets/josiah2.png">
-      <div class="hero-title-under">KETUA FRAKSI PSI SURABAYA</div>
+
+      <!-- ✅ ATAS-BAWAH, FORMAT SAMA -->
+      <div class="hero-title-stack">
+        <div>ANGGOTA DPRD KOTA SURABAYA</div>
+        <div>KETUA FRAKSI PSI SURABAYA</div>
+      </div>
     </div>
 
     <!-- KANAN -->
-    <div class="hero-right">
-
-      <h3>Langkah berikutnya</h3>
-
-      <h1>
-        Sistem pendataan keluarga <br>
-        <span>yang membantu perkembangan wilayah Anda.</span>
-      </h1>
-
-      <p>Website ini memastikan setiap data keluarga tercatat aman dan rapi.</p>
-
-      <div class="hero-metric">
-        <div class="value">100%</div>
-        <div>Target keluarga tercatat lengkap.</div>
-      </div>
-
-    </div>
+    <div class="hero-right"></div>
 
   </div>
 </section>
 
-<!-- =========================
-     NEWS SECTION
-========================= -->
 <section class="news-section" id="news">
   <div class="news-inner">
 
     <div class="news-head reveal">
       <div>
         <div class="news-title">Berita Terbaru</div>
-        <div class="news-sub">
-          Update kegiatan dan informasi terbaru. Tampilan dibuat nyambung dengan halaman utama dan akan muncul animasi saat kamu scroll.
-        </div>
-      </div>
 
       <div class="news-actions">
         <div class="news-chip" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">
@@ -867,6 +848,7 @@ function formatTanggalIndo($ymd){
 
   </div>
 </section>
+
 <!-- FOOTER -->
 <footer class="footer">
   <div class="footer-inner">
@@ -876,7 +858,7 @@ function formatTanggalIndo($ymd){
     <div class="footer-text">
       Melayani dengan Hati untuk Kemajuan Surabaya
     </div>
-    
+
     <div class="footer-social">
       <a href="https://www.facebook.com/liem.k.siong?mibextid=LQQJ4d" target="_blank" rel="noopener" title="Facebook">
         <i class="fa-brands fa-facebook-f"></i>

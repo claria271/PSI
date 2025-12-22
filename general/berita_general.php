@@ -208,7 +208,7 @@ $total = $res->num_rows;
     <img src="../assets/image/logo.png" alt="PSI Logo">
   </div>
   <div class="right">
-    <a href="../logout.php">Logout</a>
+    <a href="../logout_general.php">Logout</a>
   </div>
 </header>
 
